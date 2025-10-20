@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 
+@dataclass
 class CollectionDTO:
     """
     DTO para representar una colección de documentos.

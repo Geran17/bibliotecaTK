@@ -2,6 +2,7 @@ from dataclasses import dataclasss
 from typing import Optional
 
 
+@dataclasss
 class CategoryDTO:
     """
     DTO para representar categorías de documentos.
