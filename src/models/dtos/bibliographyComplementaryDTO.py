@@ -188,3 +188,18 @@ class BibliographyComplementaryDTO:
         if self.isbn is None:
             raise ValueError("No se puede instanciar una referencia bibliográfica por su ISBN.")
         return f"SELECT * FROM BibliographyComplementary WHERE isbn = '{self.isbn}'"
+
+    def to_exist_id_bib(self) -> str:
+        """Genera una sentencia SQL SELECT para verificar la existencia de un registro por su ID.
+
+        Returns:
+            str: La sentencia SQL SELECT como una cadena de texto.
+
+        Raises:
+            ValueError: Si el atributo `id_bib` es nulo.
+        """
+        if self.id_bib is None:
+            raise ValueError(
+                "No se puede verificar la existencia de un registro por su ID de bibliografía."
+            )
+        return f"SELECT EXISTS(SELECT count() FROM BibliographyComplementary WHERE id_bib = {self.id_bib})"

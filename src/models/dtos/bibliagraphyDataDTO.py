@@ -179,3 +179,18 @@ class BibliographyDataDTO:
         if self.id_doc is None:
             raise ValueError("El ID de documento debe ser proporcionado para buscar.")
         return f"SELECT * FROM BibliographyData WHERE id_doc = {self.id_doc}"
+
+    def to_exist_id_doc(self) -> str:
+        """Genera una sentencia SQL SELECT para verificar la existencia de un registro por su ID.
+
+        Returns:
+            str: La sentencia SQL SELECT como una cadena de texto.
+
+        Raises:
+            ValueError: Si el atributo `id_doc` del DTO es nulo.
+        """
+        if self.id_doc is None:
+            raise ValueError(
+                "No se puede verificar la existencia de un registro por su ID de documento."
+            )
+        return f"SELECT EXISTS(SELECT count() FROM BibliographyData WHERE id_doc = {self.id_doc})"

@@ -30,3 +30,6 @@ class TagDTO:
     description: Optional[str] = None
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
+
+
+# TODO: Completar las setencia, INSERT, UPDATE, DELETE, EXIST, INSTANCIA

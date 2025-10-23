@@ -121,3 +121,27 @@ class CollectionDTO:
         if self.name is None:
             raise ValueError("El nombre debe ser proporcionado para buscar por nombre.")
         return f"SELECT * FROM Collection WHERE name = '{self.name}'"
+
+    def to_delete(self) -> str:
+        """Genera uns sentencia SQL DELETE para borrar un registro de la tabla Collection.
+
+        Returns:
+            str: La sentencia SQL DELETE como una cadena de texto.
+
+        Raises:
+            ValueError: Si el atributo `id` es nulo.
+        """
+        if self.id is None:
+            raise ValueError("El ID debe ser proporcionado para borrar.")
+        return f"DELETE FROM Collection WHERE id = {self.id}"
+
+    def to_exist_name(self) -> str:
+        """Genera una sentencia SQL SELECT para verificar la existencia de una colección por su nombre.
+        Returns:
+            str: La sentencia SQL SELECT como una cadena de texto.
+        Raises:
+            ValueError: Si el atributo `name` es nulo.
+        """
+        if self.name is None:
+            raise ValueError("El nombre debe ser proporcionado para verificar la existencia.")
+        return f"SELECT EXISTS(SELECT count() FROM Collection WHERE name = '{self.name}')"

@@ -121,3 +121,14 @@ class CategoryDTO:
         if self.name is None:
             raise ValueError("El nombre debe ser proporcionado para buscar por nombre.")
         return f"SELECT * FROM Category WHERE name = '{self.name}'"
+
+    def to_exist_name(self) -> str:
+        """Genera una sentencia SQL SELECT para verificar la existencia de una categoría por su nombre.
+        Returns:
+            str: La sentencia SQL SELECT como una cadena de texto.
+        Raises:
+            ValueError: Si el atributo `name` es nulo.
+        """
+        if self.name is None:
+            raise ValueError("El nombre debe ser proporcionado para verificar la existencia.")
+        return f"SELECT EXISTS(SELECT count() FROM Category WHERE name = '{self.name}')"
