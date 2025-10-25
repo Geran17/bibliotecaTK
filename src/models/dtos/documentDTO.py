@@ -30,11 +30,11 @@ class DocumentDTO:
         ... )
     """
 
-    id: Optional[int] = None
     name: str
     extension: str
     hash: str
     size: float
+    id: Optional[int] = None
     is_active: bool = True
     created_at: Optional[str] = None
     updated_at: Optional[str] = None

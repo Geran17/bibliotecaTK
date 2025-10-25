@@ -119,7 +119,7 @@ CREATE TABLE IF NOT EXISTS Chapter(
 );
 
 -- Table Index
-/*
+/* -- Renamed to SubSection
     Tabla para gestionar el índice detallado de capítulos.
     Almacena la estructura jerárquica de secciones dentro de cada capítulo.
 
@@ -139,19 +139,18 @@ CREATE TABLE IF NOT EXISTS Chapter(
     - Nivel 3: Secciones (1.1.1, 1.1.2)
     - Nivel 4: Subsecciones (1.1.1.1)
 */
-CREATE TABLE IF NOT EXISTS IndexChapter(
+CREATE TABLE IF NOT EXISTS SubSection( -- Table was named SubSection, not IndexChapter
     id INTEGER,
     id_chapter INTEGER NOT NULL,
     title TEXT NOT NULL,
-    level INTEGER DEFAULT 1 CHECK (level BETWEEN 1 AND 4),
+    level TEXT NULL,
     parent_id INTEGER NULL,
-    order_number INTEGER NOT NULL,
     page_number INTEGER,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY(id AUTOINCREMENT),
-    FOREIGN KEY (id_chapter) REFERENCES Chapter (id) ON DELETE CASCADE,
-    FOREIGN KEY (parent_id) REFERENCES IndexChapter (id) ON DELETE CASCADE
+    FOREIGN KEY (id_chapter) REFERENCES Chapter (id) ON DELETE CASCADE, -- Corrected FK reference
+    FOREIGN KEY (parent_id) REFERENCES SubSection (id) ON DELETE CASCADE -- Corrected FK reference to itself
 );
 
 
@@ -333,5 +332,5 @@ CREATE INDEX idx_collection_name ON Collection(name);
 CREATE INDEX idx_tag_name ON Tag(name);
 CREATE INDEX idx_chapter_doc ON Chapter(id_doc);
 CREATE INDEX idx_chapter_number ON Chapter(number_chapter);
-CREATE INDEX idx_index_chapter ON IndexChapter(id_chapter);
-CREATE INDEX idx_index_level ON IndexChapter(level);
+CREATE INDEX idx_subsection_chapter ON SubSection(id_chapter); -- Renamed index
+CREATE INDEX idx_subsection_level ON SubSection(level);       -- Renamed index

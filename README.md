@@ -1,57 +1,66 @@
 # BibliotecaTK
 
-BibliotecaTK is a Python application for managing a library. It provides functionalities to add, view, update, and delete books, as well as manage users and their borrowing activities.
+BibliotecaTK es una aplicación en Python para la gestión de documentos electronicos. Ya sea
+libros u otros tipos de documentos que se puedan guardar en la memoria. No se es una aplicacion
+multi-usuario, ya que funcion principar es la de organizar y detectar documentos duplicados mediante el
+hash de cada archivo.
+Ofrece funcionalidades para agregar, ver, actualizar y eliminar documentos de la biblioteca.
 
-## Features
+## Características
 
-- **Book Management**: Add new books, view a list of all books, update book details, and remove books from the library.
-- **User Management**: Register new users, view user profiles, and update user information.
-- **Borrowing System**: Allow users to borrow and return books, track borrowing history, and manage due dates.
-- **Search and Filter**: Easily search for books or users based on various criteria.
-- **Intuitive GUI**: A user-friendly graphical interface built with Tkinter for easy navigation and interaction.
+- **Gestión de Documentos**: Agregar nuevos documentos, ver la lista completa,
+    actualizar detalles o eliminar documentos de la biblioteca.
+- **Búsqueda y Filtros**: Buscar fácilmente documentos o usuarios según
+    distintos criterios.
+- **Interfaz Intuitiva**: Una interfaz gráfica amigable construida con
+    Tkinter, que facilita la navegación y la interacción.
 
-## Technologies Used
+## Tecnologías Utilizadas
 
-- **Python**: The core programming language.
-- **Tkinter**: For building the graphical user interface.
-- **SQLite3**: For database management to store book, user, and borrowing information.
+- **Python**: Lenguaje principal del proyecto.
+- **Tkinter**: Para crear la interfaz gráfica de usuario.
+- **SQLite3**: Para la gestión de la base de datos que almacena
+    información de libros, usuarios y préstamos.
 
-## Installation
+## Instalación
 
-To get a local copy up and running, follow these simple steps.
+Para tener una copia local funcionando, sigue estos pasos sencillos.
 
-### Prerequisites
+### Requisitos Previos
 
-- Python 3.x installed on your system.
+- Tener Python 3.x instalado en tu sistema.
 
-### Steps
+### Pasos
 
-1. **Clone the repository:**
+1. **Clona el repositorio:**
 
-   ```bash
-   git clone https://github.com/your-username/BibliotecaTK.git
-   cd BibliotecaTK
-   ```
+    ``` bash
+    git clone https://github.com/your-username/BibliotecaTK.git
+    cd BibliotecaTK
+    ```
 
-2. **Install dependencies (if any, though for this project, only built-in modules are primarily used):**
+2. **Instala las dependencias (si las hubiera, aunque este proyecto usa
+    principalmente módulos incorporados):**
 
-   ```bash
-   # No external dependencies are typically required for a basic Tkinter/SQLite3 app.
-   # If you add any, list them here and provide installation instructions.
-   ```
+    ``` bash
+    # No se requieren dependencias externas para una app básica con Tkinter/SQLite3.
+    # Si agregas alguna, inclúyela aquí junto con las instrucciones de instalación.
+    ```
 
-3. **Run the application:**
+3. **Ejecuta la aplicación:**
 
-   ```bash
-   python main.py
-   ```
+    ``` bash
+    python main.py
+    ```
 
-## Usage
+## Uso
 
-Once the application is running, you can:
+Una vez que la aplicación esté en ejecución, puedes:
 
-- Navigate through the different tabs for Books, Users, and Borrows.
-- Use the "Add", "Edit", and "Delete" buttons to manage records.
-- Utilize the search bars to find specific items.
+- Navegar por las distintas pestañas.
+- Usar los botones "Agregar", "Editar" y "Eliminar" para gestionar
+    registros.
+- Utilizar las barras de búsqueda para encontrar elementos
+    específicos.
 
-## Project Structure
+## Estructura del Proyecto

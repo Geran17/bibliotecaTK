@@ -47,7 +47,7 @@ class MetaDataDTO:
         """
         if self.id is not None:
             raise ValueError("ID debe ser nulo para una operación de inserción.")
-        return f"INSERT INTO MetaData(id_doc, key_data, value_data)VALUES({self.id_doc}, '{self.key_data}', '{self.value_data}',)"
+        return f"INSERT INTO MetaData(id_doc, key_data, value_data) VALUES({self.id_doc}, '{self.key_data}', '{self.value_data}')"
 
     def to_update_all(self) -> str:
         """Genera una sentencia SQL UPDATE para todos los campos del registro.
