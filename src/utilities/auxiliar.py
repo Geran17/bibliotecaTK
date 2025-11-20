@@ -1,0 +1,322 @@
+import exiftool
+import subprocess
+from pathlib import Path
+from os import rename, mkdir
+from os.path import exists, isfile, isdir, join
+from shutil import copy2, move
+from send2trash import send2trash  # type: ignore
+from typing import Dict, Any, Optional
+
+
+def eliminar_archivo(ruta_destino: str) -> bool:
+    """
+    Elimina un archivo del sistema de archivos.
+
+    Verifica si la ruta de destino existe y es un archivo antes de intentar eliminarlo.
+
+    Args:
+        ruta_destino (str): La ruta completa del archivo a eliminar.
+
+    Returns:
+        bool: True si el archivo fue eliminado exitosamente, False en caso contrario."""
+    if exists(ruta_destino) and isfile(ruta_destino):
+        try:
+            archivo = Path(ruta_destino)
+            archivo.unlink()
+            return True
+        except Exception as e:
+            print("Error al tratar de eliminar el archivo: {e}")
+            return False
+    else:
+        print(f"La ruta de destino no existe o no es un archivo: {ruta_destino}")
+        return False
+
+
+def desglosar_ruta_documento(ruta_documento: str) -> Dict[str, Any]:
+    if exists(ruta_documento) and isfile(ruta_documento):
+        archivo = Path(ruta_documento)
+        pos = archivo.name.find("_")
+        return {
+            'ruta_completa': str(archivo),
+            'ruta_padre': str(archivo.parent),
+            'id_documento': archivo.name[:pos],
+            'nombre_sin_id': archivo.name[pos + 1 :],
+        }
+
+
+def generar_ruta_documento(ruta_biblioteca: str, nombre_documento: str, id_documento: int) -> str:
+    """
+    Genera una ruta del documento a la biblioteca, para que el usuario para operar sobre el archivo
+    Esta función crea subdirectorios basados en el ID del documento para organizar los archivos.
+
+    Args:
+        ruta_biblioteca (str): La ruta base del directorio donde se almacenan los documentos de la biblioteca.
+
+        nombre_documento (str): El nombre original del archivo, incluyendo su extensión (ej. "documento.pdf").
+
+        id_documento (int): es el id del documento que genero el registro en la base de datos
+
+    Returns:
+        str: retorna la ruta del documento
+    """
+    if exists(ruta_biblioteca) and isdir(ruta_biblioteca):
+        # Si existe la ruta a la biblioteca y es un directorio, entonces
+        # concatenamos con el posible ubicacion del subdirecectorio
+        ruta_subdirectorio = crear_directorio_id_documento(
+            ruta_destino=ruta_biblioteca, id_documento=id_documento
+        )
+        if exists(ruta_subdirectorio):
+            # Si existe el subdirectorio concanetamos con el nombre nombre
+            nuevo_nombre = f"{id_documento}_{nombre_documento}"
+            return join(ruta_subdirectorio, nuevo_nombre)
+        else:
+            print(f"No existe la ruta del subdirectorio: {ruta_subdirectorio}")
+            return None
+    else:
+        print(f"No existe la ruta a la biblioteca o no es un directorio: {ruta_biblioteca}")
+        return None
+
+
+def crear_directorio(ruta_destino: str) -> bool:
+    """
+    Crea un directorio en la ruta especificada.
+
+    Args:
+        ruta_destino (str): La ruta completa del directorio a crear.
+
+    Returns:
+        bool: True si el directorio fue creado exitosamente, False en caso contrario.
+    """
+    try:
+        mkdir(ruta_destino)
+        return True
+    except Exception as e:
+        print(f"Error al crear el directorio: {e}")
+        return False
+
+
+def crear_directorio_id_documento(ruta_destino: str, id_documento: int) -> str:
+    """
+    Crea un subdirectorio basado en el ID de un documento para organizar los archivos.
+
+    Los subdirectorios se nombran con el formato '000', '001', etc.,
+    donde cada uno contiene hasta 1000 documentos. La carpeta se determina
+    por `floor(id_documento / 1000)`.
+
+    Args:
+        ruta_destino (str): La ruta base donde se crearán los subdirectorios.
+        id_documento (int): El ID único del documento.
+
+    Returns:
+        str: La ruta completa al subdirectorio creado o existente,
+             o None si la `ruta_destino` no es un directorio válido o no existe.
+    """
+    # verficamos que la ruta de destino sea un directorio y exista
+    # este directorio sera la ubicacion para los documentos guardados por el usuario
+    if isdir(ruta_destino) and exists(ruta_destino):
+        sub_directorio = str(id_documento // 1000).zfill(3)
+        # hacemos una union y verificamos si existe la carpeta dentro de la ruta de destino
+        if not exists(join(ruta_destino, sub_directorio)):
+            crear_directorio(join(ruta_destino, sub_directorio))
+            return join(ruta_destino, sub_directorio)
+        else:
+            return join(ruta_destino, sub_directorio)
+    else:
+        print(f"La ruta de destino no es un directorio: {ruta_destino}")
+        return None
+
+
+def renombrar_archivo(ruta_origen: str, ruta_destino: str) -> bool:
+    """
+    Renombra un archivo de una ruta a otra.
+
+    Args:
+        ruta_origen (str): La ruta completa del archivo original.
+        ruta_destino (str): La nueva ruta completa (incluyendo el nuevo nombre) para el archivo.
+
+    Returns:
+        bool: True si el archivo fue renombrado exitosamente, False en caso contrario.
+    """
+    if exists(ruta_origen):
+        try:
+            rename(ruta_origen, ruta_destino)
+            return True
+        except Exception as e:
+            print(f"Error al renombrar el archivo: {e}")
+            return False
+    else:
+        print(f"No existe el archivo en ruta de origen: {ruta_origen}")
+        return False
+
+
+def copiar_archivo(ruta_origen: str, ruta_destino: str) -> bool:
+    """
+    Copia un archivo de una ruta a otra.
+
+    Args:
+        ruta_origen (str): La ruta completa del archivo a copiar.
+        ruta_destino (str): La ruta completa de destino para la copia del archivo.
+
+    Returns:
+        bool: True si el archivo fue copiado exitosamente, False en caso contrario.
+    """
+    if exists(ruta_origen):
+        try:
+            copy2(ruta_origen, ruta_destino)
+            return True
+        except Exception as e:
+            print(f"Error al copiar el archivo: {e}")
+            return False
+    else:
+        print(f"No existe el archivo en ruta de origen: {ruta_origen}")
+        return False
+
+
+def mover_archivo(ruta_origen: str, ruta_destino: str) -> bool:
+    """
+    Mueve un archivo de una ubicación a otra.
+
+    Args:
+        ruta_origen (str): La ruta completa del archivo a mover.
+        ruta_destino (str): La ruta completa de destino para el archivo.
+
+    Returns:
+        bool: True si el archivo fue movido exitosamente, False en caso contrario.
+    """
+    if exists(ruta_origen):
+        try:
+            # Corrección de sintaxis: se eliminó el ':' al final de la llamada a la función move
+            move(ruta_origen, ruta_destino)
+            return True
+        except Exception as e:
+            print(f"Error al tratar de mover el archivo: {e}")
+            return False
+    else:
+        print(f"No existe el archivo en ruta de origen: {ruta_origen}")
+        return False
+
+
+def papelera_archivo(ruta_origen: str) -> bool:
+    """
+    Mueve un archivo a la papelera de reciclaje del sistema operativo.
+
+    Args:
+        ruta_origen (str): La ruta completa del archivo a enviar a la papelera.
+
+    Returns:
+        bool: True si el archivo fue enviado a la papelera exitosamente, False en caso contrario.
+    """
+    if exists(ruta_origen):
+        try:
+            send2trash(ruta_origen)
+            return True
+        except Exception as e:
+            print(f"Error al tratar de mover el archivo a la papelera del sistema: {e}")
+            return False
+    else:
+        print(f"No existe el archivo en ruta de origen: {ruta_origen}")
+        return False
+
+
+def obtener_metadatos(ruta_origen: str) -> Dict:
+    """
+    Obtiene los metadatos de un archivo utilizando exiftool.
+
+    Args:
+        ruta_origen (str): La ruta completa del archivo del cual se extraerán los metadatos.
+                           Se espera que exiftool esté instalado y accesible en el PATH.
+
+    Returns:
+        Dict: Un diccionario con los metadatos del archivo. Retorna un diccionario vacío
+              si el archivo no existe o si ocurre un error durante la extracción.
+    """
+    if exists(ruta_origen):
+        try:
+            with exiftool.ExifToolHelper() as exif:
+                metadatos = exif.get_metadata(ruta_origen)
+                return metadatos[0]
+        except Exception as e:
+            print(f"Error al obtener los metadatos del archivo: {e}")
+            return {}
+    else:
+        print(f"No existe el archivo en la ruta de origen: {ruta_origen}")
+        return {}
+
+
+def abrir_archivo(ruta_origen: str):
+    """
+    Abre un archivo con la aplicación predeterminada del sistema.
+
+    Utiliza `xdg-open` en sistemas Linux. En otros sistemas operativos,
+    el comportamiento puede variar o no funcionar.
+
+    Args:
+        ruta_origen (str): La ruta completa del archivo a abrir.
+    """
+    if exists(ruta_origen) and isfile(ruta_origen):
+        try:
+            subprocess.run(['xdg-open', ruta_origen], check=True)
+        except Exception as e:
+            print(f"Error al tratar de abrir el archivo: {e}")
+    else:
+        print(f"No existe el archivo en la ruta de origen: {ruta_origen}")
+
+
+def obtener_datos_documento(ruta_origen: str) -> Dict[str, Any]:
+    """
+    Obtiene información básica de un archivo a partir de su ruta.
+
+    Utiliza `pathlib.Path` para extraer detalles como el nombre, la extensión,
+    el tamaño y la ruta del directorio padre.
+
+    Args:
+        ruta_origen (str): La ruta completa del archivo.
+
+    Returns:
+        Dict[str, Any]: Un diccionario con los datos del archivo si este existe
+                        y es un archivo válido. Las claves incluyen:
+                        'ruta_completa', 'nombre_con_extension',
+                        'nombre_sin_extension', 'extension', 'tamano_bytes',
+                        'ruta_padre'. Retorna un diccionario vacío si la ruta
+                        no es un archivo válido.
+    """
+    if exists(ruta_origen) and isfile(ruta_origen):
+        archivo = Path(ruta_origen)
+        return {
+            'ruta_completa': str(archivo),
+            'nombre_con_extension': archivo.name,
+            'nombre_sin_extension': archivo.stem,
+            'extension': archivo.suffix[1:],
+            'tamano_bytes': archivo.stat().st_size,
+            'ruta_padre': str(archivo.parent),
+        }
+
+    else:
+        print(f"La ruta de origen de existe o no es un archivo: {ruta_origen}")
+        return {}
+
+
+def hash_sha256(archivo: str) -> Optional[str]:
+    """
+    Calcula el hash SHA-256 de un archivo utilizando el comando `sha256sum`.
+
+    Esta función depende de que el comando `sha256sum` esté disponible en el
+    entorno del sistema (común en sistemas tipo Unix/Linux).
+
+    Args:
+        archivo (str): La ruta completa del archivo para calcular el hash.
+
+    Returns:
+        Optional[str]: El hash SHA-256 como una cadena de texto si tiene éxito,
+                       o None si ocurre un error.
+    """
+    try:
+        resultado = subprocess.run(
+            ['sha256sum', archivo], capture_output=True, text=True, check=True
+        )
+        # Extraer solo el hash (sin el nombre del archivo)
+        hash_resultado = resultado.stdout.split()[0]
+        return hash_resultado
+    except subprocess.CalledProcessError as e:
+        print(f"Error al calcular hash: {e}")
+        return None

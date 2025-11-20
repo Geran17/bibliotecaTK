@@ -4,8 +4,12 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+ttkbootstrap = "*"
+send2trash = "*"
+pyexiftool = "*"
 
 [dev-packages]
+pytest = "*"
 
 [requires]
 python_version = "3.12"

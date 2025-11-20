@@ -1,336 +1,333 @@
--- Datos de los Documentos --
--- ----------------------- --
+-- =============================== --
+--      DATOS DE LOS DOCUMENTOS      --
+-- =============================== --
 
--- Tabla de Documentos
+-- Tabla: documento
 /*
     Tabla principal para almacenar documentos.
     Gestiona la información básica de cada documento en la biblioteca.
 
     Ejemplos de uso:
-    INSERT INTO Document (name, extension, hash, size, is_active) VALUES
+    INSERT INTO documento (nombre, extension, hash, tamano, esta_activo) VALUES
     ('manual_python', 'pdf', 'a1b2c3d4e5f6', 1024, 1);
     
-    SELECT name, extension FROM Document WHERE is_active = 1;
+    SELECT nombre, extension FROM documento WHERE esta_activo = 1;
 */
-CREATE TABLE IF NOT EXISTS Document(
-    id INTEGER,
-    name TEXT NOT NULL,
+CREATE TABLE IF NOT EXISTS documento(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre TEXT NOT NULL,
     extension TEXT NOT NULL CHECK (length(extension) <= 10),
     hash TEXT NOT NULL UNIQUE, 
-    size INTEGER CHECK (size >= 0),
-    is_active INTEGER DEFAULT 0,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY(id AUTOINCREMENT)
+    tamano INTEGER CHECK (tamano >= 0),
+    esta_activo INTEGER DEFAULT 1,
+    creado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+    actualizado_en DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- Table MetaData
+-- Tabla: metadato
 /*
     Tabla para metadatos extraídos con ExifTool.
     Almacena pares clave-valor de metadatos de los documentos.
 
     Ejemplos de uso:
-    INSERT INTO MetaData (id_doc, key_data, value_data) VALUES
+    INSERT INTO metadato (id_documento, clave, valor) VALUES
     (1, 'Author', 'John Doe'),
     (1, 'CreationDate', '2023-10-21');
     
-    SELECT key_data, value_data FROM MetaData WHERE id_doc = 1;
+    SELECT clave, valor FROM metadato WHERE id_documento = 1;
 */
-CREATE TABLE IF NOT EXISTS MetaData(
-    id INTEGER,
-    id_doc INTEGER,
-    key_data TEXT NOT NULL,
-    value_data TEXT NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY(id AUTOINCREMENT),
-    FOREIGN KEY (id_doc) REFERENCES Document (id) ON DELETE CASCADE
+CREATE TABLE IF NOT EXISTS metadato(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_documento INTEGER NOT NULL,
+    clave TEXT NOT NULL,
+    valor TEXT NOT NULL,
+    creado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+    actualizado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_documento) REFERENCES documento (id) ON DELETE CASCADE
 );
 
--- Tabla BibliographyData
+-- Tabla: dato_bibliografico
 /*
     Tabla para información bibliográfica principal.
     Gestiona datos bibliográficos esenciales de cada documento.
 
     Ejemplos de uso:
-    INSERT INTO BibliographyData 
-    (title, authors, year_publication, editorial, id_doc) VALUES
+    INSERT INTO dato_bibliografico 
+    (titulo, autores, ano_publicacion, editorial, id_documento) VALUES
     ('Python Programming', 'John Doe', 2023, 'TechBooks', 1);
     
-    SELECT title, authors FROM BibliographyData WHERE year_publication > 2020;
+    SELECT titulo, autores FROM dato_bibliografico WHERE ano_publicacion > 2020;
 */
-CREATE TABLE IF NOT EXISTS BibliographyData(
-    id INTEGER,
-    title TEXT NOT NULL,
-    authors TEXT NULL,
-    year_publication INTEGER CHECK (year_publication >= 0 AND year_publication <= strftime('%Y', 'now')),
+CREATE TABLE IF NOT EXISTS dato_bibliografico(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    titulo TEXT NOT NULL,
+    autores TEXT NULL,
+    ano_publicacion INTEGER CHECK (ano_publicacion >= 0 AND ano_publicacion <= strftime('%Y', 'now')),
     editorial TEXT NULL,
-    place_publication TEXT NULL,
-    id_doc INTEGER,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY(id AUTOINCREMENT),
-    FOREIGN KEY (id_doc) REFERENCES Document (id) ON DELETE CASCADE
+    lugar_publicacion TEXT NULL,
+    id_documento INTEGER NOT NULL UNIQUE,
+    creado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+    actualizado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_documento) REFERENCES documento (id) ON DELETE CASCADE
 );
 
--- Tabla BibliographyComplementary
+-- Tabla: dato_bibliografico_complementario
 /*
     Tabla para información bibliográfica adicional.
     Almacena detalles complementarios de las referencias bibliográficas.
 
     Ejemplos de uso:
-    INSERT INTO BibliographyComplementary 
-    (id_bib, number_edition, language, isbn) VALUES
+    INSERT INTO dato_bibliografico_complementario 
+    (id_dato_bibliografico, numero_edicion, idioma, isbn) VALUES
     (1, 2, 'Español', '978-0-123456-47-2');
     
-    SELECT bc.isbn, bd.title 
-    FROM BibliographyComplementary bc 
-    JOIN BibliographyData bd ON bc.id_bib = bd.id;
+    SELECT bc.isbn, db.titulo 
+    FROM dato_bibliografico_complementario bc 
+    JOIN dato_bibliografico db ON bc.id_dato_bibliografico = db.id;
 */
-CREATE TABLE IF NOT EXISTS BibliographyComplementary(
-    id INTEGER,
-    id_bib INTEGER,
-    number_edition INTEGER NULL CHECK (number_edition > 0),
-    language TEXT NULL,
+CREATE TABLE IF NOT EXISTS dato_bibliografico_complementario(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_dato_bibliografico INTEGER NOT NULL UNIQUE,
+    numero_edicion INTEGER NULL CHECK (numero_edicion > 0),
+    idioma TEXT NULL,
     volumen_tomo TEXT NULL,
-    number_pagina INTEGER CHECK (number_pagina > 0),
+    numero_paginas INTEGER CHECK (numero_paginas > 0),
     isbn TEXT NULL UNIQUE,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY(id AUTOINCREMENT),
-    FOREIGN KEY (id_bib) REFERENCES BibliographyData (id) ON DELETE CASCADE
+    creado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+    actualizado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_dato_bibliografico) REFERENCES dato_bibliografico (id) ON DELETE CASCADE
 );
 
--- Tabla Chapter
+
+
+-- Tabla: capitulo
 /*
-    Esta tabla contendra la informacion de los capitulos del de los
-    documentos
+    Almacena la información de los capítulos de los documentos.
 */
-CREATE TABLE IF NOT EXISTS Chapter(
-    id INTEGER,
-    id_doc INTEGER NOT NULL,
-    number_chapter INTEGER NOT NULL,
-    title TEXT NOT NULL,
-    page_start INTEGER,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY(id AUTOINCREMENT),
-    FOREIGN KEY (id_doc) REFERENCES Document (id) ON DELETE CASCADE
+CREATE TABLE IF NOT EXISTS capitulo(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_documento INTEGER NOT NULL,
+    numero_capitulo INTEGER NOT NULL,
+    titulo TEXT NOT NULL,
+    pagina_inicio INTEGER,
+    creado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+    actualizado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_documento) REFERENCES documento (id) ON DELETE CASCADE
 );
 
--- Table Index
-/* -- Renamed to SubSection
-    Tabla para gestionar el índice detallado de capítulos.
+-- Tabla: seccion
+/*
+    Tabla para gestionar el índice detallado de los capítulos.
     Almacena la estructura jerárquica de secciones dentro de cada capítulo.
 
     Ejemplos de uso:
-    INSERT INTO IndexChapter (id_chapter, title, level, page_number) VALUES
+    INSERT INTO seccion (id_capitulo, titulo, nivel, numero_pagina) VALUES
     (1, '1.1 Instalación', 1, 2),
     (1, '1.1.1 Windows', 2, 3);
     
-    SELECT title, page_number 
-    FROM IndexChapter 
-    WHERE id_chapter = 1 
-    ORDER BY level, page_number;
+    SELECT titulo, numero_pagina 
+    FROM seccion 
+    WHERE id_capitulo = 1 
+    ORDER BY nivel, numero_pagina;
     
     Estructura jerárquica de índices:
     - Nivel 1: Capítulos principales (1, 2, 3)
     - Nivel 2: Subcapítulos (1.1, 1.2, 2.1)
     - Nivel 3: Secciones (1.1.1, 1.1.2)
-    - Nivel 4: Subsecciones (1.1.1.1)
+    - Nivel 4: Subsecciones (1.1.1.1) etc.
 */
-CREATE TABLE IF NOT EXISTS SubSection( -- Table was named SubSection, not IndexChapter
-    id INTEGER,
-    id_chapter INTEGER NOT NULL,
-    title TEXT NOT NULL,
-    level TEXT NULL,
-    parent_id INTEGER NULL,
-    page_number INTEGER,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY(id AUTOINCREMENT),
-    FOREIGN KEY (id_chapter) REFERENCES Chapter (id) ON DELETE CASCADE, -- Corrected FK reference
-    FOREIGN KEY (parent_id) REFERENCES SubSection (id) ON DELETE CASCADE -- Corrected FK reference to itself
+CREATE TABLE IF NOT EXISTS seccion( 
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_capitulo INTEGER NOT NULL,
+    titulo TEXT NOT NULL,
+    nivel TEXT NULL,
+    id_padre INTEGER NULL,
+    numero_pagina INTEGER,
+    creado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+    actualizado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_capitulo) REFERENCES capitulo (id) ON DELETE CASCADE,
+    FOREIGN KEY (id_padre) REFERENCES seccion (id) ON DELETE CASCADE
 );
 
+-- =================================== --
+--      ORGANIZACIÓN DE DOCUMENTOS     --
+-- =================================== --
 
--- Organización de los Documentos --
--- ------------------------------ --
-
--- Tabla Favorite
+-- Tabla: favorito
 /*
-    Esta tabla sirve para seleccionar los documentos
-    favoritos por el usuario
+    Marca los documentos favoritos del usuario.
 */
-CREATE TABLE IF NOT EXISTS Favorite(
-    id INTEGER,
-    id_doc INTEGER,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (id AUTOINCREMENT),
-    FOREIGN KEY (id_doc) REFERENCES Document (id) ON DELETE CASCADE
+CREATE TABLE IF NOT EXISTS favorito(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_documento INTEGER NOT NULL UNIQUE,
+    creado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+    actualizado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_documento) REFERENCES documento (id) ON DELETE CASCADE
 );
 
--- Tabla Category
+-- Tabla: categoria
 /*
-    Esta tabla sirve para organizar los documentos por categorías
+    Organiza los documentos por categorías temáticas.
 */
-CREATE TABLE IF NOT EXISTS Category(
-    id INTEGER,
-    name TEXT NOT NULL UNIQUE,
-    description TEXT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY(id AUTOINCREMENT)
+CREATE TABLE IF NOT EXISTS categoria(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_padre INTEGER NULL,
+    nombre TEXT NOT NULL UNIQUE,
+    descripcion TEXT NULL,
+    creado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+    actualizado_en DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- Tabla Collection
+-- Tabla Grupo
 /*
-    Esta tabla sirve para organizar los documentos en colecciones
-    de acuerdo a la preferencia del usuario
+    Almacena la informacion de los grupos
 */
-CREATE TABLE IF NOT EXISTS Collection(
-    id INTEGER,
-    name TEXT NOT NULL UNIQUE,
-    description TEXT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY(id AUTOINCREMENT)
-);
+CREATE TABLE IF NOT EXISTS grupo(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre TEXT NOT NULL UNIQUE,
+    descripcion TEXT NULL,
+    creado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+    actualizado_en DATETIME DEFAULT CURRENT_TIMESTAMP
+)
 
--- Table WordKey
+-- Tabla: coleccion
 /*
-    Esta tabla sirve para organizar los documentos por palabras claves
+    Agrupa documentos en colecciones personalizadas por el usuario.
 */
-CREATE TABLE IF NOT EXISTS WordKey(
-    id INTEGER,
-    wordkey TEXT NOT NULL,
-    description TEXT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY(id AUTOINCREMENT)
+CREATE TABLE IF NOT EXISTS coleccion(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre TEXT NOT NULL UNIQUE,
+    descripcion TEXT NULL,
+    creado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+    actualizado_en DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- Tabla Tag
+-- Tabla: palabra_clave
+/*
+    Asocia palabras clave a los documentos para facilitar la búsqueda.
+*/
+CREATE TABLE IF NOT EXISTS palabra_clave(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    palabra TEXT NOT NULL UNIQUE,
+    descripcion TEXT NULL,
+    creado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+    actualizado_en DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabla: etiqueta
 /*
     Tabla para gestión de etiquetas.
     Permite organizar documentos mediante etiquetas personalizadas.
 
     Ejemplos de uso:
-    INSERT INTO Tag (name, description) VALUES
+    INSERT INTO etiqueta (nombre, descripcion) VALUES
     ('Importante', 'Documentos prioritarios'),
     ('Python', 'Relacionado con Python');
-    
-    SELECT d.name, t.name as tag 
-    FROM Document d 
-    JOIN DocumentTag dt ON d.id = dt.id_document
-    JOIN Tag t ON t.id = dt.id_tag;
 */
-CREATE TABLE IF NOT EXISTS Tag(
-    id INTEGER,
-    name TEXT NOT NULL UNIQUE,
-    description TEXT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY(id AUTOINCREMENT)
+CREATE TABLE IF NOT EXISTS etiqueta(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre TEXT NOT NULL UNIQUE,
+    descripcion TEXT NULL,
+    creado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+    actualizado_en DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- Tablas Relacionales --
--- ------------------- --
-CREATE TABLE IF NOT EXISTS DocumentWordKey(
-    id_wordkey INTEGER,
-    id_document INTEGER,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY(id_wordkey, id_document),
-    FOREIGN KEY (id_document) REFERENCES Document(id) ON DELETE CASCADE,
-    FOREIGN KEY (id_wordkey) REFERENCES WordKey(id) ON DELETE CASCADE
-);
-)
+-- ======================= --
+--      TABLAS PIVOTE      --
+-- ======================= --
 
-CREATE TABLE IF NOT EXISTS DocumentCategory(
-    id_document INTEGER,
-    id_category INTEGER,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY(id_document, id_category),
-    FOREIGN KEY (id_document) REFERENCES Document(id) ON DELETE CASCADE,
-    FOREIGN KEY (id_category) REFERENCES Category(id) ON DELETE CASCADE
+CREATE TABLE IF NOT EXISTS documento_palabra_clave(
+    id_documento INTEGER NOT NULL,
+    id_palabra_clave INTEGER NOT NULL,
+    creado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY(id_documento, id_palabra_clave),
+    FOREIGN KEY (id_documento) REFERENCES documento(id) ON DELETE CASCADE,
+    FOREIGN KEY (id_palabra_clave) REFERENCES palabra_clave(id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS DocumentCollection(
-    id_document INTEGER,
-    id_collection INTEGER,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY(id_document, id_collection),
-    FOREIGN KEY (id_document) REFERENCES Document(id) ON DELETE CASCADE,
-    FOREIGN KEY (id_collection) REFERENCES Collection(id) ON DELETE CASCADE
+CREATE TABLE IF NOT EXISTS documento_categoria(
+    id_documento INTEGER NOT NULL,
+    id_categoria INTEGER NOT NULL,
+    creado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY(id_documento, id_categoria),
+    FOREIGN KEY (id_documento) REFERENCES documento(id) ON DELETE CASCADE,
+    FOREIGN KEY (id_categoria) REFERENCES categoria(id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS DocumentTag(
-    id_document INTEGER,
-    id_tag INTEGER,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY(id_document, id_tag),
-    FOREIGN KEY (id_document) REFERENCES Document(id) ON DELETE CASCADE,
-    FOREIGN KEY (id_tag) REFERENCES Tag(id) ON DELETE CASCADE
+CREATE TABLE IF NOT EXISTS documento_coleccion(
+    id_documento INTEGER NOT NULL,
+    id_coleccion INTEGER NOT NULL,
+    creado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY(id_documento, id_coleccion),
+    FOREIGN KEY (id_documento) REFERENCES documento(id) ON DELETE CASCADE,
+    FOREIGN KEY (id_coleccion) REFERENCES coleccion(id) ON DELETE CASCADE
 );
 
--- Triggers para las diferentes tablas --
--- ----------------------------------- --
+CREATE TABLE IF NOT EXISTS documento_grupo(
+    id_documento INTEGER NOT NULL,
+    id_grupo INTEGER NOT NULL,
+    creado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY(id_documento, id_grupo),
+    FOREIGN KEY (id_documento) REFERENCES documento(id) ON DELETE CASCADE,
+    FOREIGN KEY (id_grupo) REFERENCES grupo(id) ON DELETE CASCADE
+);
 
--- Trigger para Document
-CREATE TRIGGER IF NOT EXISTS trig_document_updated 
-AFTER UPDATE ON Document
-BEGIN
-    UPDATE Document 
-    SET updated_at = CURRENT_TIMESTAMP
-    WHERE id = NEW.id;
-END;
+CREATE TABLE IF NOT EXISTS documento_etiqueta(
+    id_documento INTEGER NOT NULL,
+    id_etiqueta INTEGER NOT NULL,
+    creado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY(id_documento, id_etiqueta),
+    FOREIGN KEY (id_documento) REFERENCES documento(id) ON DELETE CASCADE,
+    FOREIGN KEY (id_etiqueta) REFERENCES etiqueta(id) ON DELETE CASCADE
+);
 
--- Trigger para BibliographyData
-CREATE TRIGGER IF NOT EXISTS trig_bibliography_updated 
-AFTER UPDATE ON BibliographyData
-BEGIN
-    UPDATE BibliographyData 
-    SET updated_at = CURRENT_TIMESTAMP
-    WHERE id = NEW.id;
-END;
+-- =================== --
+--    DISPARADORES     --
+-- =================== --
 
--- Trigger para validar extensiones permitidas
-CREATE TRIGGER IF NOT EXISTS trig_document_extension_check
-BEFORE INSERT ON Document
+-- Triggers para actualizar el campo 'actualizado_en'
+CREATE TRIGGER IF NOT EXISTS trig_actualizar_documento AFTER UPDATE ON documento BEGIN UPDATE documento SET actualizado_en = CURRENT_TIMESTAMP WHERE id = NEW.id; END;
+CREATE TRIGGER IF NOT EXISTS trig_actualizar_metadato AFTER UPDATE ON metadato BEGIN UPDATE metadato SET actualizado_en = CURRENT_TIMESTAMP WHERE id = NEW.id; END;
+CREATE TRIGGER IF NOT EXISTS trig_actualizar_dato_bibliografico AFTER UPDATE ON dato_bibliografico BEGIN UPDATE dato_bibliografico SET actualizado_en = CURRENT_TIMESTAMP WHERE id = NEW.id; END;
+CREATE TRIGGER IF NOT EXISTS trig_actualizar_dato_bib_comp AFTER UPDATE ON dato_bibliografico_complementario BEGIN UPDATE dato_bibliografico_complementario SET actualizado_en = CURRENT_TIMESTAMP WHERE id = NEW.id; END;
+CREATE TRIGGER IF NOT EXISTS trig_actualizar_capitulo AFTER UPDATE ON capitulo BEGIN UPDATE capitulo SET actualizado_en = CURRENT_TIMESTAMP WHERE id = NEW.id; END;
+CREATE TRIGGER IF NOT EXISTS trig_actualizar_seccion AFTER UPDATE ON seccion BEGIN UPDATE seccion SET actualizado_en = CURRENT_TIMESTAMP WHERE id = NEW.id; END;
+CREATE TRIGGER IF NOT EXISTS trig_actualizar_favorito AFTER UPDATE ON favorito BEGIN UPDATE favorito SET actualizado_en = CURRENT_TIMESTAMP WHERE id = NEW.id; END;
+CREATE TRIGGER IF NOT EXISTS trig_actualizar_categoria AFTER UPDATE ON categoria BEGIN UPDATE categoria SET actualizado_en = CURRENT_TIMESTAMP WHERE id = NEW.id; END;
+CREATE TRIGGER IF NOT EXISTS trig_actualizar_coleccion AFTER UPDATE ON coleccion BEGIN UPDATE coleccion SET actualizado_en = CURRENT_TIMESTAMP WHERE id = NEW.id; END;
+CREATE TRIGGER IF NOT EXISTS trig_actualizar_grupo AFTER UPDATE ON grupo BEGIN UPDATE grupo SET actualizado_en = CURRENT_TIMESTAMP WHERE id = NEW.id; END;
+CREATE TRIGGER IF NOT EXISTS trig_actualizar_palabra_clave AFTER UPDATE ON palabra_clave BEGIN UPDATE palabra_clave SET actualizado_en = CURRENT_TIMESTAMP WHERE id = NEW.id; END;
+CREATE TRIGGER IF NOT EXISTS trig_actualizar_etiqueta AFTER UPDATE ON etiqueta BEGIN UPDATE etiqueta SET actualizado_en = CURRENT_TIMESTAMP WHERE id = NEW.id; END;
+
+-- Trigger para validar extensiones de archivo permitidas
+CREATE TRIGGER IF NOT EXISTS trig_validar_extension_documento
+BEFORE INSERT ON documento
 BEGIN
     SELECT CASE
-        WHEN NEW.extension NOT IN ('pdf', 'doc', 'docx', 'txt', 'epub')
-        THEN RAISE(ABORT, 'Extensión de archivo no válida')
+        WHEN NEW.extension NOT IN ('pdf', 'doc', 'docx', 'txt', 'epub', 'mobi')
+        THEN RAISE(ABORT, 'Extensión de archivo no válida. Use pdf, doc, docx, txt, epub o mobi.')
     END;
 END;
 
--- Trigger para BibliographyComplementary
-CREATE TRIGGER IF NOT EXISTS trig_bibliography_complementary_updated 
-AFTER UPDATE ON BibliographyComplementary
-BEGIN
-    UPDATE BibliographyComplementary 
-    SET updated_at = CURRENT_TIMESTAMP
-    WHERE id = NEW.id;
-END;
+-- =============== --
+--      ÍNDICES    --
+-- =============== --
 
--- Índices para mejorar la búsqueda --
--- -------------------------------- --
-
-CREATE INDEX idx_document_hash ON Document(hash);
-CREATE INDEX idx_document_extension ON Document(extension);
-CREATE INDEX idx_document_name ON Document(name);
-CREATE INDEX idx_bibliography_title ON BibliographyData(title);
-CREATE INDEX idx_bibliography_year ON BibliographyData(year_publication);
-CREATE INDEX idx_favorite_document ON Favorite(id_doc);
-CREATE INDEX idx_category_name ON Category(name);
-CREATE INDEX idx_collection_name ON Collection(name);
-CREATE INDEX idx_tag_name ON Tag(name);
-CREATE INDEX idx_chapter_doc ON Chapter(id_doc);
-CREATE INDEX idx_chapter_number ON Chapter(number_chapter);
-CREATE INDEX idx_subsection_chapter ON SubSection(id_chapter); -- Renamed index
-CREATE INDEX idx_subsection_level ON SubSection(level);       -- Renamed index
+CREATE INDEX IF NOT EXISTS idx_documento_hash ON documento(hash);
+CREATE INDEX IF NOT EXISTS idx_documento_extension ON documento(extension);
+CREATE INDEX IF NOT EXISTS idx_documento_nombre ON documento(nombre);
+CREATE INDEX IF NOT EXISTS idx_dato_bibliografico_titulo ON dato_bibliografico(titulo);
+CREATE INDEX IF NOT EXISTS idx_dato_bibliografico_ano ON dato_bibliografico(ano_publicacion);
+CREATE INDEX IF NOT EXISTS idx_metadato_documento ON metadato(id_documento);
+CREATE INDEX IF NOT EXISTS idx_favorito_documento ON favorito(id_documento);
+CREATE INDEX IF NOT EXISTS idx_categoria_nombre ON categoria(nombre);
+CREATE INDEX IF NOT EXISTS idx_coleccion_nombre ON coleccion(nombre);
+CREATE INDEX IF NOT EXISTS idx_grupo_nombre ON grupo(nombre);
+CREATE INDEX IF NOT EXISTS idx_etiqueta_nombre ON etiqueta(nombre);
+CREATE INDEX IF NOT EXISTS idx_palabra_clave_palabra ON palabra_clave(palabra);
+CREATE INDEX IF NOT EXISTS idx_capitulo_documento ON capitulo(id_documento);
+CREATE INDEX IF NOT EXISTS idx_capitulo_numero ON capitulo(numero_capitulo);
+CREATE INDEX IF NOT EXISTS idx_seccion_capitulo ON seccion(id_capitulo);
+CREATE INDEX IF NOT EXISTS idx_seccion_nivel ON seccion(nivel);
+CREATE INDEX IF NOT EXISTS idx_documento_grupo_documento ON documento_grupo(id_documento);
+CREATE INDEX IF NOT EXISTS idx_documento_grupo_grupo ON documento_grupo(id_grupo);

@@ -2,8 +2,9 @@
 
 BibliotecaTK es una aplicación en Python para la gestión de documentos electronicos. Ya sea
 libros u otros tipos de documentos que se puedan guardar en la memoria. No se es una aplicacion
-multi-usuario, ya que funcion principar es la de organizar y detectar documentos duplicados mediante el
-hash de cada archivo.
+multi-usuario, ya que funcion principar es la de organizar y detectar documentos duplicados mediante el hash de cada archivo.
+Una de sus funciones principales es la registrar los contenidos de los documentos, para que el
+usuario pueda buscar contenidos especificos dentro los diferentes documentos.
 Ofrece funcionalidades para agregar, ver, actualizar y eliminar documentos de la biblioteca.
 
 ## Características
