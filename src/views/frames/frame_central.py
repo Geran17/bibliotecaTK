@@ -11,6 +11,7 @@ from views.dialogs.dialog_administrar_palabras_clave import (
 from views.dialogs.dialog_administrar_categorias import (
     DialogAdministrarCategorias,
 )
+from views.dialogs.dialog_administrar_documentos import DialogAdministrarDocumentos
 
 
 class FrameCentral(Frame):
@@ -73,28 +74,38 @@ class FrameCentral(Frame):
 
         label_importar = Label(
             self.panel_archivos,
-            text="📥 Importar",
+            text="□ 📥 Importar",
             padding=(1, 1),
-            font=("Arial", 10),
+            font=("Arial", 10, "bold"),
             foreground="gray",
         )
         label_importar.bind("<Double-Button-1>", self.on_dialog_importar)
         label_importar.pack(side=TOP, fill=X, padx=1, pady=1)
 
+        label_documentos = Label(
+            self.panel_archivos,
+            text="□ 📜 Documentos",
+            padding=(1, 1),
+            font=("Arial", 10, "bold"),
+            foreground="gray",
+        )
+        label_documentos.bind("<Double-Button-1>", self.on_dialog_documentos)
+        label_documentos.pack(side=TOP, fill=X, padx=1, pady=1)
+
         label_metadato = Label(
             self.panel_archivos,
-            text="📝 Metadato",
+            text="□ 📝 Metadato",
             padding=(1, 1),
-            font=("Arial", 10),
+            font=("Arial", 10, "bold"),
             foreground="gray",
         )
         label_metadato.pack(side=TOP, fill=X, padx=1, pady=1)
 
         label_cerrar = Label(
             self.panel_archivos,
-            text="⏻ Cerrar",
+            text="□ ⏻ Cerrar",
             padding=(1, 1),
-            font=("Arial", 10),
+            font=("Arial", 10, "bold"),
             foreground="gray",
         )
         label_cerrar.pack(side=TOP, fill=X, padx=1, pady=1)
@@ -113,9 +124,9 @@ class FrameCentral(Frame):
 
         label_coleccion = Label(
             self.panel_organizar,
-            text="📚 Coleccion",
+            text="□ 📚 Coleccion",
             padding=(1, 1),
-            font=("Arial", 10),
+            font=("Arial", 10, "bold"),
             foreground="gray",
         )
         label_coleccion.bind("<Double-Button-1>", self.on_dialog_colecciones)
@@ -123,9 +134,9 @@ class FrameCentral(Frame):
 
         label_grupo = Label(
             self.panel_organizar,
-            text="🗂️ Grupo",
+            text="□ 🗂️ Grupo",
             padding=(1, 1),
-            font=("Arial", 10),
+            font=("Arial", 10, "bold"),
             foreground="gray",
         )
         label_grupo.bind("<Double-Button-1>", self.on_dialog_grupos)
@@ -133,9 +144,9 @@ class FrameCentral(Frame):
 
         label_categoria = Label(
             self.panel_organizar,
-            text="🗂️ Categoría",
+            text="□ 🗃️ Categoría",
             padding=(1, 1),
-            font=("Arial", 10),
+            font=("Arial", 10, "bold"),
             foreground="gray",
         )
         label_categoria.bind("<Double-Button-1>", self.on_dialog_categorias)
@@ -143,9 +154,9 @@ class FrameCentral(Frame):
 
         label_etiqueta = Label(
             self.panel_organizar,
-            text="🏷️ Etiqueta",
+            text="□ 🏷️ Etiqueta",
             padding=(1, 1),
-            font=("Arial", 10),
+            font=("Arial", 10, "bold"),
             foreground="gray",
         )
         label_etiqueta.bind("<Double-Button-1>", self.on_dialog_etiquetas)
@@ -153,9 +164,9 @@ class FrameCentral(Frame):
 
         label_palabra_clave = Label(
             self.panel_organizar,
-            text="🔑 Palabra clave",
+            text="□ 🔑 Palabra clave",
             padding=(1, 1),
-            font=("Arial", 10),
+            font=("Arial", 10, "bold"),
             foreground="gray",
         )
         label_palabra_clave.bind("<Double-Button-1>", self.on_dialog_palabras_clave)
@@ -163,9 +174,9 @@ class FrameCentral(Frame):
 
         label_favorito = Label(
             self.panel_organizar,
-            text="⭐ Favorito",
+            text="□ ⭐ Favorito",
             padding=(1, 1),
-            font=("Arial", 10),
+            font=("Arial", 10, "bold"),
             foreground="gray",
         )
         # label_favorito.bind("<Double-Button-1>", self.on_dialog_favorito)
@@ -283,5 +294,11 @@ class FrameCentral(Frame):
     def on_dialog_categorias(self, event):
         """Abre el diálogo para administrar categorías."""
         dialog = DialogAdministrarCategorias()
+        dialog.update_idletasks()
+        dialog.grab_set()
+
+    def on_dialog_documentos(self, event):
+        """Abre el diálogo para administrar categorías."""
+        dialog = DialogAdministrarDocumentos()
         dialog.update_idletasks()
         dialog.grab_set()

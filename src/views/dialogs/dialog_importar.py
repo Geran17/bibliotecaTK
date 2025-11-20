@@ -293,42 +293,42 @@ class DialogImportar(Toplevel):
         self.btn_abrir_documento = Button(
             frame_buttons, text="Abrir", command=self.on_abrir_archivo
         )
-        self.btn_abrir_documento.pack(side=LEFT, fill=X, expand=TRUE, padx=1, pady=1)
+        self.btn_abrir_documento.pack(side=LEFT, fill=X, expand=TRUE, padx=0, pady=0)
 
         self.btn_renombrar_documento = Button(
             frame_buttons, text="Renombrar", command=self.on_renombrar_archivo
         )
-        self.btn_renombrar_documento.pack(side=LEFT, fill=X, expand=TRUE, padx=1, pady=1)
+        self.btn_renombrar_documento.pack(side=LEFT, fill=X, expand=TRUE, padx=0, pady=0)
 
         self.btn_copiar_documento = Button(
             frame_buttons, text="Copiar", command=self.on_copiar_archivo
         )
-        self.btn_copiar_documento.pack(side=LEFT, fill=X, expand=TRUE, padx=1, pady=1)
+        self.btn_copiar_documento.pack(side=LEFT, fill=X, expand=TRUE, padx=0, pady=0)
 
         self.btn_mover_documento = Button(
             frame_buttons, text="Mover", command=self.on_mover_archivo
         )
-        self.btn_mover_documento.pack(side=LEFT, fill=X, expand=TRUE, padx=1, pady=1)
+        self.btn_mover_documento.pack(side=LEFT, fill=X, expand=TRUE, padx=0, pady=0)
 
         self.btn_eliminar_documento = Button(
             frame_buttons, text="Eliminar", command=self.on_eliminar_archivo
         )
-        self.btn_eliminar_documento.pack(side=LEFT, fill=X, expand=TRUE, padx=1, pady=1)
+        self.btn_eliminar_documento.pack(side=LEFT, fill=X, expand=TRUE, padx=0, pady=0)
 
         self.btn_papelera_documento = Button(
             frame_buttons, text="Papelera", command=self.on_papelera_archivo
         )
-        self.btn_papelera_documento.pack(side=LEFT, fill=X, expand=TRUE, padx=1, pady=1)
+        self.btn_papelera_documento.pack(side=LEFT, fill=X, expand=TRUE, padx=0, pady=0)
 
         self.btn_convertir_minusculas = Button(
             frame_buttons, text="Minusculas", command=self.on_convertir_minuscula
         )
-        self.btn_convertir_minusculas.pack(side=LEFT, fill=X, expand=TRUE, padx=1, pady=1)
+        self.btn_convertir_minusculas.pack(side=LEFT, fill=X, expand=TRUE, padx=0, pady=0)
 
         self.btn_convertir_mayusculas = Button(
             frame_buttons, text="Mayusculas", command=self.on_convertir_mayuscula
         )
-        self.btn_convertir_mayusculas.pack(side=LEFT, fill=X, expand=TRUE, padx=1, pady=1)
+        self.btn_convertir_mayusculas.pack(side=LEFT, fill=X, expand=TRUE, padx=0, pady=0)
 
         # Label Progreso
         self.lbl_progreso = Label(self.label_frame, padding=(1, 1), text="Progreso")

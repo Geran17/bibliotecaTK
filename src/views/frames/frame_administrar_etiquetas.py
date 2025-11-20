@@ -131,25 +131,25 @@ class AdministrarEtiquetas(Frame):
         frame_buttons.pack(side=TOP, fill=X, padx=1, pady=1)
 
         btn_aplicar = Button(frame_buttons, text="Aplicar", command=self.on_aplicar)
-        btn_aplicar.pack(side=LEFT, fill=X, padx=1, pady=1, expand=TRUE)
+        btn_aplicar.pack(side=LEFT, fill=X, padx=0, pady=0, expand=TRUE)
 
         btn_eliminar = Button(frame_buttons, text="Eliminar", command=self.on_eliminar)
-        btn_eliminar.pack(side=LEFT, fill=X, padx=1, pady=1, expand=TRUE)
+        btn_eliminar.pack(side=LEFT, fill=X, padx=0, pady=0, expand=TRUE)
 
         btn_nuevo = Button(frame_buttons, text="Nuevo", command=self.on_nuevo)
-        btn_nuevo.pack(side=LEFT, fill=X, padx=1, pady=1, expand=TRUE)
+        btn_nuevo.pack(side=LEFT, fill=X, padx=0, pady=0, expand=TRUE)
 
         btn_primero = Button(frame_buttons, text="|<", command=self.on_primer_elemento)
-        btn_primero.pack(side=LEFT, fill=X, padx=1, pady=1)
+        btn_primero.pack(side=LEFT, fill=X, padx=0, pady=0)
 
         btn_anterior = Button(frame_buttons, text="<", command=self.on_anterior_elemento)
-        btn_anterior.pack(side=LEFT, fill=X, padx=1, pady=1)
+        btn_anterior.pack(side=LEFT, fill=X, padx=0, pady=0)
 
         btn_siguiente = Button(frame_buttons, text=">", command=self.on_siguiente_elemento)
-        btn_siguiente.pack(side=LEFT, fill=X, padx=1, pady=1)
+        btn_siguiente.pack(side=LEFT, fill=X, padx=0, pady=0)
 
         btn_ultimo = Button(frame_buttons, text=">|", command=self.on_ultimo_elemento)
-        btn_ultimo.pack(side=LEFT, fill=X, padx=1, pady=1)
+        btn_ultimo.pack(side=LEFT, fill=X, padx=0, pady=0)
 
     def tab_explorar(self, frame):
         self.table_view = Tableview(frame, searchable=True, coldata=self.coldata)
