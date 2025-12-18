@@ -1,11 +1,65 @@
+from PIL import Image, ImageTk
+from pdf2image import convert_from_path
 import exiftool
 import subprocess
+import fitz
+import requests
+from datetime import datetime as dt
 from pathlib import Path
 from os import rename, mkdir
 from os.path import exists, isfile, isdir, join
 from shutil import copy2, move
 from send2trash import send2trash  # type: ignore
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
+
+
+def obtener_datos_libros(isbn: str) -> Dict[str, Any]:
+
+    # Limpiar el ISBN (opcional pero recomendado)
+    isbn_limpio = isbn.replace('-', '').replace(' ', '').strip()
+
+    url = f"https://www.googleapis.com/books/v1/volumes?q=isbn:{isbn_limpio}"
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        data = response.json()
+
+        if data.get('totalItems', 0) == 0:
+            return None
+
+        # Tomar el primer resultado
+        libro = data['items'][0]['volumeInfo']
+
+        # Extraer ISBN (preferir ISBN-13)
+        isbn_final = isbn
+        if 'industryIdentifiers' in libro:
+            for identifier in libro['industryIdentifiers']:
+                if identifier['type'] == 'ISBN_13':
+                    isbn_final = identifier['identifier']
+                    break
+
+        # Extraer año de publicación
+        ano = None
+        if 'publishedDate' in libro:
+            ano = int(libro['publishedDate'].split('-')[0])
+
+        # Preparar datos
+        datos = {
+            'titulo': libro.get('title', ''),
+            'autores': ', '.join(libro.get('authors', [])) if libro.get('authors') else None,
+            'ano_publicacion': ano,
+            'editorial': libro.get('publisher'),
+            'numero_edicion': libro.get('edition'),
+            'idioma': libro.get('language'),
+            'numero_paginas': libro.get('pageCount'),
+        }
+
+        return datos
+
+    except Exception as e:
+        print(f"Error al obtener datos: {e}")
+        return None
+    return data
 
 
 def eliminar_archivo(ruta_destino: str) -> bool:
@@ -185,7 +239,6 @@ def mover_archivo(ruta_origen: str, ruta_destino: str) -> bool:
     """
     if exists(ruta_origen):
         try:
-            # Corrección de sintaxis: se eliminó el ':' al final de la llamada a la función move
             move(ruta_origen, ruta_destino)
             return True
         except Exception as e:
@@ -243,23 +296,65 @@ def obtener_metadatos(ruta_origen: str) -> Dict:
         return {}
 
 
-def abrir_archivo(ruta_origen: str):
+def editar_metadato(clave: str, valor: str, path_file: str) -> bool:
     """
-    Abre un archivo con la aplicación predeterminada del sistema.
-
-    Utiliza `xdg-open` en sistemas Linux. En otros sistemas operativos,
-    el comportamiento puede variar o no funcionar.
+    Edita un metadato específico de un archivo usando ExifTool.
 
     Args:
-        ruta_origen (str): La ruta completa del archivo a abrir.
+        clave (str): La clave del metadato a editar (ej: "PDF:Title").
+        valor (str): El nuevo valor para el metadato.
+        path_file (str): La ruta completa del archivo a modificar.
+
+    Returns:
+        bool: True si la operación fue exitosa, False en caso contrario.
     """
-    if exists(ruta_origen) and isfile(ruta_origen):
+    if exists(path_file):
+        comando = ['exiftool', f'-{clave}={valor}', '-overwrite_original', path_file]
         try:
-            subprocess.run(['xdg-open', ruta_origen], check=True)
-        except Exception as e:
-            print(f"Error al tratar de abrir el archivo: {e}")
+            # Ejecutar el comando
+            subprocess.run(comando, capture_output=True, text=True, check=True, encoding='utf-8')
+            return True
+        except subprocess.CalledProcessError as e:
+            print(f"Error al ejecutar ExifTool: {e}")
+            print(f"Salida de error: {e.stderr}")
+            return False
+        except FileNotFoundError:
+            print("Error: ExifTool no está instalado o no está en el PATH del sistema")
+            # Podrías mostrar un messagebox aquí si lo deseas.
+            return False
     else:
+        raise FileExistsError("No existe el archivo")
+
+
+def abrir_archivo(ruta_origen: str):
+    """
+    Abre un archivo con la aplicación predeterminada del sistema de forma multiplataforma.
+
+    Args:
+            ruta_origen (str): La ruta completa del archivo a abrir.
+    """
+    if not exists(ruta_origen):
         print(f"No existe el archivo en la ruta de origen: {ruta_origen}")
+        return
+
+    try:
+        import os
+        import sys
+
+        if sys.platform == "win32":
+            os.startfile(ruta_origen)
+        elif sys.platform == "darwin":  # macOS
+            subprocess.run(["open", ruta_origen], check=True)
+        else:  # Linux y otros Unix-like
+            # Intentar con diferentes comandos en orden de preferencia
+            # kioclient5 es el preferido en KDE para evitar problemas.
+            for cmd in ["kioclient5 exec", "xdg-open", "gvfs-open", "gnome-open"]:
+                if subprocess.run(["which", cmd], capture_output=True).returncode == 0:
+                    subprocess.run([cmd, ruta_origen], check=True)
+                    return
+            print("No se encontró un comando para abrir archivos (xdg-open, gvfs-open, etc.).")
+    except Exception as e:
+        print(f"Error al tratar de abrir el archivo '{ruta_origen}': {e}")
 
 
 def obtener_datos_documento(ruta_origen: str) -> Dict[str, Any]:
@@ -320,3 +415,117 @@ def hash_sha256(archivo: str) -> Optional[str]:
     except subprocess.CalledProcessError as e:
         print(f"Error al calcular hash: {e}")
         return None
+
+
+def pdf_primera_pagina_a_png(pdf_path, output_path, dpi=72, thumbnail_size=(150, 200)):
+    """
+    Extrae la primera página de un PDF y la guarda como PNG miniatura.
+
+    Args:
+        pdf_path (str): Ruta al archivo PDF
+        output_path (str): Ruta donde guardar el PNG
+        dpi (int): Resolución (72 para miniaturas, 150 para calidad)
+        thumbnail_size (tuple): (ancho, alto) para miniatura
+
+    Returns:
+        bool: True si fue exitoso, False en caso contrario
+    """
+    try:
+        doc = fitz.open(pdf_path)
+        pagina = doc[0]
+
+        zoom = dpi / 72
+        mat = fitz.Matrix(zoom, zoom)
+        pix = pagina.get_pixmap(matrix=mat)
+
+        # Guardar temporalmente
+        pix.save(output_path)
+
+        # Redimensionar para miniatura
+        img = Image.open(output_path)
+        img.thumbnail(thumbnail_size, Image.Resampling.LANCZOS)
+        img.save(output_path, optimize=True, quality=85)
+
+        doc.close()
+        return True
+
+    except Exception as e:
+        print(f"Error al extraer portada: {e}")
+        return False
+
+
+def pdf_miniatura(pdf_path, output_path=None, size=(150, 200), dpi=72):
+    """
+    Extrae la primera página del PDF como miniatura optimizada.
+    Ideal para TableView, listas, previews pequeñas.
+
+    Args:
+        pdf_path (str): Ruta al archivo PDF
+        output_path (str, optional): Ruta donde guardar. Si es None, retorna PhotoImage
+        size (tuple): (ancho, alto) de la miniatura. Default: (150, 200)
+        dpi (int): Resolución baja para rapidez. Default: 72
+
+    Returns:
+        ImageTk.PhotoImage si output_path es None, bool si se guarda archivo
+    """
+    try:
+        # Convertir solo primera página con baja resolución
+        imagenes = convert_from_path(pdf_path, dpi=dpi, first_page=1, last_page=1)
+
+        if not imagenes:
+            return None if output_path is None else False
+
+        img = imagenes[0]
+
+        # Redimensionar a miniatura manteniendo proporción
+        img.thumbnail(size, Image.Resampling.LANCZOS)
+
+        # Si se especifica ruta, guardar archivo
+        if output_path:
+            img.save(output_path, 'PNG', optimize=True, quality=85)
+            return True
+
+        # Si no, retornar PhotoImage para uso directo en tkinter
+        return ImageTk.PhotoImage(img)
+
+    except Exception as e:
+        return None if output_path is None else False
+
+
+def pdf_normal(pdf_path, output_path=None, max_size=(800, 1100), dpi=150):
+    """
+    Extrae la primera página del PDF en tamaño normal con buena calidad.
+    Ideal para visualización completa, impresión, vista detallada.
+
+    Args:
+        pdf_path (str): Ruta al archivo PDF
+        output_path (str, optional): Ruta donde guardar. Si es None, retorna PhotoImage
+        max_size (tuple): Tamaño máximo (ancho, alto). Default: (800, 1100)
+        dpi (int): Resolución media-alta para calidad. Default: 150
+
+    Returns:
+        ImageTk.PhotoImage si output_path es None, bool si se guarda archivo
+    """
+    try:
+        # Convertir primera página con buena resolución
+        imagenes = convert_from_path(pdf_path, dpi=dpi, first_page=1, last_page=1)
+
+        if not imagenes:
+            return None if output_path is None else False
+
+        img = imagenes[0]
+
+        # Redimensionar si excede el tamaño máximo
+        if max_size:
+            img.thumbnail(max_size, Image.Resampling.LANCZOS)
+
+        # Si se especifica ruta, guardar archivo
+        if output_path:
+            img.save(output_path, 'PNG', optimize=True, quality=95)
+            return True
+
+        # Si no, retornar PhotoImage para uso directo en tkinter
+        return ImageTk.PhotoImage(img)
+
+    except Exception as e:
+        return None if output_path is None else False

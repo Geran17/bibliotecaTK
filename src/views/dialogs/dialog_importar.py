@@ -14,6 +14,7 @@ from ttkbootstrap import (
     Entry,
     StringVar,
 )
+from ttkbootstrap.tooltip import ToolTip
 from ttkbootstrap.constants import *
 from ttkbootstrap.tableview import Tableview
 from tkinter import filedialog
@@ -74,9 +75,6 @@ class DialogImportar(Toplevel):
         # variable para almacenar el focus
         self.item_focus = ""
 
-        self.estilo = Style()
-        self.estilo.configure('Custom.TButton', justify=LEFT, anchor=W, bordercolor="SteelBlue1")
-
         # creamos los widgets
         self.crear_widgets()
 
@@ -105,10 +103,12 @@ class DialogImportar(Toplevel):
         """Frame Superior"""
 
         # Menu
-        self.btn_menu = Button(frame, text="Menu", command=self.on_toggle_menu)
+        self.btn_menu = Button(
+            frame, text="☰", command=self.on_toggle_menu, style="primary.Toolbutton"
+        )
         self.btn_menu.pack(side=LEFT, padx=1, pady=1)
 
-        # Seleccion
+        # Selección
         self.cbx_operaciones = Combobox(frame, values=self.operaciones, state=READONLY)
         self.cbx_operaciones.pack(side=LEFT, fill=X, expand=True, padx=1, pady=1)
         self.cbx_operaciones.current(0)
@@ -139,134 +139,123 @@ class DialogImportar(Toplevel):
         self.frame_menu.pack(side=LEFT, fill=Y, padx=1, pady=1)
         self.frame_menu.pack_propagate(False)
 
-        # Todos
-        self.lbl_todos = Label(
-            self.frame_menu,
-            text="Todos los documentos",
-            font=("Arial", 10),
-            foreground="gray",
+        # --- Sección "Todos los documentos" ---
+        lf_todos = LabelFrame(self.frame_menu, text="Todos los documentos", padding=5)
+        lf_todos.pack(side=TOP, fill=X, padx=5, pady=5)
+
+        btn_copiar_todos = Button(
+            lf_todos, text="Copiar todos", command=self.on_copiar_todos, style="Link.TButton"
         )
-        self.lbl_todos.pack(side=TOP, fill=X, padx=2, pady=2)
+        btn_copiar_todos.pack(side=TOP, fill=X, padx=2, pady=2)
+        ToolTip(btn_copiar_todos, "Copiar todos los archivos de la tabla a una nueva ubicación")
 
-        # Seprador
-        self.spt_todos = Separator(self.frame_menu, orient=HORIZONTAL)
-        self.spt_todos.pack(side=TOP, fill=X, padx=2, pady=2)
-
-        # Copiar todos
-        self.btn_copiar_todos = Button(
-            self.frame_menu, text="Copiar todos", command=self.on_copiar_todos
+        btn_mover_todos = Button(
+            lf_todos, text="Mover todos", command=self.on_mover_todos, style="Link.TButton"
         )
-        self.btn_copiar_todos.config(style="Custom.TButton")
-        self.btn_copiar_todos.pack(side=TOP, fill=X, padx=1, pady=1)
+        btn_mover_todos.pack(side=TOP, fill=X, padx=2, pady=2)
+        ToolTip(btn_mover_todos, "Mover todos los archivos de la tabla a una nueva ubicación")
 
-        # Mover todos
-        self.btn_mover_todos = Button(
-            self.frame_menu, text="Mover todos", command=self.on_mover_todos
+        btn_eliminar_todos = Button(
+            lf_todos, text="Eliminar todos", command=self.on_eliminar_todos, style="Link.TButton"
         )
-        self.btn_mover_todos.config(style="Custom.TButton")
-        self.btn_mover_todos.pack(side=TOP, fill=X, padx=1, pady=1)
+        btn_eliminar_todos.pack(side=TOP, fill=X, padx=2, pady=2)
+        ToolTip(btn_eliminar_todos, "Eliminar permanentemente todos los archivos de la tabla")
 
-        # Eliminar todos
-        self.btn_eliminar_todos = Button(
-            self.frame_menu, text="Eliminar todos", command=self.on_eliminar_todos
+        btn_papelera_todos = Button(
+            lf_todos, text="Papelera todos", command=self.on_papelera_todos, style="Link.TButton"
         )
-        self.btn_eliminar_todos.config(style="Custom.TButton")
-        self.btn_eliminar_todos.pack(side=TOP, fill=X, padx=1, pady=1)
-
-        # Papalera todos
-        self.btn_papelera_todos = Button(
-            self.frame_menu, text="Papelera todos", command=self.on_papelera_todos
+        btn_papelera_todos.pack(side=TOP, fill=X, padx=2, pady=2)
+        ToolTip(
+            btn_papelera_todos, "Mover todos los archivos de la tabla a la papelera de reciclaje"
         )
-        self.btn_papelera_todos.config(style="Custom.TButton")
-        self.btn_papelera_todos.pack(side=TOP, fill=X, padx=1, pady=1)
 
-        # Existe
-        self.lbl_existe = Label(
-            self.frame_menu,
-            text="Existentes en la biblioteca",
-            font=("Arial", 10),
-            foreground="gray",
+        # --- Sección "Existentes en la biblioteca" ---
+        lf_existentes = LabelFrame(self.frame_menu, text="Existentes en la biblioteca", padding=5)
+        lf_existentes.pack(side=TOP, fill=X, padx=5, pady=5)
+
+        btn_copiar_existentes = Button(
+            lf_existentes,
+            text="Copiar existentes",
+            command=self.on_copiar_existentes,
+            style="Link.TButton",
         )
-        self.lbl_existe.pack(side=TOP, fill=X, padx=2, pady=2)
+        btn_copiar_existentes.pack(side=TOP, fill=X, padx=2, pady=2)
+        ToolTip(btn_copiar_existentes, "Copiar solo los archivos que ya existen en la biblioteca")
 
-        # Seprador
-        self.spt_existe = Separator(self.frame_menu, orient=HORIZONTAL)
-        self.spt_existe.pack(side=TOP, fill=X, padx=2, pady=2)
-
-        # Copiar Existentes
-        self.btn_copiar_existentes = Button(
-            self.frame_menu, text="Copiar existentes", command=self.on_copiar_existentes
+        btn_mover_existentes = Button(
+            lf_existentes,
+            text="Mover existentes",
+            command=self.on_mover_existentes,
+            style="Link.TButton",
         )
-        self.btn_copiar_existentes.config(style="Custom.TButton")
-        self.btn_copiar_existentes.pack(side=TOP, fill=X, padx=1, pady=1)
+        btn_mover_existentes.pack(side=TOP, fill=X, padx=2, pady=2)
+        ToolTip(btn_mover_existentes, "Mover solo los archivos que ya existen en la biblioteca")
 
-        # Mover Existentes
-        self.btn_mover_existentes = Button(
-            self.frame_menu, text="Mover existentes", command=self.on_mover_existentes
+        btn_eliminar_existentes = Button(
+            lf_existentes,
+            text="Eliminar existentes",
+            command=self.on_eliminar_existentes,
+            style="Link.TButton",
         )
-        self.btn_mover_existentes.config(style="Custom.TButton")
-        self.btn_mover_existentes.pack(side=TOP, fill=X, padx=1, pady=1)
-
-        # Eliminar Existentes
-        self.btn_eliminar_existentes = Button(
-            self.frame_menu, text="Eliminar existentes", command=self.on_eliminar_existentes
+        btn_eliminar_existentes.pack(side=TOP, fill=X, padx=2, pady=2)
+        ToolTip(
+            btn_eliminar_existentes,
+            "Eliminar permanentemente solo los archivos que ya existen en la biblioteca",
         )
-        self.btn_eliminar_existentes.config(style="Custom.TButton")
-        self.btn_eliminar_existentes.pack(side=TOP, fill=X, padx=1, pady=1)
 
-        # Papelera Existentes
-        self.btn_papelera_existentes = Button(
-            self.frame_menu, text="Papelera existentes", command=self.on_papelera_existentes
+        btn_papelera_existentes = Button(
+            lf_existentes,
+            text="Papelera existentes",
+            command=self.on_papelera_existentes,
+            style="Link.TButton",
         )
-        self.btn_papelera_existentes.config(style="Custom.TButton")
-        self.btn_papelera_existentes.pack(side=TOP, fill=X, padx=1, pady=1)
-
-        # Comparar Existente
-        self.btn_compara_existentes = Button(
-            self.frame_menu, text="Comparar existentes", command=self.on_eliminar_existentes
+        btn_papelera_existentes.pack(side=TOP, fill=X, padx=2, pady=2)
+        ToolTip(
+            btn_papelera_existentes,
+            "Mover a la papelera solo los archivos que ya existen en la biblioteca",
         )
-        self.btn_compara_existentes.config(style="Custom.TButton")
-        self.btn_compara_existentes.pack(side=TOP, fill=X, padx=1, pady=1)
 
-        # Label Table
-        self.lbl_tabla = Label(
-            self.frame_menu,
-            text="Tabla",
-            font=("Arial", 10),
-            foreground="gray",
+        btn_compara_existentes = Button(
+            lf_existentes,
+            text="Comparar existentes",
+            command=self.on_eliminar_existentes,
+            style="Link.TButton",
         )
-        self.lbl_tabla.pack(side=TOP, fill=X, padx=2, pady=2)
+        btn_compara_existentes.pack(side=TOP, fill=X, padx=2, pady=2)
+        ToolTip(btn_compara_existentes, "Comparar archivos existentes (función no implementada)")
 
-        # Seprador
-        self.spt_table = Separator(self.frame_menu, orient=HORIZONTAL)
-        self.spt_table.pack(side=TOP, fill=X, padx=2, pady=2)
+        # --- Sección "Tabla" ---
+        lf_tabla = LabelFrame(self.frame_menu, text="Operaciones de Tabla", padding=5)
+        lf_tabla.pack(side=TOP, fill=X, padx=5, pady=5)
 
-        # Eliminar fila seleccionada
-        self.btn_eliminar_fila = Button(
-            self.frame_menu,
-            text="Eliminar filas seleccionada",
+        btn_eliminar_fila = Button(
+            lf_tabla,
+            text="Eliminar filas seleccionadas",
             command=self.on_eliminar_filas_seleccionadas,
+            style="Link.TButton",
         )
-        self.btn_eliminar_fila.config(style="Custom.TButton")
-        self.btn_eliminar_fila.pack(side=TOP, fill=X, padx=1, pady=1)
+        btn_eliminar_fila.pack(side=TOP, fill=X, padx=2, pady=2)
+        ToolTip(btn_eliminar_fila, "Quitar de la tabla las filas seleccionadas")
 
-        # Eliminar todas las filas
-        self.btn_eliminar_filas_existentes = Button(
-            self.frame_menu,
+        btn_eliminar_filas_existentes = Button(
+            lf_tabla,
             text="Eliminar filas existentes",
             command=self.on_eliminar_filas_existentes,
+            style="Link.TButton",
         )
-        self.btn_eliminar_filas_existentes.config(style="Custom.TButton")
-        self.btn_eliminar_filas_existentes.pack(side=TOP, fill=X, padx=1, pady=1)
+        btn_eliminar_filas_existentes.pack(side=TOP, fill=X, padx=2, pady=2)
+        ToolTip(
+            btn_eliminar_filas_existentes, "Quitar de la tabla las filas marcadas como existentes"
+        )
 
-        # Eliminar todas las filas
-        self.btn_eliminar_filas = Button(
-            self.frame_menu,
-            text="Eliminar todas las filas",
+        btn_eliminar_filas = Button(
+            lf_tabla,
+            text="Limpiar tabla",
             command=lambda: self.table_view.delete_rows(),
+            style="Link.TButton",
         )
-        self.btn_eliminar_filas.config(style="Custom.TButton")
-        self.btn_eliminar_filas.pack(side=TOP, fill=X, padx=1, pady=1)
+        btn_eliminar_filas.pack(side=TOP, fill=X, padx=2, pady=2)
+        ToolTip(btn_eliminar_filas, "Quitar todas las filas de la tabla")
 
         # Frame Table
         self.frame_table = Frame(frame, padding=(1, 1))
@@ -289,46 +278,48 @@ class DialogImportar(Toplevel):
         frame_buttons = Frame(self.label_frame, padding=(1, 1))
         frame_buttons.pack(side=TOP, fill=X, padx=1, pady=1)
 
+        frame_buttons.columnconfigure((0, 1, 2, 3), weight=1)
+
         # Abrir documentos
         self.btn_abrir_documento = Button(
             frame_buttons, text="Abrir", command=self.on_abrir_archivo
         )
-        self.btn_abrir_documento.pack(side=LEFT, fill=X, expand=TRUE, padx=0, pady=0)
+        self.btn_abrir_documento.grid(row=0, column=0, padx=2, pady=2, sticky=EW)
 
         self.btn_renombrar_documento = Button(
             frame_buttons, text="Renombrar", command=self.on_renombrar_archivo
         )
-        self.btn_renombrar_documento.pack(side=LEFT, fill=X, expand=TRUE, padx=0, pady=0)
+        self.btn_renombrar_documento.grid(row=0, column=1, padx=2, pady=2, sticky=EW)
 
         self.btn_copiar_documento = Button(
             frame_buttons, text="Copiar", command=self.on_copiar_archivo
         )
-        self.btn_copiar_documento.pack(side=LEFT, fill=X, expand=TRUE, padx=0, pady=0)
+        self.btn_copiar_documento.grid(row=0, column=2, padx=2, pady=2, sticky=EW)
 
         self.btn_mover_documento = Button(
             frame_buttons, text="Mover", command=self.on_mover_archivo
         )
-        self.btn_mover_documento.pack(side=LEFT, fill=X, expand=TRUE, padx=0, pady=0)
+        self.btn_mover_documento.grid(row=0, column=3, padx=2, pady=2, sticky=EW)
 
         self.btn_eliminar_documento = Button(
             frame_buttons, text="Eliminar", command=self.on_eliminar_archivo
         )
-        self.btn_eliminar_documento.pack(side=LEFT, fill=X, expand=TRUE, padx=0, pady=0)
+        self.btn_eliminar_documento.grid(row=1, column=0, padx=2, pady=2, sticky=EW)
 
         self.btn_papelera_documento = Button(
             frame_buttons, text="Papelera", command=self.on_papelera_archivo
         )
-        self.btn_papelera_documento.pack(side=LEFT, fill=X, expand=TRUE, padx=0, pady=0)
+        self.btn_papelera_documento.grid(row=1, column=1, padx=2, pady=2, sticky=EW)
 
         self.btn_convertir_minusculas = Button(
             frame_buttons, text="Minusculas", command=self.on_convertir_minuscula
         )
-        self.btn_convertir_minusculas.pack(side=LEFT, fill=X, expand=TRUE, padx=0, pady=0)
+        self.btn_convertir_minusculas.grid(row=1, column=2, padx=2, pady=2, sticky=EW)
 
         self.btn_convertir_mayusculas = Button(
             frame_buttons, text="Mayusculas", command=self.on_convertir_mayuscula
         )
-        self.btn_convertir_mayusculas.pack(side=LEFT, fill=X, expand=TRUE, padx=0, pady=0)
+        self.btn_convertir_mayusculas.grid(row=1, column=3, padx=2, pady=2, sticky=EW)
 
         # Label Progreso
         self.lbl_progreso = Label(self.label_frame, padding=(1, 1), text="Progreso")

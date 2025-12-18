@@ -7,6 +7,10 @@ name = "pypi"
 ttkbootstrap = "*"
 send2trash = "*"
 pyexiftool = "*"
+requests = "*"
+fitz = "*"
+pymupdf = "*"
+pdf2image = "*"
 
 [dev-packages]
 pytest = "*"

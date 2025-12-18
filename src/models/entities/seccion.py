@@ -1,6 +1,7 @@
 from typing import Optional
-from src.models.dtos.seccion_dto import SeccionDTO
-from src.models.daos.seccion_dao import SeccionDAO
+from models.dtos.seccion_dto import SeccionDTO
+from models.daos.seccion_dao import SeccionDAO
+from typing import List
 
 
 class Seccion(SeccionDTO):
@@ -131,3 +132,30 @@ class Seccion(SeccionDTO):
         """
         params = (self.id_capitulo, self.titulo)
         return self._dao.existe(params=params)
+
+    def es_hijo(self) -> bool:
+        params = (self.id,)
+        return self._dao.es_hijo(params=params)
+
+    def es_padre(self) -> bool:
+        params = (self.id_padre,)
+        return self._dao.es_padre(params=params)
+
+    def hijos_directos(self) -> List['Seccion']:
+        lista = []
+        params = (self.id_padre,)
+        lista_hijos = self._dao.hijos_directos(params=params)
+        if lista_hijos:
+            for dato in lista_hijos:
+                seccion = Seccion(
+                    id=dato['id'],
+                    id_capitulo=dato['id_capitulo'],
+                    titulo=dato['titulo'],
+                    nivel=dato['nivel'],
+                    id_padre=dato['id_padre'],
+                    numero_pagina=dato['numero_pagina'],
+                    creado_en=dato['creado_en'],
+                    actualizado_en=dato['actualizado_en'],
+                )
+                lista.append(seccion)
+        return lista

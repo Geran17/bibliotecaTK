@@ -26,6 +26,7 @@ class AppTK:
         # intemamos establecer el tema
         try:
             self.raiz.style.theme_use(tema_user)
+            self.raiz.style.configure('.', font=('Noto Sans', 9))
         except Exception as e:
             print(f"Ocurrio un error al establcer el tema: {e}")
             self.raiz.style.theme_use("cosmo")

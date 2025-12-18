@@ -1,6 +1,6 @@
 from typing import Optional
-from src.models.dtos.capitulo_dto import CapituloDTO
-from src.models.daos.capitulo_dao import CapituloDAO
+from models.dtos.capitulo_dto import CapituloDTO
+from models.daos.capitulo_dao import CapituloDAO
 
 
 class Capitulo(CapituloDTO):

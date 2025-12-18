@@ -1,5 +1,6 @@
-from ttkbootstrap import Frame, Label, Separator, Checkbutton, Notebook, IntVar, Style
+from ttkbootstrap import Frame, Button, Separator, Checkbutton, Notebook, IntVar, Style
 from ttkbootstrap.constants import *
+from ttkbootstrap.tooltip import ToolTip
 from models.controllers.configuracion_controller import ConfiguracionController
 from views.dialogs.dialog_importar import DialogImportar
 from views.dialogs.dialog_administrar_coleccion import DialogAdministrarColeccion
@@ -12,6 +13,14 @@ from views.dialogs.dialog_administrar_categorias import (
     DialogAdministrarCategorias,
 )
 from views.dialogs.dialog_administrar_documentos import DialogAdministrarDocumentos
+from views.dialogs.dialog_configurar_vistas import DialogConfigurarVistas
+from views.frames.frame_bienvenida import FrameBienvenida
+from views.frames.frame_visualizar_documentos import FrameVisualizarDocumentos
+from views.frames.frame_favoritos import FrameFavoritos
+from views.frames.frame_visualizar_biblioteca import FrameVisualizarBiblioteca
+from views.frames.frame_visualizar_contenido import FrameVisualizarContenido
+from views.frames.frame_visor_metadatos import FrameVisorMetadatos
+from views.frames.frame_visualizar_estante import FrameVisualizarEstante
 
 
 class FrameCentral(Frame):
@@ -34,6 +43,12 @@ class FrameCentral(Frame):
         self.panel_lateral_visible = True
         self.var_archivo = IntVar(value=0)
         self.var_organizar = IntVar(value=0)
+        self.notebook_central = None
+        self.tab_bienvenida = None
+
+        # --- Estilos ---
+        self.estilo = Style()
+        self.estilo.configure("Link.TButton", anchor="w", relief="flat")
 
         # --- Creación de la interfaz ---
         self.crear_widgets()
@@ -41,9 +56,11 @@ class FrameCentral(Frame):
         # --- Estado inicial de la interfaz ---
         self.show_panel_lateral()
         self.show_panel_archivo()
+        self.show_panel_organizar()
 
         # --- Vinculación de eventos ---
         self.var_archivo.trace_add("write", self.on_ckb_archivo)
+        self.var_organizar.trace_add("write", self.on_ckb_organizar)
 
     # ┌────────────────────────────────────────────────────────────┐
     # │ Creación de Widgets de la Interfaz
@@ -72,43 +89,52 @@ class FrameCentral(Frame):
         self.panel_archivos = Frame(self.panel_lateral, padding=(2, 2))
         self.panel_archivos.pack(side=TOP, fill=Y, padx=1, pady=1, anchor=W)
 
-        label_importar = Label(
+        btn_importar = Button(
             self.panel_archivos,
-            text="□ 📥 Importar",
-            padding=(1, 1),
-            font=("Arial", 10, "bold"),
-            foreground="gray",
+            text="📥 Importar",
+            style="Link.TButton",
+            command=lambda: self.on_dialog_importar(None),
         )
-        label_importar.bind("<Double-Button-1>", self.on_dialog_importar)
-        label_importar.pack(side=TOP, fill=X, padx=1, pady=1)
+        btn_importar.pack(side=TOP, fill=X, padx=5, pady=2)
+        ToolTip(btn_importar, "Importar nuevos documentos a la biblioteca")
 
-        label_documentos = Label(
+        btn_documentos = Button(
             self.panel_archivos,
-            text="□ 📜 Documentos",
-            padding=(1, 1),
-            font=("Arial", 10, "bold"),
-            foreground="gray",
+            text="📜 Documentos",
+            style="Link.TButton",
+            command=lambda: self.on_dialog_documentos(None),
         )
-        label_documentos.bind("<Double-Button-1>", self.on_dialog_documentos)
-        label_documentos.pack(side=TOP, fill=X, padx=1, pady=1)
+        btn_documentos.pack(side=TOP, fill=X, padx=5, pady=2)
+        ToolTip(btn_documentos, "Administrar todos los documentos")
 
-        label_metadato = Label(
+        btn_metadato = Button(
             self.panel_archivos,
-            text="□ 📝 Metadato",
-            padding=(1, 1),
-            font=("Arial", 10, "bold"),
-            foreground="gray",
+            text="📝 Metadatos",
+            style="Link.TButton",
         )
-        label_metadato.pack(side=TOP, fill=X, padx=1, pady=1)
+        btn_metadato.pack(side=TOP, fill=X, padx=5, pady=2)
+        ToolTip(btn_metadato, "Ver y editar metadatos (función no implementada)")
 
-        label_cerrar = Label(
+        btn_cerrar = Button(
             self.panel_archivos,
-            text="□ ⏻ Cerrar",
-            padding=(1, 1),
-            font=("Arial", 10, "bold"),
-            foreground="gray",
+            text="⏻ Cerrar",
+            style="Link.TButton",
+            command=self.winfo_toplevel().quit,
         )
-        label_cerrar.pack(side=TOP, fill=X, padx=1, pady=1)
+        btn_cerrar.pack(side=TOP, fill=X, padx=5, pady=2)
+        ToolTip(btn_cerrar, "Cerrar la aplicación")
+
+        # --- Separador y Configuración ---
+        Separator(self.panel_lateral).pack(side=TOP, fill=X, padx=1, pady=5)
+
+        btn_config_vistas = Button(
+            self.panel_lateral,
+            text="⚙️ Configurar Vistas",
+            style="Link.TButton",
+            command=self.on_dialog_config_vistas,
+        )
+        btn_config_vistas.pack(side=TOP, fill=X, padx=5, pady=2)
+        ToolTip(btn_config_vistas, "Elegir qué pestañas mostrar u ocultar")
 
         # --- Sección "Organizar" ---
         ckb_organizar = Checkbutton(
@@ -122,73 +148,102 @@ class FrameCentral(Frame):
         self.panel_organizar = Frame(self.panel_lateral, padding=(2, 2))
         self.panel_organizar.pack(side=TOP, fill=Y, padx=1, pady=1, anchor=W)
 
-        label_coleccion = Label(
+        btn_coleccion = Button(
             self.panel_organizar,
-            text="□ 📚 Coleccion",
-            padding=(1, 1),
-            font=("Arial", 10, "bold"),
-            foreground="gray",
+            text="📚 Colecciones",
+            style="Link.TButton",
+            command=lambda: self.on_dialog_colecciones(None),
         )
-        label_coleccion.bind("<Double-Button-1>", self.on_dialog_colecciones)
-        label_coleccion.pack(side=TOP, fill=X, padx=1, pady=1)
+        btn_coleccion.pack(side=TOP, fill=X, padx=5, pady=2)
+        ToolTip(btn_coleccion, "Administrar colecciones")
 
-        label_grupo = Label(
+        btn_grupo = Button(
             self.panel_organizar,
-            text="□ 🗂️ Grupo",
-            padding=(1, 1),
-            font=("Arial", 10, "bold"),
-            foreground="gray",
+            text="🗂️ Grupos",
+            style="Link.TButton",
+            command=lambda: self.on_dialog_grupos(None),
         )
-        label_grupo.bind("<Double-Button-1>", self.on_dialog_grupos)
-        label_grupo.pack(side=TOP, fill=X, padx=1, pady=1)
+        btn_grupo.pack(side=TOP, fill=X, padx=5, pady=2)
+        ToolTip(btn_grupo, "Administrar grupos")
 
-        label_categoria = Label(
+        btn_categoria = Button(
             self.panel_organizar,
-            text="□ 🗃️ Categoría",
-            padding=(1, 1),
-            font=("Arial", 10, "bold"),
-            foreground="gray",
+            text="🗃️ Categorías",
+            style="Link.TButton",
+            command=lambda: self.on_dialog_categorias(None),
         )
-        label_categoria.bind("<Double-Button-1>", self.on_dialog_categorias)
-        label_categoria.pack(side=TOP, fill=X, padx=1, pady=1)
+        btn_categoria.pack(side=TOP, fill=X, padx=5, pady=2)
+        ToolTip(btn_categoria, "Administrar categorías")
 
-        label_etiqueta = Label(
+        btn_etiqueta = Button(
             self.panel_organizar,
-            text="□ 🏷️ Etiqueta",
-            padding=(1, 1),
-            font=("Arial", 10, "bold"),
-            foreground="gray",
+            text="🏷️ Etiquetas",
+            style="Link.TButton",
+            command=lambda: self.on_dialog_etiquetas(None),
         )
-        label_etiqueta.bind("<Double-Button-1>", self.on_dialog_etiquetas)
-        label_etiqueta.pack(side=TOP, fill=X, padx=1, pady=1)
+        btn_etiqueta.pack(side=TOP, fill=X, padx=5, pady=2)
+        ToolTip(btn_etiqueta, "Administrar etiquetas")
 
-        label_palabra_clave = Label(
+        btn_palabra_clave = Button(
             self.panel_organizar,
-            text="□ 🔑 Palabra clave",
-            padding=(1, 1),
-            font=("Arial", 10, "bold"),
-            foreground="gray",
+            text="🔑 Palabras Clave",
+            style="Link.TButton",
+            command=lambda: self.on_dialog_palabras_clave(None),
         )
-        label_palabra_clave.bind("<Double-Button-1>", self.on_dialog_palabras_clave)
-        label_palabra_clave.pack(side=TOP, fill=X, padx=1, pady=1)
-
-        label_favorito = Label(
-            self.panel_organizar,
-            text="□ ⭐ Favorito",
-            padding=(1, 1),
-            font=("Arial", 10, "bold"),
-            foreground="gray",
-        )
-        # label_favorito.bind("<Double-Button-1>", self.on_dialog_favorito)
-        label_favorito.pack(side=TOP, fill=X, padx=1, pady=1)
+        btn_palabra_clave.pack(side=TOP, fill=X, padx=5, pady=2)
+        ToolTip(btn_palabra_clave, "Administrar palabras clave")
 
     def _crear_panel_central(self):
         """Crea el panel central que contendrá el contenido principal."""
         self.panel_central = Frame(self, padding=(2, 2))
         self.panel_central.pack(side=LEFT, fill=BOTH, padx=2, pady=2, expand=True)
 
-        notebook_central = Notebook(self.panel_central)
-        notebook_central.pack(side=TOP, fill=BOTH, expand=True)
+        self.notebook_central = Notebook(self.panel_central)
+        self.notebook_central.pack(side=TOP, fill=BOTH, expand=True)
+
+        # Obtener la configuración de visibilidad de pestañas
+        config = ConfiguracionController()
+        visibilidad = config.obtener_visibilidad_pestanas()
+
+        # --- Pestaña de Bienvenida ---
+        if visibilidad.get("bienvenida", True):
+            self.tab_bienvenida = FrameBienvenida(
+                self.notebook_central,
+                command_importar=lambda: self.on_dialog_importar(None),
+                command_documentos=lambda: self.on_dialog_documentos(None),
+                command_config=lambda: print("Botón de configuraciones presionado"),
+            )
+            self.notebook_central.add(self.tab_bienvenida, text="🏠 Bienvenida")
+
+        # --- Pestaña de Visualizar Documentos ---
+        if visibilidad.get("visualizar", True):
+            self.tab_visualizar = FrameVisualizarDocumentos(self.notebook_central)
+            self.notebook_central.add(self.tab_visualizar, text="🔎 Visualizar")
+
+        # --- Pestaña de Favoritos ---
+        if visibilidad.get("favoritos", True):
+            self.tab_favoritos = FrameFavoritos(self.notebook_central)
+            self.notebook_central.add(self.tab_favoritos, text="⭐ Favoritos")
+
+        # --- Pestaña de Visualizar Biblioteca ---
+        if visibilidad.get("biblioteca", True):
+            self.tab_biblioteca = FrameVisualizarBiblioteca(self.notebook_central)
+            self.notebook_central.add(self.tab_biblioteca, text="📖 Biblioteca")
+
+        # --- Pestaña de Visualizar Contenido ---
+        if visibilidad.get("contenido", True):
+            self.tab_contenido = FrameVisualizarContenido(self.notebook_central)
+            self.notebook_central.add(self.tab_contenido, text="📑 Contenido")
+
+        # --- Pestaña de Visualizar Metadatos ---
+        if visibilidad.get("metadatos", True):
+            self.tab_metadatos = FrameVisorMetadatos(self.notebook_central)
+            self.notebook_central.add(self.tab_metadatos, text="🧮 Metadatos")
+
+        # --- Pestaña de Visualizar Estante ---
+        if visibilidad.get("estante", True):
+            self.tab_estante = FrameVisualizarEstante(self.notebook_central)
+            self.notebook_central.add(self.tab_estante, text="📚 Estante")
 
     # ┌────────────────────────────────────────────────────────────┐
     # │ Manejo del Estado de la Interfaz
@@ -241,6 +296,28 @@ class FrameCentral(Frame):
             self.var_archivo.set(1)
             self._actualizar_visibilidad_panel_archivo(1)
 
+    def show_panel_organizar(self):
+        """Muestra u oculta la sección 'Organizar' del panel lateral según la configuración."""
+        try:
+            # NOTA: Asumo que tendrás una función similar a esta en tu controlador
+            # configuracion = ConfiguracionController()
+            # valor = configuracion.get_toogle_panel_organizar()
+            valor = 1  # Valor por defecto mientras no exista en la config
+            self.var_organizar.set(valor)
+            self._actualizar_visibilidad_panel_organizar(valor)
+        except Exception:
+            self.var_organizar.set(1)
+            self._actualizar_visibilidad_panel_organizar(1)
+
+    def _actualizar_visibilidad_panel_organizar(self, valor: int):
+        """Función auxiliar para mostrar u ocultar el panel de organizar."""
+        if valor == 0:
+            self.panel_organizar.pack_forget()
+        else:
+            self.panel_organizar.pack(
+                side=TOP, fill=Y, padx=1, pady=1, anchor=W, after=self.separator_organizar
+            )
+
     def _actualizar_visibilidad_panel_archivo(self, valor: int):
         """Función auxiliar para mostrar u ocultar el panel de archivos."""
         if valor == 0:
@@ -261,9 +338,23 @@ class FrameCentral(Frame):
         configuracion.set_toggle_panel_archivo(valor=valor)
         self._actualizar_visibilidad_panel_archivo(valor)
 
+    def on_ckb_organizar(self, *args):
+        """Se ejecuta cuando cambia el estado del Checkbutton 'Organizar'."""
+        valor = self.var_organizar.get()
+        # NOTA: Asumo que tendrás una función similar a esta en tu controlador
+        # configuracion = ConfiguracionController()
+        # configuracion.set_toggle_panel_organizar(valor=valor)
+        self._actualizar_visibilidad_panel_organizar(valor)
+
     def on_dialog_importar(self, event):
         """Abre el diálogo para importar documentos."""
         dialog = DialogImportar()
+        dialog.update_idletasks()
+        dialog.grab_set()
+
+    def on_dialog_config_vistas(self):
+        """Abre el diálogo para configurar la visibilidad de las pestañas."""
+        dialog = DialogConfigurarVistas(master=self)
         dialog.update_idletasks()
         dialog.grab_set()
 

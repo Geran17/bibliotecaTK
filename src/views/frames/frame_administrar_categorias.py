@@ -8,6 +8,7 @@ from ttkbootstrap import (
     Text,
     IntVar,
     StringVar,
+    LabelFrame,
     Scrollbar,
     Combobox,
 )
@@ -76,52 +77,56 @@ class AdministrarCategorias(Frame):
         self.notebook.add(frame_explorar, text="Explorar")
 
     def tab_datos(self, frame):
-        # --- Fila de ID y Nombre ---
-        frame_nombre = Frame(frame, padding=(1, 1))
-        frame_nombre.pack(side=TOP, fill=X, padx=1, pady=1)
+        # --- Frame para Detalles de la Categoría ---
+        lf_detalles = LabelFrame(frame, text="Detalles de la Categoría", padding=10)
+        lf_detalles.pack(side=TOP, fill=X, padx=5, pady=5)
+        lf_detalles.columnconfigure(1, weight=1)
 
-        Label(frame_nombre, padding=(1, 1), text="Id: ").pack(side=LEFT, padx=(0, 1))
+        # Fila 1: ID y Nombre
+        Label(lf_detalles, text="ID:").grid(row=0, column=0, sticky=W, padx=5, pady=5)
         Entry(
-            frame_nombre,
+            lf_detalles,
             state=READONLY,
             textvariable=self.var_id_categoria,
             width=10,
             justify="center",
-        ).pack(side=LEFT, padx=(0, 5))
+        ).grid(row=0, column=1, sticky=W, padx=5, pady=5)
 
-        Label(frame_nombre, padding=(1, 1), text="Categoría: ").pack(side=LEFT, padx=(5, 1))
-        Entry(frame_nombre, textvariable=self.var_nombre).pack(side=LEFT, fill=X, expand=True)
+        Label(lf_detalles, text="Nombre:").grid(row=1, column=0, sticky=W, padx=5, pady=5)
+        Entry(lf_detalles, textvariable=self.var_nombre).grid(
+            row=1, column=1, sticky=EW, padx=5, pady=5
+        )
 
-        # --- Fila de Categoría Padre ---
-        frame_padre = Frame(frame, padding=(1, 1))
-        frame_padre.pack(side=TOP, fill=X, padx=1, pady=1)
-        Label(frame_padre, text="Categoría Padre:").pack(side=LEFT)
-        self.combo_padre = Combobox(frame_padre, state="readonly")
-        self.combo_padre.pack(side=LEFT, fill=X, expand=True, padx=5)
+        # Fila 2: Categoría Padre
+        Label(lf_detalles, text="Categoría Padre:").grid(row=2, column=0, sticky=W, padx=5, pady=5)
+        self.combo_padre = Combobox(lf_detalles, state="readonly")
+        self.combo_padre.grid(row=2, column=1, sticky=EW, padx=5, pady=5)
 
-        # --- Descripción ---
-        frame_descripcion = Frame(frame, padding=(1, 1))
-        frame_descripcion.pack(side=TOP, fill=BOTH, padx=1, pady=1, expand=True)
-        Label(frame_descripcion, text="Descripción:").pack(side=TOP, fill=X)
-        scrollbar = Scrollbar(frame_descripcion)
+        # --- Frame para Descripción ---
+        lf_descripcion = LabelFrame(frame, text="Descripción", padding=10)
+        lf_descripcion.pack(side=TOP, fill=BOTH, padx=5, pady=5, expand=True)
+
+        scrollbar = Scrollbar(lf_descripcion)
         self.txt_descripcion = Text(
-            frame_descripcion, wrap=WORD, height=10, yscrollcommand=scrollbar.set
+            lf_descripcion, wrap=WORD, height=5, yscrollcommand=scrollbar.set
         )
         scrollbar.pack(side=RIGHT, fill=Y)
         self.txt_descripcion.pack(side=LEFT, fill=BOTH, expand=TRUE)
         scrollbar.config(command=self.txt_descripcion.yview)
 
-        # --- Botones ---
+        # --- Frame para Botones de Acción ---
         frame_buttons = Frame(frame, padding=(1, 1))
         frame_buttons.pack(side=TOP, fill=X, padx=1, pady=1)
+        frame_buttons.columnconfigure((0, 1, 2), weight=1)
+
         Button(frame_buttons, text="Aplicar", command=self.on_aplicar).pack(
-            side=LEFT, fill=X, expand=TRUE
+            side=LEFT, fill=X, expand=TRUE, padx=2, pady=2
         )
         Button(frame_buttons, text="Eliminar", command=self.on_eliminar).pack(
-            side=LEFT, fill=X, expand=TRUE
+            side=LEFT, fill=X, expand=TRUE, padx=2, pady=2
         )
         Button(frame_buttons, text="Nuevo", command=self.on_nuevo).pack(
-            side=LEFT, fill=X, expand=TRUE
+            side=LEFT, fill=X, expand=TRUE, padx=2, pady=2
         )
         Button(frame_buttons, text="|<", command=self.on_primer_elemento).pack(side=LEFT)
         Button(frame_buttons, text="<", command=self.on_anterior_elemento).pack(side=LEFT)

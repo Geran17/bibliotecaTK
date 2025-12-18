@@ -1,0 +1,184 @@
+from os.path import join, exists
+from tkinter.messagebox import showerror, showwarning
+from typing import Dict, Any, List
+
+from ttkbootstrap import Button, Entry, Combobox
+from ttkbootstrap.tableview import Tableview
+
+from models.controllers.configuracion_controller import ConfiguracionController
+from models.entities.consulta import Consulta
+from utilities.auxiliar import (
+    generar_ruta_documento,
+    copiar_archivo,
+    abrir_archivo,
+)
+from utilities.configuracion import DIRECTORIO_TEMPORAL
+
+
+class ControlarVisualizarBiblioteca:
+    """
+    Controlador para la lógica de la vista de búsqueda bibliográfica.
+    """
+
+    def __init__(
+        self,
+        table_view: Tableview,
+        ent_buscar: Entry,
+        cbx_campos: Combobox,
+        btn_buscar: Button,
+        master,
+    ):
+        self.table_view = table_view
+        self.ent_buscar = ent_buscar
+        self.cbx_campos = cbx_campos
+        self.btn_buscar = btn_buscar
+        self.master = master
+
+        self.map_documentos: Dict[int, Dict[str, Any]] = {}
+        self.icon_libro = "📕"
+
+        self._vincular_eventos()
+
+    # ┌────────────────────────────────────────────────────────────┐
+    # │ Metodos Privados
+    # └────────────────────────────────────────────────────────────┘
+
+    def _vincular_eventos(self):
+        """Vincula los eventos de los widgets a sus manejadores."""
+        self.btn_buscar.config(command=self.on_buscar)
+        self.ent_buscar.bind("<Return>", lambda event: self.on_buscar())
+        self.table_view.view.bind("<Double-1>", self.on_doble_clic_tabla)
+
+    # ┌────────────────────────────────────────────────────────────┐
+    # │ Eventos
+    # └────────────────────────────────────────────────────────────┘
+
+    def on_buscar(self):
+        """
+        Manejador del evento de búsqueda. Obtiene el término y el campo de búsqueda,
+        consulta la base de datos y puebla la tabla con los resultados.
+        """
+        campo_display = self.cbx_campos.get()
+        termino = self.ent_buscar.get().strip()
+
+        if not termino:
+            showwarning("Búsqueda vacía", "Por favor, ingrese un término para buscar.")
+            return
+
+        # Mapeo del valor del combobox al nombre real de la columna en la BD
+        mapa_campos = {
+            "Título": "titulo",
+            "Autores": "autores",
+            "Editorial": "editorial",
+            "ISBN": "isbn",
+        }
+        campo = mapa_campos.get(campo_display)
+
+        resultados = Consulta().buscar_en_bibliografia(campo=campo, termino=termino)
+
+        # Guardamos los datos para poder abrir el documento después
+        self.map_documentos = {res["id_documento"]: res for res in resultados}
+
+        self._poblar_tabla(resultados)
+
+    def on_doble_clic_tabla(self, event=None):
+        """
+        Manejador del evento de doble clic en la tabla.
+        Abre el documento correspondiente a la fila seleccionada.
+        """
+        self._abrir_documento_seleccionado()
+
+    def _poblar_tabla(self, lista_resultados: List[Dict[str, Any]]) -> None:
+        """Limpia y puebla la tabla con una lista de resultados bibliográficos.
+
+        Args:
+            lista_resultados (List[Dict[str, Any]]): La lista de diccionarios
+                con los datos a mostrar.
+        """
+        self.table_view.delete_rows()
+        if not lista_resultados:
+            return
+
+        # Insertar las filas una por una
+        for res in lista_resultados:
+            self.table_view.insert_row(values=self._formatear_fila(res))
+
+        self.table_view.autoalign_columns()
+        self.table_view.autofit_columns()
+
+    def _abrir_documento_seleccionado(self) -> None:
+        """
+        Obtiene el documento de la fila seleccionada, construye su ruta y lo abre
+        en el directorio temporal. Muestra errores si algo falla.
+        """
+        selected_row = self.table_view.get_rows(selected=True)
+        if not selected_row:
+            return
+
+        id_documento = selected_row[0].values[0]
+        documento_data = self.map_documentos.get(id_documento)
+
+        if not documento_data:
+            showerror(
+                title="Error",
+                message="No se encontró la información del documento.",
+                parent=self.master,
+            )
+            return
+
+        config = ConfiguracionController()
+        ruta_biblioteca = config.obtener_ubicacion_biblioteca()
+        if not ruta_biblioteca or not exists(ruta_biblioteca):
+            showerror(
+                title="Error",
+                message="La ubicación de la biblioteca no está configurada o no existe.",
+                parent=self.master,
+            )
+            return
+
+        nombre_archivo = f"{documento_data['nombre_doc']}.{documento_data['extension_doc']}"
+        ruta_origen = generar_ruta_documento(
+            ruta_biblioteca=ruta_biblioteca,
+            id_documento=id_documento,
+            nombre_documento=nombre_archivo,
+        )
+
+        if not exists(ruta_origen):
+            showerror(
+                title="Archivo no encontrado",
+                message=f"El archivo no se encontró en la biblioteca:\n{ruta_origen}",
+                parent=self.master,
+            )
+            return
+
+        ruta_destino_temporal = join(DIRECTORIO_TEMPORAL, nombre_archivo)
+        try:
+            copiar_archivo(ruta_origen=ruta_origen, ruta_destino=ruta_destino_temporal)
+            abrir_archivo(ruta_origen=ruta_destino_temporal)
+        except Exception as e:
+            showerror(
+                title="Error al abrir",
+                message=f"No se pudo abrir el documento: {e}",
+                parent=self.master,
+            )
+
+    def _formatear_fila(self, res: Dict[str, Any]) -> list:
+        """Formatea un diccionario de resultado a una lista para la tabla.
+
+        Args:
+            res (Dict[str, Any]): Diccionario con los datos de un resultado de búsqueda.
+
+        Returns:
+            list: Una lista con los valores formateados para una fila de la tabla.
+        """
+        return [
+            res.get("id_documento", "-"),
+            self.icon_libro,
+            res.get("titulo", "N/A"),
+            res.get("autores", "N/A"),
+            res.get("ano_publicacion", "-"),
+            res.get("editorial", "N/A"),
+            res.get("isbn", "N/A"),
+            res.get("nombre_doc", ""),
+            res.get("extension_doc", ""),
+        ]

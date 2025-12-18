@@ -136,3 +136,24 @@ class SeccionDAO(DAO):
 
         resultados = self._ejecutar_consulta(sql, params)
         return len(resultados) > 0
+
+    def es_hijo(self, sql: str = None, params: tuple = ()) -> bool:
+        if sql is None:
+            sql = "SELECT EXISTS(SELECT 1 FROM seccion WHERE id = ? AND id_padre IS NOT NULL) as es_hijo"
+
+        resultados = self._ejecutar_consulta(sql, params)
+        return len(resultados) > 0
+
+    def es_padre(self, sql: str = None, params: tuple = ()) -> bool:
+        if sql is None:
+            sql = "SELECT EXISTS(SELECT 1 FROM seccion WHERE id_padre = ?) as es_padre"
+
+        resultados = self._ejecutar_consulta(sql, params)
+        return len(resultados) > 0
+
+    def hijos_directos(self, sql: str = None, params: tuple = ()) -> List[Dict[str, Any]]:
+        if sql is None:
+            sql = "SELECT * FROM seccion WHERE id_padre = ?"
+
+        resultados = self._ejecutar_consulta(sql, params)
+        return resultados

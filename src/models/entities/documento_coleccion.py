@@ -1,6 +1,6 @@
 from typing import Optional
-from src.models.dtos.documento_coleccion_dto import DocumentoColeccionDTO
-from src.models.daos.documento_coleccion_dao import DocumentoColeccionDAO
+from models.dtos.documento_coleccion_dto import DocumentoColeccionDTO
+from models.daos.documento_coleccion_dao import DocumentoColeccionDAO
 
 
 class DocumentoColeccion(DocumentoColeccionDTO):

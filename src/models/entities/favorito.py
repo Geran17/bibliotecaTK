@@ -1,6 +1,6 @@
 from typing import Optional
-from src.models.dtos.favorito_dto import FavoritoDTO
-from src.models.daos.favorito_dao import FavoritoDAO
+from models.dtos.favorito_dto import FavoritoDTO
+from models.daos.favorito_dao import FavoritoDAO
 
 
 class Favorito(FavoritoDTO):

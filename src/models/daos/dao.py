@@ -1,184 +1,142 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Any, List, Optional
 import sqlite3
-from models.daos.connection_sqlite import Database
+from contextlib import contextmanager
+import threading
+from utilities.configuracion import RUTA_DATA
+from os.path import join
 
 
 class DAO(ABC):
     """
     Clase abstracta base para los Data Access Objects (DAO).
-
-    Define una interfaz común para las operaciones CRUD (Crear, Leer, Actualizar,
-    Eliminar) en la base de datos. Las clases que hereden de DAO deben
-    implementar los métodos abstractos para una tabla específica.
-
-    Attributes:
-        _db (Database): Instancia del gestor de la conexión a la base de datos.
+    Versión thread-safe que crea conexiones independientes por operación.
     """
-
-    _db = None
 
     def __init__(self, ruta_db: Optional[str] = None):
         """
-        Inicializa el DAO, establece la conexión a la base de datos y crea la tabla.
-
-        Args:
-            ruta_db (Optional[str]): Ruta opcional al archivo de la base de datos.
-                                     Si es None, se usará la ruta por defecto.
+        Inicializa el DAO y guarda la ruta de la base de datos.
         """
         super().__init__()
-        self._db = Database(ruta_db=ruta_db)
+        if ruta_db is None:
+            ruta_db = join(RUTA_DATA, "bibliotecaTK.sqlite3")
 
-        # creamos la tabla
+        self._ruta_db = ruta_db
+        self._lock = threading.Lock()
+
+        # Crear la tabla
         self.crear_tabla()
+
+    @contextmanager
+    def _get_connection(self):
+        """
+        Context manager para obtener una conexión thread-safe.
+        Crea una nueva conexión que se cierra automáticamente.
+        """
+        con = sqlite3.connect(self._ruta_db)
+        con.row_factory = sqlite3.Row
+        con.execute("PRAGMA foreign_keys = ON")
+
+        try:
+            yield con
+            con.commit()
+        except Exception as e:
+            con.rollback()
+            raise e
+        finally:
+            con.close()
 
     @abstractmethod
     def crear_tabla(self):
         """
-        Método abstracto para crear la tabla específica del DAO en la base de datos.
-
-        Las clases hijas deben implementar este método para definir el esquema
-        de su tabla correspondiente.
+        Método abstracto para crear la tabla específica del DAO.
         """
         pass
 
     @abstractmethod
     def insertar(self, sql: str, params: tuple = ()) -> Optional[int]:
         """
-        Método abstracto para insertar un registro en la base de datos.
-
-        Args:
-            sql (str): La sentencia SQL de inserción.
-            params (tuple): Los parámetros para la sentencia SQL.
-
-        Returns:
-            Optional[int]: El ID del último registro insertado, o None si falla.
+        Método abstracto para insertar un registro.
         """
         pass
 
     @abstractmethod
     def eliminar(self, sql: str, params: tuple = ()) -> bool:
         """
-        Método abstracto para eliminar un registro de la base de datos.
-
-        Args:
-            sql (str): La sentencia SQL de eliminación.
-            params (tuple): Los parámetros para la sentencia SQL.
-
-        Returns:
-            bool: True si la eliminación fue exitosa, False en caso contrario.
+        Método abstracto para eliminar un registro.
         """
         pass
 
     @abstractmethod
     def instanciar(self, sql: str, params: tuple = ()) -> List[Dict[str, Any]]:
         """
-        Método abstracto para consultar y obtener registros de la base de datos.
-
-        Args:
-            sql (str): La sentencia SQL de consulta.
-            params (tuple): Los parámetros para la sentencia SQL.
-
-        Returns:
-            List[Dict[str, Any]]: Una lista de diccionarios, donde cada diccionario
-                                  representa un registro.
+        Método abstracto para consultar registros.
         """
         pass
 
     @abstractmethod
     def existe(self, sql: str, params: tuple = ()) -> bool:
         """
-        Método abstracto para verificar si existen datos que cumplen una condición.
-
-        Args:
-            sql (str): La sentencia SQL de consulta (generalmente un SELECT COUNT).
-            params (tuple): Los parámetros para la sentencia SQL.
-
-        Returns:
-            bool: True si la consulta devuelve algún resultado, False en caso contrario.
+        Método abstracto para verificar existencia.
         """
         pass
 
-    def _conectar(self):
-        """
-        Obtiene el objeto de conexión a la base de datos.
-
-        Returns:
-            sqlite3.Connection: El objeto de conexión.
-        """
-        return self._db.obtener_conexion()
-
-    def _cursor(self):
-        """
-        Obtiene un cursor para ejecutar consultas en la base de datos.
-
-        Returns:
-            sqlite3.Cursor: Un objeto cursor.
-        """
-        return self._db.obtener_cursor()
-
     def _ejecutar_insertar(self, sql: str, params: tuple = ()) -> Optional[int]:
         """
-        Ejecuta una sentencia de inserción de forma segura y transaccional.
-
-        Args:
-            sql (str): La sentencia SQL de inserción.
-            params (tuple): Los parámetros para la sentencia SQL.
-
-        Returns:
-            Optional[int]: El ID del último registro insertado, o None si ocurre un error.
+        Ejecuta una sentencia de inserción thread-safe.
         """
-        con = self._conectar()
-        cursor = con.cursor()
         try:
-            cursor.execute(sql, params)
-            con.commit()
-            last_id = cursor.lastrowid
-            return last_id
+            with self._get_connection() as con:
+                cursor = con.cursor()
+                cursor.execute(sql, params)
+                return cursor.lastrowid
         except sqlite3.Error as ex:
-            print(f"Error al tratar de ejecutar la insercion: {ex}")
-            con.rollback()
+            print(f"Error al ejecutar inserción: {ex}")
             return None
 
     def _ejecutar_consulta(self, sql: str, params: tuple = ()) -> List[Dict[str, Any]]:
         """
-        Ejecuta una consulta SELECT y retorna los resultados como una lista de diccionarios.
-
-        Args:
-            sql (str): La sentencia SQL de consulta.
-            params (tuple): Los parámetros para la sentencia SQL.
-
-        Returns:
-            List[Dict[str, Any]]: Una lista de diccionarios que representan las filas.
-                                  Retorna una lista vacía si no hay resultados o si ocurre un error.
+        Ejecuta una consulta SELECT thread-safe.
         """
         try:
-            cursor = self._cursor()
-            cursor.execute(sql, params)
-            rows = cursor.fetchall()
-            return [dict(row) for row in rows]
+            with self._get_connection() as con:
+                cursor = con.cursor()
+                cursor.execute(sql, params)
+                rows = cursor.fetchall()
+                return [dict(row) for row in rows]
         except sqlite3.Error as ex:
             print(f"Error al ejecutar consulta: {ex}")
             return []
 
     def _ejecutar_actualizacion(self, sql: str, params: tuple = ()) -> bool:
         """
-        Ejecuta una sentencia de actualización o eliminación de forma segura.
+        Ejecuta una actualización o eliminación thread-safe.
+        """
+        try:
+            with self._get_connection() as con:
+                cursor = con.cursor()
+                cursor.execute(sql, params)
+                return cursor.rowcount > 0
+        except sqlite3.Error as ex:
+            print(f"Error al ejecutar actualización: {ex}")
+            return False
 
-        Args:
-            sql (str): La sentencia SQL (UPDATE, DELETE).
-            params (tuple): Los parámetros para la sentencia SQL.
+    # Métodos de compatibilidad para código existente
+    def _conectar(self):
+        """
+        DEPRECATED: Usar _get_connection() context manager en su lugar.
+        Retorna una conexión temporal (debe cerrarse manualmente).
+        """
+        con = sqlite3.connect(self._ruta_db)
+        con.row_factory = sqlite3.Row
+        con.execute("PRAGMA foreign_keys = ON")
+        return con
 
-        Returns:
-            bool: True si al menos una fila fue afectada, False en caso contrario.
+    def _cursor(self):
+        """
+        DEPRECATED: Usar _get_connection() context manager en su lugar.
+        Crea una nueva conexión y retorna un cursor.
+        ADVERTENCIA: Esta conexión no se cierra automáticamente.
         """
         con = self._conectar()
-        cursor = con.cursor()
-        try:
-            cursor.execute(sql, params)
-            con.commit()
-            return cursor.rowcount > 0
-        except sqlite3.Error as ex:
-            print(f"Error al ejecutar actualización/eliminación: {ex}")
-            con.rollback()
-            return False
+        return con.cursor()

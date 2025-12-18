@@ -3,11 +3,13 @@ from os.path import join, isdir
 from utilities.fileINI import FileINI
 from utilities.configuracion import CONFIG_INI
 from pathlib import Path
+from typing import Dict
 
 
 class ConfiguracionController:
     def __init__(self):
         self.nombre_biblioteca = "BibliotecaTK"
+        self.nombre_portada = "Portadas"
         self.iniFile = FileINI(pathINI=CONFIG_INI)
         # ----- Seciones ----
         self.section_ubiaciones = "ubicaciones"
@@ -16,12 +18,24 @@ class ConfiguracionController:
         self.section_ubicaciones = "ubicaciones"
         # ----- Keys --------
         self.key_ubicacion_biblioteca = "ubicacion_biblioteca"
+        self.key_ubicacion_portadas = "ubicacion_portadas"
         self.key_tema = "tema"
+        self.key_estilo_citacion = "estilo_citacion"
         self.key_panel_laterial = "panel_lateral"
         self.key_panel_archivo = "panel_archivo"
         self.key_ultima_ubicacion = "ultima_ubicacion"
         self.key_copiar_ubicacion = "copiar_ubicacion"
         self.key_mover_ubicacion = "mover_ubicacion"
+        self.key_mostrar_asociaciones = "mostrar_asociaciones"
+        self.key_mostrar_datos_bibliograficos = "mostrar_datos_bibliograficos"
+        self.key_mostrar_operaciones = "mostrar_operaciones"
+        # ----- Keys Pestañas -----
+        self.key_pestana_bienvenida = "pestana_bienvenida"
+        self.key_pestana_visualizar = "pestana_visualizar"
+        self.key_pestana_favoritos = "pestana_favoritos"
+        self.key_pestana_biblioteca = "pestana_biblioteca"
+        self.key_pestana_contenido = "pestana_contenido"
+        self.key_pestana_metadatos = "pestana_metadatos"
 
         # creamos la seccion [ubicaciones]
         if not self.iniFile.section_exist(section=self.section_ubiaciones):
@@ -68,12 +82,20 @@ class ConfiguracionController:
             folder = Path(directrio)
             if folder.name != self.nombre_biblioteca:
                 try:
-                    mkdir(join(directrio, self.nombre_biblioteca))
+                    dir_biblioteca = join(directrio, self.nombre_biblioteca)
+                    dir_portada = join(dir_biblioteca, self.nombre_portada)
+                    mkdir(dir_biblioteca)  # creamos el directorio: biblioteca
+                    mkdir(dir_portada)  # creamos el directorio: portadas
                     # si el directorio se crea con existo, establcemos en el archivo de configuraciones
                     isValue = self.iniFile.add_value(
                         section=self.section_ubiaciones,
                         key=self.key_ubicacion_biblioteca,
-                        value=join(directrio, self.nombre_biblioteca),
+                        value=dir_biblioteca,
+                    )
+                    isValue_portada = self.iniFile.add_value(
+                        section=self.section_ubiaciones,
+                        key=self.key_ubicacion_biblioteca,
+                        value=dir_portada,
                     )
                     return isValue
                 except Exception as e:
@@ -101,11 +123,26 @@ class ConfiguracionController:
     def obtener_tema(self) -> str:
         return self.iniFile.get_value(section=self.section_estilo, key=self.key_tema)
 
+    def establecer_estilo_citacion(self, estilo: str) -> bool:
+        if estilo:
+            return self.iniFile.add_value(
+                section=self.section_estilo, key=self.key_estilo_citacion, value=estilo
+            )
+
+    def obtener_estilo_citacion(self) -> str:
+        return self.iniFile.get_value(section=self.section_estilo, key=self.key_estilo_citacion)
+
     def obtener_ubicacion_biblioteca(self) -> str:
         ubicacion_biblioteca = self.iniFile.get_value(
             section=self.section_ubiaciones, key=self.key_ubicacion_biblioteca
         )
         return ubicacion_biblioteca
+
+    def obtener_ubicacion_portadas(self) -> str:
+        ubicacion_portadas = self.iniFile.get_value(
+            section=self.section_ubiaciones, key=self.key_ubicacion_portadas
+        )
+        return ubicacion_portadas
 
     def get_toogle_panel_lateral(self) -> int:
         panel_lateral = self.iniFile.get_value(
@@ -170,3 +207,99 @@ class ConfiguracionController:
                 key=self.key_mover_ubicacion,
                 value=str(valor),
             )
+
+    # ┌────────────────────────────────────────────────────────────┐
+    # │ Toggle para el panel de asociaciones
+    # └────────────────────────────────────────────────────────────┘
+
+    def set_mostrar_asociaciones(self, valor: str) -> bool:
+        if valor is not None:
+            return self.iniFile.add_value(
+                section=self.section_toggle,
+                key=self.key_mostrar_asociaciones,
+                value=str(valor),
+            )
+
+    def get_mostrar_asociaciones(self) -> str:
+        valor = self.iniFile.get_value(
+            section=self.section_toggle, key=self.key_mostrar_asociaciones
+        )
+        return valor
+
+    # ┌────────────────────────────────────────────────────────────┐
+    # │ Toggle para el panel de datos bibliograficos
+    # └────────────────────────────────────────────────────────────┘
+
+    def set_mostrar_datos_bibliograficos(self, valor: str) -> bool:
+        if valor is not None:
+            return self.iniFile.add_value(
+                section=self.section_toggle,
+                key=self.key_mostrar_datos_bibliograficos,
+                value=str(valor),
+            )
+
+    def get_mostrar_datos_bibliograficos(self) -> str:
+        valor = self.iniFile.get_value(
+            section=self.section_toggle, key=self.key_mostrar_datos_bibliograficos
+        )
+        return valor
+
+    # ┌────────────────────────────────────────────────────────────┐
+    # │ Toggle para el panel de operaciones
+    # └────────────────────────────────────────────────────────────┘
+
+    def set_mostrar_operaciones(self, valor: str) -> bool:
+        if valor is not None:
+            return self.iniFile.add_value(
+                section=self.section_toggle,
+                key=self.key_mostrar_operaciones,
+                value=str(valor),
+            )
+
+    def get_mostrar_operaciones(self) -> str:
+        valor = self.iniFile.get_value(
+            section=self.section_toggle, key=self.key_mostrar_operaciones
+        )
+        return valor
+
+    # ┌────────────────────────────────────────────────────────────┐
+    # │ Visibilidad de Pestañas
+    # └────────────────────────────────────────────────────────────┘
+
+    def obtener_visibilidad_pestanas(self) -> Dict[str, bool]:
+        """
+        Obtiene el diccionario de visibilidad de pestañas desde la configuración.
+
+        Returns:
+            Dict[str, bool]: Un diccionario donde las claves son los nombres
+                             de las pestañas y los valores son booleanos.
+        """
+        visibilidad = {}
+        defaults = {
+            "bienvenida": True,
+            "visualizar": True,
+            "favoritos": True,
+            "biblioteca": True,
+            "contenido": True,
+            "metadatos": True,
+        }
+
+        for key_short, default_value in defaults.items():
+            ini_key = f"pestana_{key_short}"
+            value_str = self.iniFile.get_value(section=self.section_toggle, key=ini_key)
+            if value_str == "":  # La clave no existe en el INI
+                visibilidad[key_short] = default_value
+            else:
+                visibilidad[key_short] = value_str.lower() == 'true'
+
+        return visibilidad
+
+    def guardar_visibilidad_pestanas(self, visibilidad: Dict[str, bool]) -> None:
+        """
+        Guarda el diccionario de visibilidad de pestañas en el archivo de
+        configuración.
+        """
+        for key_short, is_visible in visibilidad.items():
+            ini_key = f"pestana_{key_short}"
+            value_str = str(is_visible)  # Convierte True a 'True' y False a 'False'
+            self.iniFile.add_value(section=self.section_toggle, key=ini_key, value=value_str)

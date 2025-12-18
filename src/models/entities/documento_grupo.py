@@ -1,6 +1,6 @@
 from typing import Optional
-from src.models.dtos.documento_grupo_dto import DocumentoGrupoDTO
-from src.models.daos.documento_grupo_dao import DocumentoGrupoDAO
+from models.dtos.documento_grupo_dto import DocumentoGrupoDTO
+from models.daos.documento_grupo_dao import DocumentoGrupoDAO
 
 
 class DocumentoGrupo(DocumentoGrupoDTO):

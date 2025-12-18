@@ -8,6 +8,7 @@ from ttkbootstrap import (
     Text,
     IntVar,
     StringVar,
+    LabelFrame,
     Scrollbar,
 )
 from typing import List
@@ -97,73 +98,59 @@ class AdministrarGrupos(Frame):
         self.notebook.add(frame_explorar, text="Explorar")
 
     def tab_datos(self, frame):
-        frame_nombre = Frame(frame, padding=(1, 1))
-        frame_nombre.pack(side=TOP, fill=X, padx=1, pady=1)
+        # --- Frame para Detalles del Grupo ---
+        lf_detalles = LabelFrame(frame, text="Detalles del Grupo", padding=10)
+        lf_detalles.pack(side=TOP, fill=X, padx=5, pady=5)
+        lf_detalles.columnconfigure(1, weight=1)
 
-        lbl_id = Label(frame_nombre, padding=(1, 1), text="Id: ")
-        lbl_id.pack(side=LEFT, fill=X, padx=1, pady=1)
-
+        # Fila 1: ID
+        Label(lf_detalles, text="ID:").grid(row=0, column=0, sticky=W, padx=5, pady=5)
         ent_id = Entry(
-            frame_nombre,
+            lf_detalles,
             state=READONLY,
             textvariable=self.var_id_grupo,
             width=10,
             justify="center",
         )
-        ent_id.pack(side=LEFT, fill=X, padx=1, pady=1)
+        ent_id.grid(row=0, column=1, sticky=W, padx=5, pady=5)
 
-        lbl_grupo = Label(frame_nombre, padding=(1, 1), text="Grupo: ")
-        lbl_grupo.pack(side=LEFT, fill=X, padx=1, pady=1)
+        # Fila 2: Nombre
+        Label(lf_detalles, text="Nombre:").grid(row=1, column=0, sticky=W, padx=5, pady=5)
+        ent_grupo = Entry(lf_detalles, textvariable=self.var_nombre)
+        ent_grupo.grid(row=1, column=1, sticky=EW, padx=5, pady=5)
 
-        ent_grupo = Entry(frame_nombre, textvariable=self.var_nombre)
-        ent_grupo.pack(side=LEFT, fill=X, padx=1, pady=1, expand=True)
+        # --- Frame para Descripción ---
+        lf_descripcion = LabelFrame(frame, text="Descripción", padding=10)
+        lf_descripcion.pack(side=TOP, fill=BOTH, padx=5, pady=5, expand=True)
 
-        frame_descripcion = Frame(frame, padding=(1, 1))
-        frame_descripcion.pack(side=TOP, fill=BOTH, padx=1, pady=1, expand=True)
-
-        lbl_descripcion = Label(frame_descripcion, text="Descripcion: ")
-        lbl_descripcion.pack(side=TOP, fill=X, padx=1, pady=1)
-
-        # barra de desplazamiento
-        scrollbar = Scrollbar(frame_descripcion)
-
+        scrollbar = Scrollbar(lf_descripcion)
         self.txt_descripcion = Text(
-            frame_descripcion, wrap=WORD, height=10, yscrollcommand=scrollbar.set
+            lf_descripcion, wrap=WORD, height=5, yscrollcommand=scrollbar.set
         )
-
-        # empaquetamos el scrollbar
         scrollbar.pack(side=RIGHT, fill=Y)
-
-        # empaquetamos el Text
         self.txt_descripcion.pack(side=LEFT, fill=BOTH, expand=TRUE)
-
-        # vinculamos
         scrollbar.config(command=self.txt_descripcion.yview)
 
-        # frame buttons
+        # --- Frame para Botones de Acción ---
         frame_buttons = Frame(frame, padding=(1, 1))
         frame_buttons.pack(side=TOP, fill=X, padx=1, pady=1)
+        frame_buttons.columnconfigure((0, 1, 2), weight=1)
 
-        btn_aplicar = Button(frame_buttons, text="Aplicar", command=self.on_aplicar)
-        btn_aplicar.pack(side=LEFT, fill=X, padx=0, pady=0, expand=TRUE)
+        Button(frame_buttons, text="Aplicar", command=self.on_aplicar).pack(
+            side=LEFT, fill=X, expand=TRUE, padx=2, pady=2
+        )
+        Button(frame_buttons, text="Eliminar", command=self.on_eliminar).pack(
+            side=LEFT, fill=X, expand=TRUE, padx=2, pady=2
+        )
+        Button(frame_buttons, text="Nuevo", command=self.on_nuevo).pack(
+            side=LEFT, fill=X, expand=TRUE, padx=2, pady=2
+        )
 
-        btn_eliminar = Button(frame_buttons, text="Eliminar", command=self.on_eliminar)
-        btn_eliminar.pack(side=LEFT, fill=X, padx=0, pady=0, expand=TRUE)
-
-        btn_nuevo = Button(frame_buttons, text="Nuevo", command=self.on_nuevo)
-        btn_nuevo.pack(side=LEFT, fill=X, padx=0, pady=0, expand=TRUE)
-
-        btn_primero = Button(frame_buttons, text="|<", command=self.on_primer_elemento)
-        btn_primero.pack(side=LEFT, fill=X, padx=0, pady=0)
-
-        btn_anterior = Button(frame_buttons, text="<", command=self.on_anterior_elemento)
-        btn_anterior.pack(side=LEFT, fill=X, padx=0, pady=0)
-
-        btn_siguiente = Button(frame_buttons, text=">", command=self.on_siguiente_elemento)
-        btn_siguiente.pack(side=LEFT, fill=X, padx=0, pady=0)
-
-        btn_ultimo = Button(frame_buttons, text=">|", command=self.on_ultimo_elemento)
-        btn_ultimo.pack(side=LEFT, fill=X, padx=0, pady=0)
+        # Botones de navegación
+        Button(frame_buttons, text="|<", command=self.on_primer_elemento).pack(side=LEFT)
+        Button(frame_buttons, text="<", command=self.on_anterior_elemento).pack(side=LEFT)
+        Button(frame_buttons, text=">", command=self.on_siguiente_elemento).pack(side=LEFT)
+        Button(frame_buttons, text=">|", command=self.on_ultimo_elemento).pack(side=LEFT)
 
     def tab_explorar(self, frame):
         self.table_view = Tableview(frame, searchable=True, coldata=self.coldata)
@@ -211,12 +198,9 @@ class AdministrarGrupos(Frame):
     def _load_table(self):
         grupos = self._generar_lista()
         if grupos:
-            # limpiamos la tabla
-            self.table_view.delete_rows()
-            for grupo in grupos:
-                fila = self._get_row(grupo=grupo)
-                if fila:
-                    self.table_view.insert_row(values=fila)
+            row_data = [self._get_row(grupo) for grupo in grupos]
+            self.table_view.build_table_data(self.coldata, row_data)
+            self.table_view.autofit_columns()
 
     def _get_row(self, grupo: Grupo) -> List:
         fila = []

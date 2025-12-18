@@ -188,7 +188,7 @@ CREATE TABLE IF NOT EXISTS grupo(
     descripcion TEXT NULL,
     creado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
     actualizado_en DATETIME DEFAULT CURRENT_TIMESTAMP
-)
+);
 
 -- Tabla: coleccion
 /*
@@ -281,6 +281,41 @@ CREATE TABLE IF NOT EXISTS documento_etiqueta(
     FOREIGN KEY (id_etiqueta) REFERENCES etiqueta(id) ON DELETE CASCADE
 );
 
+-- ==================== --
+--       Vistas         --
+-- ==================== --
+
+-- Vista para obtener un resumen de las asociaciones de cada documento.
+-- Utiliza LEFT JOIN y GROUP BY para una mayor eficiencia en comparación con subconsultas EXISTS.
+CREATE VIEW IF NOT EXISTS vista_documento_asociaciones AS
+SELECT
+    d.id AS id_documento,
+    d.nombre AS nombre_documento,
+    -- Asociaciones bibliográficas y de contenido
+    MAX(CASE WHEN db.id IS NOT NULL THEN 1 ELSE 0 END) AS tiene_dato_bibliografico,
+    MAX(CASE WHEN m.id IS NOT NULL THEN 1 ELSE 0 END) AS tiene_metadatos,
+    MAX(CASE WHEN c.id IS NOT NULL THEN 1 ELSE 0 END) AS tiene_capitulos,
+    -- Asociaciones de organización (Tablas Pivote)
+    MAX(CASE WHEN dc.id_documento IS NOT NULL THEN 1 ELSE 0 END) AS tiene_coleccion,
+    MAX(CASE WHEN dg.id_documento IS NOT NULL THEN 1 ELSE 0 END) AS tiene_grupo,
+    MAX(CASE WHEN dca.id_documento IS NOT NULL THEN 1 ELSE 0 END) AS tiene_categoria,
+    MAX(CASE WHEN de.id_documento IS NOT NULL THEN 1 ELSE 0 END) AS tiene_etiqueta,
+    MAX(CASE WHEN dpc.id_documento IS NOT NULL THEN 1 ELSE 0 END) AS tiene_palabra_clave,
+    -- Estatus de Favorito
+    MAX(CASE WHEN f.id IS NOT NULL THEN 1 ELSE 0 END) AS es_favorito
+FROM
+    documento d
+LEFT JOIN dato_bibliografico db ON d.id = db.id_documento
+LEFT JOIN metadato m ON d.id = m.id_documento
+LEFT JOIN capitulo c ON d.id = c.id_documento
+LEFT JOIN documento_coleccion dc ON d.id = dc.id_documento
+LEFT JOIN documento_grupo dg ON d.id = dg.id_documento
+LEFT JOIN documento_categoria dca ON d.id = dca.id_documento
+LEFT JOIN documento_etiqueta de ON d.id = de.id_documento
+LEFT JOIN documento_palabra_clave dpc ON d.id = dpc.id_documento
+LEFT JOIN favorito f ON d.id = f.id_documento
+GROUP BY d.id, d.nombre;
+
 -- =================== --
 --    DISPARADORES     --
 -- =================== --
@@ -298,16 +333,6 @@ CREATE TRIGGER IF NOT EXISTS trig_actualizar_coleccion AFTER UPDATE ON coleccion
 CREATE TRIGGER IF NOT EXISTS trig_actualizar_grupo AFTER UPDATE ON grupo BEGIN UPDATE grupo SET actualizado_en = CURRENT_TIMESTAMP WHERE id = NEW.id; END;
 CREATE TRIGGER IF NOT EXISTS trig_actualizar_palabra_clave AFTER UPDATE ON palabra_clave BEGIN UPDATE palabra_clave SET actualizado_en = CURRENT_TIMESTAMP WHERE id = NEW.id; END;
 CREATE TRIGGER IF NOT EXISTS trig_actualizar_etiqueta AFTER UPDATE ON etiqueta BEGIN UPDATE etiqueta SET actualizado_en = CURRENT_TIMESTAMP WHERE id = NEW.id; END;
-
--- Trigger para validar extensiones de archivo permitidas
-CREATE TRIGGER IF NOT EXISTS trig_validar_extension_documento
-BEFORE INSERT ON documento
-BEGIN
-    SELECT CASE
-        WHEN NEW.extension NOT IN ('pdf', 'doc', 'docx', 'txt', 'epub', 'mobi')
-        THEN RAISE(ABORT, 'Extensión de archivo no válida. Use pdf, doc, docx, txt, epub o mobi.')
-    END;
-END;
 
 -- =============== --
 --      ÍNDICES    --

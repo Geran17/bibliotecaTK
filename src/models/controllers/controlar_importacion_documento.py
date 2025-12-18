@@ -14,6 +14,9 @@ from utilities.auxiliar import (
     copiar_archivo,
     mover_archivo,
     obtener_metadatos,
+    crear_directorio_id_documento,
+    pdf_miniatura,
+    pdf_normal,
 )
 from models.controllers.configuracion_controller import ConfiguracionController
 
@@ -36,9 +39,11 @@ class ControlarImporetacionDocumento:
         self.tipo_importacion = tipo_importacion
         # Ruta biblioteca
         self.ruta_biblioteca = ""
+        self.ruta_portadas = ""
         configuracion = ConfiguracionController()
         if exists(configuracion.obtener_ubicacion_biblioteca()):
             self.ruta_biblioteca = configuracion.obtener_ubicacion_biblioteca()
+            self.ruta_portadas = configuracion.obtener_ubicacion_portadas()
 
     def importar(self):
         """Generamos el hilo de importacion"""
@@ -87,8 +92,15 @@ class ControlarImporetacionDocumento:
                                 nombre_documento=nombre_con_extension,
                                 id_documento=id_documento,
                             )
+                            # copiamos
                             self._copiar_documento(
                                 ruta_origen=ruta_documento, ruta_destino=ruta_destino
+                            )
+                            # generamos la portad
+                            self._generar_portada(
+                                pdf_path=ruta_documento,
+                                id_documento=id_documento,
+                                extension=documento.extension,
                             )
                         elif self.tipo_importacion == "mover":
                             # movemos lo archivos
@@ -97,6 +109,13 @@ class ControlarImporetacionDocumento:
                                 nombre_documento=nombre_con_extension,
                                 id_documento=id_documento,
                             )
+                            # antes de mover generamos la portada
+                            self._generar_portada(
+                                pdf_path=ruta_documento,
+                                id_documento=id_documento,
+                                extension=documento.extension,
+                            )
+                            # movemos
                             self._mover_documento(
                                 ruta_origen=ruta_documento, ruta_destino=ruta_destino
                             )
@@ -131,12 +150,12 @@ class ControlarImporetacionDocumento:
 
     def _copiar_documento(self, ruta_origen, ruta_destino):
         """Copiamos los archivos importados a la biblioteca"""
-        time.sleep(2)
+        time.sleep(1)
         copiar_archivo(ruta_origen=ruta_origen, ruta_destino=ruta_destino)
 
     def _mover_documento(self, ruta_origen, ruta_destino):
         """Copiamos los archivos importados a la biblioteca"""
-        time.sleep(2)
+        time.sleep(1)
         mover_archivo(ruta_origen=ruta_origen, ruta_destino=ruta_destino)
 
     def _generar_documento(self, ruta_documento: str) -> Documento:
@@ -151,3 +170,14 @@ class ControlarImporetacionDocumento:
                 esta_activo=True,
             )
         return documento
+
+    def _generar_portada(self, pdf_path: str, id_documento: int, extension: str):
+        if extension.lower() == "pdf":
+            if exists(self.ruta_portadas):
+                dir_portada = crear_directorio_id_documento(
+                    ruta_destino=self.ruta_portadas, id_documento=id_documento
+                )
+                output_path_normal = join(dir_portada, f"{str(id_documento)}_normal.png")
+                output_path_miniatura = join(dir_portada, f"{str(id_documento)}_miniatura.png")
+                pdf_miniatura(pdf_path=pdf_path, output_path=output_path_miniatura)
+                pdf_normal(pdf_path=pdf_path, output_path=output_path_normal)

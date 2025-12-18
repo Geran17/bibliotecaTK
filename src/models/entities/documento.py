@@ -108,6 +108,8 @@ class Documento(DocumentoDTO):
         self.nombre = lista[0]["nombre"]
         self.extension = lista[0]["extension"]
         self.hash = lista[0]["hash"]
+        self.actualizado_en = lista[0]['actualizado_en']
+        self.creado_en = lista[0]['creado_en']
         self.tamano = lista[0]["tamano"]
         self.esta_activo = bool(lista[0]["esta_activo"])
         return True
