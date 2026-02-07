@@ -18,3 +18,10 @@ venv/
 # Sistema
 .DS_Store
 Thumbs.db
+
+# Build artifacts (PyInstaller)
+build/
+dist/
+src/build/
+src/dist/
+*.spec.bak
