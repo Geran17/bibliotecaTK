@@ -5,7 +5,7 @@ from ttkbootstrap.tableview import Tableview, TableRow
 from ttkbootstrap import Label, Progressbar
 from models.entities.documento import Documento
 from typing import List, Dict
-from tkinter.messagebox import showwarning
+from tkinter.messagebox import showwarning, askyesno
 from utilities.auxiliar import (
     generar_ruta_documento,
     copiar_archivo,
@@ -69,24 +69,54 @@ class ControlarOperacionesDocumentos:
         self.path_move = path_move
 
     def ejecutar_copia_seleccionados(self):
+        if not self._confirmar_operacion("copiar", self.path_copy):
+            return
         hijo_copia = Thread(target=self._copiar_seleccionados)
         hijo_copia.start()
 
     def ejecutar_mover_seleccionados(self):
+        if not self._confirmar_operacion("mover", self.path_move):
+            return
         hijo_mover = Thread(target=self._mover_seleccionados)
         hijo_mover.start()
 
     def ejecutar_eliminar_seleccionados(self):
+        if not self._confirmar_operacion("eliminar"):
+            return
         hijo_eliminar = Thread(target=self._eliminar_seleccionados)
         hijo_eliminar.start()
 
     def ejecutar_eliminar_filas_seleccionados(self):
+        if not self._confirmar_operacion("eliminar filas"):
+            return
         hijo_eliminar_filas = Thread(target=self._eliminar_filas_seleccionados)
         hijo_eliminar_filas.start()
 
     def ejecutar_eliminar_registros(self):
+        if not self._confirmar_operacion("eliminar registros"):
+            return
         hijo_registros = Thread(target=self._eliminar_registros)
         hijo_registros.start()
+
+    def _confirmar_operacion(self, operacion: str, ruta_destino: str = None) -> bool:
+        if not self.documentos_seleccionados:
+            showwarning(
+                title="Advertencia",
+                message="Seleccione al menos un documento para continuar.",
+                parent=self.master,
+            )
+            return False
+
+        total = len(self.documentos_seleccionados)
+        mensaje = [f"Operación: {operacion}", f"Documentos seleccionados: {total}"]
+        if ruta_destino:
+            mensaje.append(f"Destino: {ruta_destino}")
+        mensaje.append("¿Desea continuar?")
+        return askyesno(
+            title="Confirmar operación en lote",
+            message="\n".join(mensaje),
+            parent=self.master,
+        )
 
     def _copiar_seleccionados(self):
         """Copiamos los archivos seleccionados"""

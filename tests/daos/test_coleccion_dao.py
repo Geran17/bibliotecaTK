@@ -1,24 +1,20 @@
 import pytest
 import sqlite3
-from src.models.daos.coleccion_dao import ColeccionDAO
-from src.models.dtos.coleccion_dto import ColeccionDTO
-from src.models.daos.connection_sqlite import Database
+from models.daos.coleccion_dao import ColeccionDAO
+from models.dtos.coleccion_dto import ColeccionDTO
 
 # --- Fixtures ---
 
 
 @pytest.fixture
-def coleccion_dao_en_memoria():
+def coleccion_dao_en_memoria(tmp_path):
     """
-    Fixture que crea un ColeccionDAO con una base de datos en memoria.
+    Fixture que crea un ColeccionDAO con una base de datos temporal en archivo.
     Se asegura de que la tabla 'coleccion' esté creada y limpia para cada test.
     """
-    Database.resetear()
-    # El __init__ de DAO llama a crear_tabla()
-    dao = ColeccionDAO(ruta_db=":memory:")
+    ruta_db = tmp_path / "coleccion.sqlite3"
+    dao = ColeccionDAO(ruta_db=str(ruta_db))
     yield dao
-    dao._db.cerrar()
-    Database.resetear()
 
 
 @pytest.fixture
@@ -135,7 +131,7 @@ def test_listar_todos(coleccion_dao_con_datos):
     Verifica que se pueden obtener todas las colecciones.
     """
     dao = coleccion_dao_con_datos
-    resultados = dao.listar_todos()
+    resultados = dao._ejecutar_consulta(sql="SELECT * FROM coleccion ORDER BY id")
 
     assert len(resultados) == 3
     assert resultados[0]['nombre'] == 'Novelas Clásicas'

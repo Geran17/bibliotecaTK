@@ -1,0 +1,14 @@
+titulo,nivel,numero_pagina,id_padre
+Antecedentes,1.1,15,
+Estado del arte,1.2,20,
+Definición del problema,1.3,25,
+Planteamiento de hipótesis,2.1,45,
+Variables independientes,2.1.1,46,Planteamiento de hipótesis
+Variables dependientes,2.1.2,48,Planteamiento de hipótesis
+Procedimiento,2.2,52,
+Diseño experimental,2.2.1,53,Procedimiento
+Técnica de recolección,2.2.2,56,Procedimiento
+Análisis de datos,3.1,67,
+Estadística descriptiva,3.1.1,68,Análisis de datos
+Prueba de hipótesis,3.1.2,72,Análisis de datos
+Interpretación,3.2,78,

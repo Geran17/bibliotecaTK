@@ -1,5 +1,5 @@
 import pytest
-from src.models.dtos.documento_dto import DocumentoDTO
+from models.dtos.documento_dto import DocumentoDTO
 
 
 def test_documento_dto_creacion_instancia():

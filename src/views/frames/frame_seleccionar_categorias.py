@@ -10,13 +10,16 @@ from ttkbootstrap import (
     PanedWindow,
     Label,
     LabelFrame,
+    Button,
 )
 from ttkbootstrap.scrolled import ScrolledFrame
 from models.entities.consulta import Consulta
 from models.entities.categoria import Categoria
 from models.entities.documento import Documento
 from models.entities.documento_categoria import DocumentoCategoria
+from views.dialogs.dialog_administrar_categorias import DialogAdministrarCategorias
 from ttkbootstrap.constants import *
+from views.components.ui_tokens import PADDING_COMPACT, PADDING_OUTER, PADDING_PANEL
 from typing import List, Dict, Any
 
 
@@ -50,48 +53,57 @@ class FrameSeleccionarCategorias(Frame):
     # └────────────────────────────────────────────────────────────┘
 
     def crear_widgets(self):
-        frame_superior = Frame(self, padding=(1, 1))
+        frame_superior = Frame(self, padding=(PADDING_COMPACT, PADDING_COMPACT))
         self.panel_superior(frame=frame_superior)
-        frame_superior.pack(side=TOP, fill=X, padx=1, pady=1)
+        frame_superior.pack(side=TOP, fill=X, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
 
-        frame_central = Frame(self, padding=(1, 1))
+        frame_central = Frame(self, padding=(PADDING_COMPACT, PADDING_COMPACT))
         self.panel_central(frame=frame_central)
-        frame_central.pack(side=TOP, fill=BOTH, expand=True, padx=1, pady=1)
+        frame_central.pack(side=TOP, fill=BOTH, expand=True, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
 
-        frame_inferior = Frame(self, padding=(1, 1))
+        frame_inferior = Frame(self, padding=(PADDING_COMPACT, PADDING_COMPACT))
         self.panel_inferior(frame=frame_inferior)
-        frame_inferior.pack(side=TOP, fill=X, padx=1, pady=1)
+        frame_inferior.pack(side=TOP, fill=X, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
 
     def panel_superior(self, frame: Frame):
-        pass
+        label_titulo = Label(
+            frame, text="Asociar categorías a los documentos", font=("Helvetica", 12, "bold")
+        )
+        label_titulo.pack(side=LEFT, padx=PADDING_OUTER * 2, pady=PADDING_OUTER)
 
     def panel_central(self, frame: Frame):
 
         paned_window = PanedWindow(frame, orient="vertical")
-        paned_window.pack(side=TOP, fill=BOTH, expand=True, padx=1, pady=1)
+        paned_window.pack(side=TOP, fill=BOTH, expand=True, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
 
         # --- Panel de Documentos ---
-        container_documentos = LabelFrame(paned_window, text="Documentos", padding=5)
+        container_documentos = LabelFrame(paned_window, text="Documentos", padding=PADDING_PANEL)
         paned_window.add(container_documentos)
 
         ent_buscar_documentos = Entry(container_documentos, textvariable=self.var_buscar_documentos)
-        ent_buscar_documentos.pack(fill=X, padx=2, pady=(0, 5))
+        ent_buscar_documentos.pack(fill=X, padx=PADDING_PANEL, pady=(0, PADDING_OUTER))
 
-        self.frame_documentos = ScrolledFrame(container_documentos, padding=(1, 1))
-        self.frame_documentos.pack(fill=BOTH, expand=True, padx=2, pady=2)
+        self.frame_documentos = ScrolledFrame(container_documentos, padding=(PADDING_COMPACT, PADDING_COMPACT))
+        self.frame_documentos.pack(fill=BOTH, expand=True, padx=PADDING_PANEL, pady=PADDING_PANEL)
 
         # --- Panel de Categorías ---
-        container_categorias = LabelFrame(paned_window, text="Categorías", padding=5)
+        container_categorias = LabelFrame(paned_window, text="Categorías", padding=PADDING_PANEL)
         paned_window.add(container_categorias)
 
         ent_categorias = Entry(container_categorias, textvariable=self.var_buscar_categorias)
-        ent_categorias.pack(fill=X, padx=2, pady=(0, 5))
+        ent_categorias.pack(fill=X, padx=PADDING_PANEL, pady=(0, PADDING_OUTER))
 
-        self.frame_categorias = ScrolledFrame(container_categorias, padding=(1, 1))
-        self.frame_categorias.pack(fill=BOTH, expand=True, padx=2, pady=2)
+        self.frame_categorias = ScrolledFrame(container_categorias, padding=(PADDING_COMPACT, PADDING_COMPACT))
+        self.frame_categorias.pack(fill=BOTH, expand=True, padx=PADDING_PANEL, pady=PADDING_PANEL)
 
     def panel_inferior(self, frame: Frame):
-        pass
+        btn_administrar = Button(
+            frame,
+            text="Administrar Categorías",
+            command=self.on_administrar_categorias,
+            style="primary.Outline.TButton",
+        )
+        btn_administrar.pack(side=RIGHT, padx=PADDING_OUTER * 2, pady=PADDING_OUTER)
 
     # ┌────────────────────────────────────────────────────────────┐
     # │ Metodos de la clase
@@ -228,6 +240,10 @@ class FrameSeleccionarCategorias(Frame):
     # ┌────────────────────────────────────────────────────────────┐
     # │ Eventos
     # └────────────────────────────────────────────────────────────┘
+
+    def on_administrar_categorias(self):
+        dialog = DialogAdministrarCategorias(master=self.master)
+        self.master.wait_window(dialog)
 
     def on_documento_seleccionado(self):
         seleccionado = self.var_radio_documento.get()

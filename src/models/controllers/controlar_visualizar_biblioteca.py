@@ -1,4 +1,4 @@
-from os.path import join, exists
+from os.path import exists
 from tkinter.messagebox import showerror, showwarning
 from typing import Dict, Any, List
 
@@ -8,11 +8,8 @@ from ttkbootstrap.tableview import Tableview
 from models.controllers.configuracion_controller import ConfiguracionController
 from models.entities.consulta import Consulta
 from utilities.auxiliar import (
-    generar_ruta_documento,
-    copiar_archivo,
-    abrir_archivo,
+    abrir_documento_desde_biblioteca,
 )
-from utilities.configuracion import DIRECTORIO_TEMPORAL
 
 
 class ControlarVisualizarBiblioteca:
@@ -81,6 +78,18 @@ class ControlarVisualizarBiblioteca:
 
         self._poblar_tabla(resultados)
 
+    def recargar_resultados(self):
+        """
+        Refresca la vista sin forzar advertencias de búsqueda vacía.
+        Si hay término de búsqueda activo, vuelve a ejecutar la consulta.
+        """
+        termino = self.ent_buscar.get().strip()
+        if termino:
+            self.on_buscar()
+        else:
+            self.map_documentos.clear()
+            self.table_view.delete_rows()
+
     def on_doble_clic_tabla(self, event=None):
         """
         Manejador del evento de doble clic en la tabla.
@@ -136,31 +145,14 @@ class ControlarVisualizarBiblioteca:
             )
             return
 
-        nombre_archivo = f"{documento_data['nombre_doc']}.{documento_data['extension_doc']}"
-        ruta_origen = generar_ruta_documento(
-            ruta_biblioteca=ruta_biblioteca,
+        ok, error = abrir_documento_desde_biblioteca(
             id_documento=id_documento,
-            nombre_documento=nombre_archivo,
+            nombre_documento=documento_data["nombre_doc"],
+            extension_documento=documento_data["extension_doc"],
+            ruta_biblioteca=ruta_biblioteca,
         )
-
-        if not exists(ruta_origen):
-            showerror(
-                title="Archivo no encontrado",
-                message=f"El archivo no se encontró en la biblioteca:\n{ruta_origen}",
-                parent=self.master,
-            )
-            return
-
-        ruta_destino_temporal = join(DIRECTORIO_TEMPORAL, nombre_archivo)
-        try:
-            copiar_archivo(ruta_origen=ruta_origen, ruta_destino=ruta_destino_temporal)
-            abrir_archivo(ruta_origen=ruta_destino_temporal)
-        except Exception as e:
-            showerror(
-                title="Error al abrir",
-                message=f"No se pudo abrir el documento: {e}",
-                parent=self.master,
-            )
+        if not ok:
+            showerror(title="Error al abrir", message=error, parent=self.master)
 
     def _formatear_fila(self, res: Dict[str, Any]) -> list:
         """Formatea un diccionario de resultado a una lista para la tabla.

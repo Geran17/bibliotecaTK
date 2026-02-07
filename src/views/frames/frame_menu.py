@@ -3,6 +3,9 @@ from ttkbootstrap.constants import *
 from views.dialogs.dialog_configurar import DialogConfigurar
 from views.dialogs.dialog_acerca_de import DialogAcercaDe
 from ttkbootstrap.tooltip import ToolTip
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class FrameMenu(Frame):
@@ -84,16 +87,18 @@ class FrameMenu(Frame):
         ToolTip(menu_administrar_btn, "Administrar elementos de la biblioteca")
 
         # Crear el menú asociado
+        menu_items = [
+            {"label": "📚 Colecciones", "command": self.on_administrar_colecciones},
+            {"label": "🗂️ Grupos", "command": self.on_administrar_grupos},
+            {"label": "🗃️ Categorías", "command": self.on_administrar_categorias},
+            {"label": "🏷️ Etiquetas", "command": self.on_administrar_etiquetas},
+            {"label": "🔑 Palabras Clave", "command": self.on_administrar_palabras_clave},
+        ]
+
         menu_desplegable = Menu(menu_administrar_btn, tearoff=0)
-        menu_desplegable.add_command(
-            label="📚 Colecciones", command=self.on_administrar_colecciones
-        )
-        menu_desplegable.add_command(label="🗂️ Grupos", command=self.on_administrar_grupos)
-        menu_desplegable.add_command(label="🗃️ Categorías", command=self.on_administrar_categorias)
-        menu_desplegable.add_command(label="🏷️ Etiquetas", command=self.on_administrar_etiquetas)
-        menu_desplegable.add_command(
-            label="🔑 Palabras Clave", command=self.on_administrar_palabras_clave
-        )
+        for item in menu_items:
+            menu_desplegable.add_command(label=item["label"], command=item["command"])
+
         menu_administrar_btn["menu"] = menu_desplegable
 
         for config in botones_izquierda:
@@ -119,53 +124,53 @@ class FrameMenu(Frame):
         if self.frame_central:
             self.frame_central.on_dialog_importar(event=None)
         else:
-            print("Error: No se ha establecido frame central para la importación")
+            logger.warning("No se ha establecido frame central para la importación")
 
     def on_administrar_documentos(self):
         """Abre el diálogo para administrar documentos."""
         if self.frame_central:
             self.frame_central.on_dialog_documentos(event=None)
         else:
-            print("Error: No se ha establecido frame central para administrar documentos")
+            logger.warning("No se ha establecido frame central para administrar documentos")
 
     def toggle_panel_lateral(self):
         """Alterna la visibilidad del panel lateral"""
         if self.frame_central:
             self.frame_central.toggle_panel_lateral()
         else:
-            print("Error: No se ha establcecido frame central")
+            logger.warning("No se ha establecido frame central para toggle_panel_lateral")
 
     def on_administrar_colecciones(self):
         """Abre el diálogo para administrar colecciones."""
         if self.frame_central:
             self.frame_central.on_dialog_colecciones(event=None)
         else:
-            print("Error: No se ha establecido frame central para administrar colecciones")
+            logger.warning("No se ha establecido frame central para administrar colecciones")
 
     def on_administrar_grupos(self):
         """Abre el diálogo para administrar grupos."""
         if self.frame_central:
             self.frame_central.on_dialog_grupos(event=None)
         else:
-            print("Error: No se ha establecido frame central para administrar grupos")
+            logger.warning("No se ha establecido frame central para administrar grupos")
 
     def on_administrar_categorias(self):
         """Abre el diálogo para administrar categorías."""
         if self.frame_central:
             self.frame_central.on_dialog_categorias(event=None)
         else:
-            print("Error: No se ha establecido frame central para administrar categorías")
+            logger.warning("No se ha establecido frame central para administrar categorías")
 
     def on_administrar_etiquetas(self):
         """Abre el diálogo para administrar etiquetas."""
         if self.frame_central:
             self.frame_central.on_dialog_etiquetas(event=None)
         else:
-            print("Error: No se ha establecido frame central para administrar etiquetas")
+            logger.warning("No se ha establecido frame central para administrar etiquetas")
 
     def on_administrar_palabras_clave(self):
         """Abre el diálogo para administrar palabras clave."""
         if self.frame_central:
             self.frame_central.on_dialog_palabras_clave(event=None)
         else:
-            print("Error: No se ha establecido frame central para administrar palabras clave")
+            logger.warning("No se ha establecido frame central para administrar palabras clave")

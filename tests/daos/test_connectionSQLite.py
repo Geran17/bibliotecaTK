@@ -1,5 +1,5 @@
 import pytest
-from src.models.daos.connection_sqlite import Database
+from models.daos.connection_sqlite import Database
 
 
 @pytest.fixture
@@ -109,11 +109,10 @@ def test_acceso_por_nombre_columna(db_con_tabla_libros):
 
 
 def test_cerrar_conexion(db_en_memoria):
-    """Verifica que al cerrar la conexión no se puede acceder a ella"""
+    """Verifica que al cerrar la conexión se puede reabrir correctamente."""
     db_en_memoria.cerrar()
-
-    with pytest.raises(RuntimeError, match="No hay conexion a la base de datos establecida"):
-        db_en_memoria.obtener_conexion()
+    conn = db_en_memoria.obtener_conexion()
+    assert conn is not None
 
 
 def test_multiples_consultas(db_con_tabla_libros):

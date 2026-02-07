@@ -5,6 +5,7 @@ from ttkbootstrap.constants import *
 
 # Import the new controller
 from models.controllers.controlar_visualizar_estante import ControlarVisualizarEstante
+from views.components.ui_tokens import PADDING_COMPACT, PADDING_OUTER, PADDING_PANEL
 
 
 class FrameVisualizarEstante(Frame):
@@ -37,7 +38,7 @@ class FrameVisualizarEstante(Frame):
         self._crear_widgets()  # Creates widgets and populates self.map_widgets
 
         # --- Instanciar Controlador ---
-        ControlarVisualizarEstante(
+        self.controlador = ControlarVisualizarEstante(
             master=self,
             map_widgets=self.map_widgets,
             map_vars=self.map_vars,
@@ -51,25 +52,34 @@ class FrameVisualizarEstante(Frame):
 
     def _crear_widgets(self):
         # frame superior
-        frame_superior = Frame(self, padding=(1, 1))
+        frame_superior = Frame(self, padding=(PADDING_COMPACT, PADDING_COMPACT))
         self._panel_superior(frame=frame_superior)
-        frame_superior.pack(side=TOP, fill=X, padx=1, pady=1)
+        frame_superior.pack(side=TOP, fill=X, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
 
         # frame central
-        frame_central = Frame(self, padding=(1, 1))
+        frame_central = Frame(self, padding=(PADDING_COMPACT, PADDING_COMPACT))
         self._panel_central(frame=frame_central)
-        frame_central.pack(side=TOP, fill=BOTH, padx=1, pady=1, expand=TRUE)
+        frame_central.pack(
+            side=TOP,
+            fill=BOTH,
+            padx=PADDING_COMPACT,
+            pady=PADDING_COMPACT,
+            expand=TRUE,
+        )
 
         # frame inferior
-        frame_inferior = Frame(self, padding=(1, 1))
+        frame_inferior = Frame(self, padding=(PADDING_COMPACT, PADDING_COMPACT))
         self._panel_inferior(frame=frame_inferior)
-        frame_inferior.pack(side=TOP, fill=X, padx=1, pady=1)
+        frame_inferior.pack(side=TOP, fill=X, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
 
         # Populate map_widgets after all widgets are created
         self.map_widgets = {
             "ent_buscar": self.ent_buscar,
             "cbx_campos": self.cbx_campos,
             "btn_buscar": self.btn_buscar,
+            "btn_anterior": self.btn_anterior,
+            "btn_siguiente": self.btn_siguiente,
+            "lbl_pagina": self.lbl_pagina,
         }
 
     # ┌────────────────────────────────────────────────────────────┐
@@ -82,14 +92,22 @@ class FrameVisualizarEstante(Frame):
         )
         lbl_titulo.pack(side=TOP, fill=X, padx=10, pady=(5, 10))
 
-        Separator(frame, orient=HORIZONTAL).pack(fill=X, padx=5, pady=(0, 5))
+        Separator(frame, orient=HORIZONTAL).pack(
+            fill=X,
+            padx=PADDING_OUTER,
+            pady=(0, PADDING_OUTER),
+        )
 
     # ┌────────────────────────────────────────────────────────────┐
     # │ Panel Central
     # └────────────────────────────────────────────────────────────┘
 
     def _panel_central(self, frame: Frame):
-        self.scroll_frame = ScrolledFrame(frame, padding=(1, 1), bootstyle="dark")
+        self.scroll_frame = ScrolledFrame(
+            frame,
+            padding=(PADDING_COMPACT, PADDING_COMPACT),
+            bootstyle="dark",
+        )
         self.scroll_frame.pack(side=TOP, fill=BOTH, expand=True)
 
     # ┌────────────────────────────────────────────────────────────┐
@@ -98,19 +116,44 @@ class FrameVisualizarEstante(Frame):
 
     def _panel_inferior(self, frame: Frame):
         frame_busqueda = Frame(frame)
-        frame_busqueda.pack(fill=X, padx=5, pady=5)
+        frame_busqueda.pack(fill=X, padx=PADDING_OUTER, pady=PADDING_OUTER)
 
         self.ent_buscar = Entry(frame_busqueda, textvariable=self.var_buscar)
-        self.ent_buscar.pack(side=LEFT, fill=X, expand=True, padx=(0, 5))
+        self.ent_buscar.pack(side=LEFT, fill=X, expand=True, padx=(0, PADDING_PANEL))
         ToolTip(self.ent_buscar, "Escribe aquí para buscar y presiona Enter")
 
         self.cbx_campos = Combobox(
             frame_busqueda, values=self.campos_busqueda, state=READONLY, width=12
         )
         self.cbx_campos.current(0)
-        self.cbx_campos.pack(side=LEFT, padx=5)
+        self.cbx_campos.pack(side=LEFT, padx=PADDING_PANEL)
         ToolTip(self.cbx_campos, "Selecciona en qué campo buscar")
 
         self.btn_buscar = Button(frame_busqueda, text="Buscar", style="primary")
         self.btn_buscar.pack(side=LEFT)
         ToolTip(self.btn_buscar, "Realizar la búsqueda en el estante")
+
+        # Frame para paginación
+        frame_paginacion = Frame(frame)
+        frame_paginacion.pack(fill=X, padx=PADDING_OUTER, pady=(0, PADDING_OUTER))
+
+        self.btn_anterior = Button(frame_paginacion, text="◀ Anterior", style="secondary")
+        self.btn_anterior.pack(side=LEFT, padx=(0, PADDING_PANEL))
+        ToolTip(self.btn_anterior, "Ir a la página anterior")
+
+        self.lbl_pagina = Label(frame_paginacion, text="Página 1 de 1", style="inverse-dark")
+        self.lbl_pagina.pack(side=LEFT, expand=True)
+
+        self.btn_siguiente = Button(frame_paginacion, text="Siguiente ▶", style="secondary")
+        self.btn_siguiente.pack(side=RIGHT, padx=(PADDING_PANEL, 0))
+        ToolTip(self.btn_siguiente, "Ir a la página siguiente")
+
+    def actualizar_tabla(self):
+        """
+        Refrescar los datos del estante.
+
+        Nota: El refrescado es manejado automáticamente por el controlador
+        cuando hay cambios en la búsqueda.
+        """
+        if hasattr(self, "controlador"):
+            self.controlador.recargar_estante()

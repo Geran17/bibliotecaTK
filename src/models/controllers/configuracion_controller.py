@@ -94,7 +94,7 @@ class ConfiguracionController:
                     )
                     isValue_portada = self.iniFile.add_value(
                         section=self.section_ubiaciones,
-                        key=self.key_ubicacion_biblioteca,
+                        key=self.key_ubicacion_portadas,
                         value=dir_portada,
                     )
                     return isValue
@@ -104,10 +104,18 @@ class ConfiguracionController:
                     )
                     return False
             elif folder.name == self.nombre_biblioteca:
+                dir_portada = join(directrio, self.nombre_portada)
+                if not isdir(dir_portada):
+                    mkdir(dir_portada)
                 isValue = self.iniFile.add_value(
                     section=self.section_ubiaciones,
                     key=self.key_ubicacion_biblioteca,
                     value=directrio,
+                )
+                self.iniFile.add_value(
+                    section=self.section_ubiaciones,
+                    key=self.key_ubicacion_portadas,
+                    value=dir_portada,
                 )
                 return isValue
         else:

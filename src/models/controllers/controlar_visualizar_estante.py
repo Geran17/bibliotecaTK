@@ -25,6 +25,7 @@ from ttkbootstrap.constants import *
 
 ANCHO_PORTADA = 100
 PORTADAS_POR_REPISA = 8
+DOCUMENTOS_POR_PAGINA = 40  # Número de documentos por página
 
 
 class ControlarVisualizarEstante:
@@ -51,9 +52,18 @@ class ControlarVisualizarEstante:
         self.ent_buscar: Entry = self.map_widgets["ent_buscar"]
         self.cbx_campos: Combobox = self.map_widgets["cbx_campos"]
         self.btn_buscar: Button = self.map_widgets["btn_buscar"]
+        self.btn_anterior: Button = self.map_widgets.get("btn_anterior")
+        self.btn_siguiente: Button = self.map_widgets.get("btn_siguiente")
+        self.lbl_pagina: Label = self.map_widgets.get("lbl_pagina")
 
         # Acceso a las variables
         self.var_buscar: StringVar = self.map_vars["var_buscar"]
+
+        # Variables de paginación
+        self.pagina_actual = 1
+        self.total_documentos = 0
+        self.campo_busqueda_actual = ""
+        self.termino_busqueda_actual = ""
 
         # Almacenamiento de referencias de imágenes para evitar que el recolector de basura las elimine
         self._referencias_imagenes = []
@@ -82,26 +92,23 @@ class ControlarVisualizarEstante:
         """Vincula los eventos de los widgets a los métodos del controlador."""
         self.btn_buscar.config(command=self.on_buscar)
         self.ent_buscar.bind("<Return>", self.on_buscar)
+        if self.btn_anterior:
+            self.btn_anterior.config(command=self.on_pagina_anterior)
+        if self.btn_siguiente:
+            self.btn_siguiente.config(command=self.on_pagina_siguiente)
 
     def _cargar_estante(self):
-        """Carga los documentos en el estante al iniciar."""
-        todos_los_documentos = Consulta().get_todos_documentos()
-        self._mostrar_documentos_en_estante(todos_los_documentos)
+        """Inicializa el estante mostrando el catálogo completo paginado."""
+        self.campo_busqueda_actual = "todo"
+        self.termino_busqueda_actual = ""
+        self.pagina_actual = 1
+        self.total_documentos = Consulta().contar_resultados_busqueda(campo="todo", termino="")
+        self._mostrar_pagina_actual()
 
     def on_buscar(self, event=None):
         """Maneja el evento de búsqueda."""
         termino_busqueda = self.var_buscar.get()
         campo_seleccionado = self.cbx_campos.get()
-
-        if not termino_busqueda.strip() and campo_seleccionado.lower() != "todo":
-            self._cargar_estante()
-            return
-
-        if not termino_busqueda.strip():
-            showwarning(
-                "Búsqueda vacía", "Por favor, ingrese un término para buscar.", parent=self.master
-            )
-            return
 
         # Mapeo de texto de UI a nombre de campo en BD
         mapa_campos = {
@@ -116,8 +123,24 @@ class ControlarVisualizarEstante:
         }
         campo_db = mapa_campos.get(campo_seleccionado, "todo")
 
-        resultados = Consulta().buscar_en_estante(campo=campo_db, termino=termino_busqueda)
-        self._mostrar_documentos_en_estante(resultados)
+        if not termino_busqueda.strip() and campo_seleccionado.lower() != "todo":
+            self._cargar_estante()
+            return
+
+        if not termino_busqueda.strip() and campo_db != "todo":
+            showwarning(
+                "Búsqueda vacía", "Por favor, ingrese un término para buscar.", parent=self.master
+            )
+            return
+
+        # Obtener total de resultados para paginación
+        self.total_documentos = Consulta().contar_resultados_busqueda(
+            campo=campo_db, termino=termino_busqueda
+        )
+        self.campo_busqueda_actual = campo_db
+        self.termino_busqueda_actual = termino_busqueda
+        self.pagina_actual = 1
+        self._mostrar_pagina_actual()
 
     def _mostrar_documentos_en_estante(self, lista_documentos):
         """
@@ -211,6 +234,61 @@ class ControlarVisualizarEstante:
         threading.Thread(
             target=self._procesar_carga_imagenes, args=(tareas_carga,), daemon=True
         ).start()
+
+    def _mostrar_pagina_actual(self):
+        """Muestra la página actual de documentos."""
+        if not self.campo_busqueda_actual:
+            self._cargar_estante()
+            return
+        offset = (self.pagina_actual - 1) * DOCUMENTOS_POR_PAGINA
+        documentos_pagina = Consulta().buscar_en_estante(
+            campo=self.campo_busqueda_actual,
+            termino=self.termino_busqueda_actual,
+            limit=DOCUMENTOS_POR_PAGINA,
+            offset=offset,
+        )
+        self._mostrar_documentos_en_estante(documentos_pagina)
+        self._actualizar_controles_paginacion()
+
+    def _actualizar_controles_paginacion(self):
+        """Actualiza los controles de paginación."""
+        total_paginas = (self.total_documentos + DOCUMENTOS_POR_PAGINA - 1) // DOCUMENTOS_POR_PAGINA
+        total_paginas = max(1, total_paginas)
+        if self.lbl_pagina:
+            self.lbl_pagina.config(text=f"Página {self.pagina_actual} de {total_paginas}")
+        if self.btn_anterior:
+            self.btn_anterior.config(state=NORMAL if self.pagina_actual > 1 else DISABLED)
+        if self.btn_siguiente:
+            self.btn_siguiente.config(
+                state=NORMAL if self.pagina_actual < total_paginas else DISABLED
+            )
+
+    def on_pagina_anterior(self):
+        """Navega a la página anterior."""
+        if self.pagina_actual > 1:
+            self.pagina_actual -= 1
+            self._mostrar_pagina_actual()
+
+    def on_pagina_siguiente(self):
+        """Navega a la página siguiente."""
+        total_paginas = (self.total_documentos + DOCUMENTOS_POR_PAGINA - 1) // DOCUMENTOS_POR_PAGINA
+        if self.pagina_actual < total_paginas:
+            self.pagina_actual += 1
+            self._mostrar_pagina_actual()
+
+    def recargar_estante(self):
+        """
+        Refresca el estado visual del estante.
+        Si hay una búsqueda activa, recarga la página actual.
+        """
+        if self.termino_busqueda_actual:
+            self._mostrar_pagina_actual()
+            return
+
+        self.pagina_actual = 1
+        self.total_documentos = 0
+        self._cargar_estante()
+        self._actualizar_controles_paginacion()
 
     def _procesar_carga_imagenes(self, tareas):
         """Procesa la carga de imágenes en un hilo separado."""

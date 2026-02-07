@@ -1,23 +1,19 @@
 import pytest
 import sqlite3
-from src.models.daos.documento_dao import DocumentoDAO
-from src.models.daos.connection_sqlite import Database
+from models.daos.documento_dao import DocumentoDAO
 
 # --- Fixtures ---
 
 
 @pytest.fixture
-def documento_dao_en_memoria():
+def documento_dao_en_memoria(tmp_path):
     """
-    Fixture que crea un DocumentoDAO con una base de datos en memoria.
+    Fixture que crea un DocumentoDAO con una base de datos temporal en archivo.
     Se asegura de que la tabla 'documento' esté creada y limpia para cada test.
     """
-    Database.resetear()
-    # El __init__ de DAO llama a crear_tabla()
-    dao = DocumentoDAO(ruta_db=":memory:")
+    ruta_db = tmp_path / "documento.sqlite3"
+    dao = DocumentoDAO(ruta_db=str(ruta_db))
     yield dao
-    dao._db.cerrar()
-    Database.resetear()
 
 
 @pytest.fixture

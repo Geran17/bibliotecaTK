@@ -46,6 +46,8 @@ class ControlarAdministrarContenido:
         self.btn_eliminar_seccion: Button = self.map_widgets["eliminar_seccion"]
         self.btn_nuevo_seccion: Button = self.map_widgets["nuevo_seccion"]
         self.btn_abrir_documento: Button = self.map_widgets["abrir_documento"]
+        self.btn_importar_capitulos: Button = self.map_widgets["importar_capitulos"]
+        self.btn_importar_secciones: Button = self.map_widgets["importar_secciones"]
         self.tree_view: Treeview = self.map_widgets["tree_view"]
         self.cbx_seccion_padre: Combobox = self.map_widgets["seccion_padre"]
 
@@ -64,6 +66,8 @@ class ControlarAdministrarContenido:
         self.btn_nuevo_capitulo.config(command=self.on_nuevo_capitulo)
         self.btn_eliminar_capitulo.config(command=self.on_eliminar_capitulo)
         self.btn_eliminar_seccion.config(command=self.on_eliminar_seccion)
+        self.btn_importar_capitulos.config(command=self.on_importar_capitulos)
+        self.btn_importar_secciones.config(command=self.on_importar_secciones)
         # evento el tree_view
         self.tree_view.bind("<Double-1>", self.on_doble_click_tree)
 
@@ -611,3 +615,11 @@ class ControlarAdministrarContenido:
             id=id_documento,
         )
         self.documento.instanciar()
+
+    def on_importar_capitulos(self):
+        """Delega la importación de capítulos a la vista."""
+        self.master.importar_capitulos()
+
+    def on_importar_secciones(self):
+        """Delega la importación de secciones a la vista."""
+        self.master.importar_secciones()

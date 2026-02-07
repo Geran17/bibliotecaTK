@@ -16,6 +16,7 @@ from tkinter import ttk
 from typing import List, Dict
 from tkinter import messagebox
 from ttkbootstrap.constants import *
+from views.components.ui_tokens import PADDING_COMPACT, PADDING_OUTER, PADDING_PANEL
 from models.entities.categoria import Categoria
 from models.entities.consulta import Consulta
 
@@ -45,66 +46,66 @@ class AdministrarCategorias(Frame):
     # └────────────────────────────────────────────────────────────┘
 
     def crear_widgets(self):
-        self.frame_superior = Frame(self, padding=(1, 1))
-        self.frame_superior.pack(side=TOP, fill=X, padx=1, pady=1)
+        self.frame_superior = Frame(self, padding=(PADDING_COMPACT, PADDING_COMPACT))
+        self.frame_superior.pack(side=TOP, fill=X, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
         self.panel_superior(frame=self.frame_superior)
 
-        self.frame_central = Frame(self, padding=(1, 1))
-        self.frame_central.pack(side=TOP, fill=BOTH, expand=True, padx=1, pady=1)
+        self.frame_central = Frame(self, padding=(PADDING_COMPACT, PADDING_COMPACT))
+        self.frame_central.pack(side=TOP, fill=BOTH, expand=True, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
         self.panel_central(frame=self.frame_central)
 
-        self.frame_inferior = Frame(self, padding=(1, 1))
-        self.frame_inferior.pack(side=TOP, fill=X, padx=1, pady=1)
+        self.frame_inferior = Frame(self, padding=(PADDING_COMPACT, PADDING_COMPACT))
+        self.frame_inferior.pack(side=TOP, fill=X, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
         self.panel_inferior(frame=self.frame_inferior)
 
     def panel_superior(self, frame: Frame):
         estilo_fuente_titulo = ('Helvetica', 14, 'bold')
         label_titulo = Label(frame, text="🗂️ Administrar Categorías", font=estilo_fuente_titulo)
-        label_titulo.pack(side=TOP, fill=X, padx=2, pady=2)
+        label_titulo.pack(side=TOP, fill=X, padx=PADDING_PANEL, pady=PADDING_PANEL)
         separador = Separator(frame)
-        separador.pack(side=TOP, fill=X, padx=1, pady=1)
+        separador.pack(side=TOP, fill=X, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
 
     def panel_central(self, frame: Frame):
         self.notebook = Notebook(frame)
-        self.notebook.pack(fill=BOTH, expand=True, padx=5, pady=5)
+        self.notebook.pack(fill=BOTH, expand=True, padx=PADDING_OUTER, pady=PADDING_OUTER)
 
-        frame_datos = Frame(self.notebook, padding=(2, 2))
+        frame_datos = Frame(self.notebook, padding=(PADDING_PANEL, PADDING_PANEL))
         self.tab_datos(frame=frame_datos)
         self.notebook.add(frame_datos, text="Datos")
 
-        frame_explorar = Frame(self.notebook, padding=(2, 2))
+        frame_explorar = Frame(self.notebook, padding=(PADDING_PANEL, PADDING_PANEL))
         self.tab_explorar(frame=frame_explorar)
         self.notebook.add(frame_explorar, text="Explorar")
 
     def tab_datos(self, frame):
         # --- Frame para Detalles de la Categoría ---
         lf_detalles = LabelFrame(frame, text="Detalles de la Categoría", padding=10)
-        lf_detalles.pack(side=TOP, fill=X, padx=5, pady=5)
+        lf_detalles.pack(side=TOP, fill=X, padx=PADDING_OUTER, pady=PADDING_OUTER)
         lf_detalles.columnconfigure(1, weight=1)
 
         # Fila 1: ID y Nombre
-        Label(lf_detalles, text="ID:").grid(row=0, column=0, sticky=W, padx=5, pady=5)
+        Label(lf_detalles, text="ID:").grid(row=0, column=0, sticky=W, padx=PADDING_OUTER, pady=PADDING_OUTER)
         Entry(
             lf_detalles,
             state=READONLY,
             textvariable=self.var_id_categoria,
             width=10,
             justify="center",
-        ).grid(row=0, column=1, sticky=W, padx=5, pady=5)
+        ).grid(row=0, column=1, sticky=W, padx=PADDING_OUTER, pady=PADDING_OUTER)
 
-        Label(lf_detalles, text="Nombre:").grid(row=1, column=0, sticky=W, padx=5, pady=5)
+        Label(lf_detalles, text="Nombre:").grid(row=1, column=0, sticky=W, padx=PADDING_OUTER, pady=PADDING_OUTER)
         Entry(lf_detalles, textvariable=self.var_nombre).grid(
-            row=1, column=1, sticky=EW, padx=5, pady=5
+            row=1, column=1, sticky=EW, padx=PADDING_OUTER, pady=PADDING_OUTER
         )
 
         # Fila 2: Categoría Padre
-        Label(lf_detalles, text="Categoría Padre:").grid(row=2, column=0, sticky=W, padx=5, pady=5)
+        Label(lf_detalles, text="Categoría Padre:").grid(row=2, column=0, sticky=W, padx=PADDING_OUTER, pady=PADDING_OUTER)
         self.combo_padre = Combobox(lf_detalles, state="readonly")
-        self.combo_padre.grid(row=2, column=1, sticky=EW, padx=5, pady=5)
+        self.combo_padre.grid(row=2, column=1, sticky=EW, padx=PADDING_OUTER, pady=PADDING_OUTER)
 
         # --- Frame para Descripción ---
         lf_descripcion = LabelFrame(frame, text="Descripción", padding=10)
-        lf_descripcion.pack(side=TOP, fill=BOTH, padx=5, pady=5, expand=True)
+        lf_descripcion.pack(side=TOP, fill=BOTH, padx=PADDING_OUTER, pady=PADDING_OUTER, expand=True)
 
         scrollbar = Scrollbar(lf_descripcion)
         self.txt_descripcion = Text(
@@ -115,23 +116,23 @@ class AdministrarCategorias(Frame):
         scrollbar.config(command=self.txt_descripcion.yview)
 
         # --- Frame para Botones de Acción ---
-        frame_buttons = Frame(frame, padding=(1, 1))
-        frame_buttons.pack(side=TOP, fill=X, padx=1, pady=1)
+        frame_buttons = Frame(frame, padding=(PADDING_COMPACT, PADDING_COMPACT))
+        frame_buttons.pack(side=TOP, fill=X, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
         frame_buttons.columnconfigure((0, 1, 2), weight=1)
 
-        Button(frame_buttons, text="Aplicar", command=self.on_aplicar).pack(
-            side=LEFT, fill=X, expand=TRUE, padx=2, pady=2
+        Button(frame_buttons, text="Aplicar", command=self.on_aplicar, style="primary.TButton").pack(
+            side=LEFT, fill=X, expand=TRUE, padx=PADDING_PANEL, pady=PADDING_PANEL
         )
-        Button(frame_buttons, text="Eliminar", command=self.on_eliminar).pack(
-            side=LEFT, fill=X, expand=TRUE, padx=2, pady=2
+        Button(frame_buttons, text="Eliminar", command=self.on_eliminar, style="danger.Outline.TButton").pack(
+            side=LEFT, fill=X, expand=TRUE, padx=PADDING_PANEL, pady=PADDING_PANEL
         )
-        Button(frame_buttons, text="Nuevo", command=self.on_nuevo).pack(
-            side=LEFT, fill=X, expand=TRUE, padx=2, pady=2
+        Button(frame_buttons, text="Nuevo", command=self.on_nuevo, style="success.Outline.TButton").pack(
+            side=LEFT, fill=X, expand=TRUE, padx=PADDING_PANEL, pady=PADDING_PANEL
         )
-        Button(frame_buttons, text="|<", command=self.on_primer_elemento).pack(side=LEFT)
-        Button(frame_buttons, text="<", command=self.on_anterior_elemento).pack(side=LEFT)
-        Button(frame_buttons, text=">", command=self.on_siguiente_elemento).pack(side=LEFT)
-        Button(frame_buttons, text=">|", command=self.on_ultimo_elemento).pack(side=LEFT)
+        Button(frame_buttons, text="|<", command=self.on_primer_elemento, style="secondary.Outline.TButton").pack(side=LEFT)
+        Button(frame_buttons, text="<", command=self.on_anterior_elemento, style="secondary.Outline.TButton").pack(side=LEFT)
+        Button(frame_buttons, text=">", command=self.on_siguiente_elemento, style="secondary.Outline.TButton").pack(side=LEFT)
+        Button(frame_buttons, text=">|", command=self.on_ultimo_elemento, style="secondary.Outline.TButton").pack(side=LEFT)
 
     def tab_explorar(self, frame):
         frame.columnconfigure(0, weight=1)

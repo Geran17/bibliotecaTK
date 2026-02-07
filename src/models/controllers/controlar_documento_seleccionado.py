@@ -64,6 +64,7 @@ class ControlarDocumentoSeleccionado:
         self.btn_abrir.config(command=self.on_abrir_documento)
         self.btn_abrir_carpeta.config(command=self.on_abrir_carpeta)
         self.btn_renombrar.config(command=self.on_renombrar)
+        self.btn_copiar.config(command=self.on_copiar)
         self.btn_mover.config(command=self.on_mover)
         self.btn_eliminar.config(command=self.on_eliminar)
         self.btn_papelera.config(command=self.on_papelera)
@@ -80,25 +81,27 @@ class ControlarDocumentoSeleccionado:
             # Obtener el ID del item seleccionado
             item_id = self.selected_item[0]
 
-            # Opción 1: Obtener valores directamente del treeview (RECOMENDADO)
+            # Opción 1: Obtener valores directamente del treeview
             values = self.table_view.view.item(item_id)['values']
 
-            # O Opción 2: Convertir el ID a índice numérico
-            # all_items = self.table_view.view.get_children()
-            # row_index = all_items.index(item_id)
-            # values = self.table_view.get_row(row_index).values
-
             if values:
+                # Crear documento solo con ID y extensión desde la tabla
+                id_documento = values[0]
+                extension = values[4]
+
+                # Crear objeto Documento
                 self.documento = Documento(
-                    id=values[0],
-                    nombre=values[3],
-                    hash=values[9],
-                    extension=values[4],
+                    id=id_documento,
+                    nombre="",  # Se actualizará desde BD
+                    hash="",  # Se actualizará desde BD
+                    extension=extension,
                     creado_en="",
                     actualizado_en="",
                     tamano=0,
                     esta_activo=True,
                 )
+
+                # Instanciar desde BD para obtener datos actualizados
                 if self.documento.instanciar():
                     self.var_id_documento.set(value=self.documento.id)
                     self.var_nombre_documento.set(value=self.documento.nombre)
@@ -177,9 +180,6 @@ class ControlarDocumentoSeleccionado:
     # ┌────────────────────────────────────────────────────────────┐
     # │ Eventos
     # └────────────────────────────────────────────────────────────┘
-    def on_abrir_carpeta(self):
-        pass
-
     def on_double_click_table_view(self, event):
         self._set_documento()
 
@@ -359,6 +359,9 @@ class ControlarDocumentoSeleccionado:
             # Actualizar la ruta del documento en memoria
             self.ruta_documento = ruta_destino
 
+            # Actualizar la variable del entry con el nombre nuevo
+            self.var_nombre_documento.set(value=self.documento.nombre)
+
             # Refrescar la fila en la tabla sin perder la selección
             self._actualizar_fila_tabla()
 
@@ -369,6 +372,75 @@ class ControlarDocumentoSeleccionado:
             showerror(
                 title="Error al renombrar",
                 message=f"No se pudo renombrar el archivo: {str(e)}",
+                parent=self.master,
+            )
+
+    def on_copiar(self):
+        """
+        Copia el documento seleccionado a una ubicación fuera de la biblioteca.
+        El documento original permanece en la biblioteca.
+        """
+        if not self.documento:
+            showwarning(
+                title="Seleccione el documento",
+                message="Error: No hay documento seleccionado para copiar. Doble click para seleccionar",
+                icon="warning",
+                parent=self.master,
+            )
+            return
+
+        # Validar que el archivo existe
+        if not exists(self.ruta_documento):
+            showerror(
+                title="Error",
+                message=f"El documento no existe en la biblioteca: {self.ruta_documento}",
+                parent=self.master,
+            )
+            return
+
+        # Seleccionar carpeta de destino
+        from tkinter.filedialog import askdirectory
+
+        ruta_destino_carpeta = askdirectory(
+            title="Seleccione la carpeta de destino para copiar",
+            parent=self.master,
+        )
+
+        if not ruta_destino_carpeta:
+            # Usuario canceló la selección
+            return
+
+        # Construir la ruta completa del archivo de destino SIN el ID
+        nombre_archivo = f"{self.documento.nombre}.{self.documento.extension}"
+        ruta_destino = join(ruta_destino_carpeta, nombre_archivo)
+
+        # Validar que no exista ya un archivo en el destino
+        if exists(ruta_destino):
+            from tkinter.messagebox import askyesno
+
+            sobreescribir = askyesno(
+                title="Archivo existente",
+                message=f"Ya existe un archivo con el mismo nombre en el destino.\n¿Desea sobreescribirlo?",
+                parent=self.master,
+            )
+
+            if not sobreescribir:
+                return
+
+        # Intentar copiar el archivo
+        try:
+            copiar_archivo(ruta_origen=self.ruta_documento, ruta_destino=ruta_destino)
+            from tkinter.messagebox import showinfo
+
+            showinfo(
+                title="Copia exitosa",
+                message=f"El documento se ha copiado exitosamente a:\n{ruta_destino}",
+                parent=self.master,
+            )
+        except Exception as e:
+            showerror(
+                title="Error al copiar",
+                message=f"No se pudo copiar el archivo: {str(e)}",
                 parent=self.master,
             )
 

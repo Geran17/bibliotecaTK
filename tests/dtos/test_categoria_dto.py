@@ -1,5 +1,5 @@
 import pytest
-from src.models.dtos.categoria_dto import CategoriaDTO
+from models.dtos.categoria_dto import CategoriaDTO
 
 
 def test_categoria_dto_creacion_instancia_completa():

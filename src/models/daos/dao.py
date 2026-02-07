@@ -5,6 +5,9 @@ from contextlib import contextmanager
 import threading
 from utilities.configuracion import RUTA_DATA
 from os.path import join
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class DAO(ABC):
@@ -91,7 +94,7 @@ class DAO(ABC):
                 cursor.execute(sql, params)
                 return cursor.lastrowid
         except sqlite3.Error as ex:
-            print(f"Error al ejecutar inserción: {ex}")
+            logger.error("Error al ejecutar inserción: %s", ex)
             return None
 
     def _ejecutar_consulta(self, sql: str, params: tuple = ()) -> List[Dict[str, Any]]:
@@ -105,7 +108,7 @@ class DAO(ABC):
                 rows = cursor.fetchall()
                 return [dict(row) for row in rows]
         except sqlite3.Error as ex:
-            print(f"Error al ejecutar consulta: {ex}")
+            logger.error("Error al ejecutar consulta: %s", ex)
             return []
 
     def _ejecutar_actualizacion(self, sql: str, params: tuple = ()) -> bool:
@@ -118,7 +121,7 @@ class DAO(ABC):
                 cursor.execute(sql, params)
                 return cursor.rowcount > 0
         except sqlite3.Error as ex:
-            print(f"Error al ejecutar actualización: {ex}")
+            logger.error("Error al ejecutar actualización: %s", ex)
             return False
 
     # Métodos de compatibilidad para código existente

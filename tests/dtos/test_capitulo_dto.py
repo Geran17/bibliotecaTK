@@ -1,5 +1,5 @@
 import pytest
-from src.models.dtos.capitulo_dto import CapituloDTO
+from models.dtos.capitulo_dto import CapituloDTO
 
 
 def test_capitulo_dto_creacion_instancia_completa():

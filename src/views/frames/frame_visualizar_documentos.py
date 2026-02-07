@@ -4,20 +4,20 @@ from ttkbootstrap import (
     Notebook,
     Treeview,
     Label,
-    Entry,
     Button,
-    Combobox,
     StringVar,
     LabelFrame,
     Separator,
 )
 from ttkbootstrap.constants import *
 from ttkbootstrap import Style
-from ttkbootstrap.tableview import Tableview
 from ttkbootstrap.tooltip import ToolTip
 from models.controllers.controlar_visualizacion_documentos import (
     ControlarVisualizacionDocumentos,
 )
+from views.components.smart_table_frame import SmartTableFrame
+from views.components.context_menu_factory import ContextMenuFactory
+from views.components.ui_tokens import PADDING_COMPACT, PADDING_OUTER, PADDING_PANEL
 
 
 class FrameVisualizarDocumentos(Frame):
@@ -81,7 +81,7 @@ class FrameVisualizarDocumentos(Frame):
         map_vars = {"var_buscar": self.var_buscar}
 
         # --- Instanciar Controlador ---
-        ControlarVisualizacionDocumentos(
+        self.controlador = ControlarVisualizacionDocumentos(
             master=self, map_widgets=self.map_widgets, map_vars=map_vars
         )
 
@@ -92,22 +92,22 @@ class FrameVisualizarDocumentos(Frame):
     def crear_widgets(self):
         """Crea y organiza los widgets principales del frame."""
         paned_window = PanedWindow(self, orient=HORIZONTAL, style="Separador.TPanedwindow")
-        paned_window.pack(fill=BOTH, expand=True, padx=5, pady=5)
+        paned_window.pack(fill=BOTH, expand=True, padx=PADDING_OUTER, pady=PADDING_OUTER)
 
         # --- Panel Izquierdo (Organización) ---
-        frame_izquierdo = LabelFrame(paned_window, text="📚 Organización", padding=5)
+        frame_izquierdo = LabelFrame(paned_window, text="📚 Organización", padding=PADDING_PANEL)
         self.panel_izquierdo(frame=frame_izquierdo)
         paned_window.add(frame_izquierdo, weight=1)
 
         # --- Panel Derecho (Documentos) ---
-        frame_derecho = LabelFrame(paned_window, text="📜 Documentos", padding=5)
+        frame_derecho = LabelFrame(paned_window, text="📜 Documentos", padding=PADDING_PANEL)
         self.panel_derecho(frame=frame_derecho)
         paned_window.add(frame_derecho, weight=4)
 
     def panel_izquierdo(self, frame: Frame):
         """Crea el Notebook con Treeviews para la organización."""
         notebook_organizacion = Notebook(frame, style="Left.TNotebook")
-        notebook_organizacion.pack(fill=BOTH, expand=True, pady=(0, 5))
+        notebook_organizacion.pack(fill=BOTH, expand=True, pady=(0, PADDING_OUTER))
 
         # Pestañas para cada tipo de organización
         for nombre_tab, icono in self.map_iconos_tabs.items():
@@ -116,7 +116,7 @@ class FrameVisualizarDocumentos(Frame):
             )
 
         self.btn_refrescar = Button(frame, text="🔄 Refrescar", style="secondary-toolbutton")
-        self.btn_refrescar.pack(side=BOTTOM, fill=X, padx=2, pady=(5, 0))
+        self.btn_refrescar.pack(side=BOTTOM, fill=X, padx=PADDING_COMPACT, pady=(PADDING_OUTER, 0))
         ToolTip(self.btn_refrescar, "Recargar los datos de la organización")
 
     def _crear_tab_organizacion(
@@ -134,38 +134,33 @@ class FrameVisualizarDocumentos(Frame):
 
     def panel_derecho(self, frame: Frame):
         """Crea el panel de búsqueda y la tabla de documentos."""
-        # --- Frame para la búsqueda ---
-        frame_busqueda = Frame(frame)
-        frame_busqueda.pack(fill=X, pady=(0, 5))
-
-        self.ent_buscar = Entry(frame_busqueda, textvariable=self.var_buscar)
-        self.ent_buscar.pack(side=LEFT, fill=X, expand=True, padx=(0, 5))
-        ToolTip(self.ent_buscar, "Escribe aquí para buscar y presiona Enter")
-
-        self.cbx_campos = Combobox(
-            frame_busqueda, values=self.campos_busqueda, state=READONLY, width=12
-        )
-        self.cbx_campos.current(0)
-        self.cbx_campos.pack(side=LEFT, padx=5)
-        ToolTip(self.cbx_campos, "Selecciona en qué campo buscar")
-
-        self.btn_buscar = Button(frame_busqueda, text="Buscar", style="primary")
-        self.btn_buscar.pack(side=LEFT)
-        ToolTip(self.btn_buscar, "Realizar la búsqueda de documentos")
-
-        # --- Separador ---
         Separator(frame, orient=HORIZONTAL).pack(fill=X, pady=5)
 
-        # --- Tabla de Documentos ---
-        self.table_view = Tableview(
+        self.smart_table = SmartTableFrame(
             master=frame,
             coldata=self.coldata,
+            search_fields=self.campos_busqueda,
+            var_buscar=self.var_buscar,
+            show_refresh=True,
+            on_search=self.on_buscar_documentos,
+            on_refresh=self.actualizar_tabla,
             paginated=True,
-            searchable=False,  # La búsqueda se maneja con los widgets de arriba
+            searchable=False,
             autofit=True,
             bootstyle=PRIMARY,
         )
-        self.table_view.pack(fill=BOTH, expand=True)
+        self.smart_table.pack(fill=BOTH, expand=True)
+
+        self.ent_buscar = self.smart_table.ent_buscar
+        self.cbx_campos = self.smart_table.cbx_campos
+        self.btn_buscar = self.smart_table.btn_buscar
+        self.btn_refrescar_tabla = self.smart_table.btn_refrescar
+        self.table_view = self.smart_table.table_view
+
+        ToolTip(self.ent_buscar, "Escribe aquí para buscar y presiona Enter")
+        ToolTip(self.cbx_campos, "Selecciona en qué campo buscar")
+        ToolTip(self.btn_buscar, "Realizar la búsqueda de documentos")
+        self._crear_menu_contextual_tabla()
 
     # ┌────────────────────────────────────────────────────────────┐
     # │ Eventos (a implementar)
@@ -173,4 +168,31 @@ class FrameVisualizarDocumentos(Frame):
 
     def on_buscar_documentos(self):
         """Lógica para buscar documentos y poblar la tabla."""
-        pass
+        if hasattr(self, "controlador"):
+            self.controlador.on_buscar_documentos()
+
+    def actualizar_tabla(self):
+        """
+        Refrescar los datos de la tabla de documentos.
+
+        Nota: El refrescado es manejado automáticamente por el controlador
+        cuando hay cambios en la búsqueda o selección de elementos.
+        """
+        if hasattr(self, "controlador"):
+            self.controlador.recargar_datos()
+
+    def _crear_menu_contextual_tabla(self):
+        acciones = [
+            {
+                "label": "📖 Abrir documento",
+                "command": lambda: self.controlador.on_doble_clic_tabla_documentos(None),
+            },
+            {"label": "🔎 Buscar", "command": self.on_buscar_documentos},
+            {"separator": True},
+            {"label": "🔄 Refrescar", "command": self.actualizar_tabla},
+        ]
+        self.menu_contextual_tabla = ContextMenuFactory.build_for_treeview(
+            master=self,
+            treeview=self.table_view.view,
+            actions=acciones,
+        )

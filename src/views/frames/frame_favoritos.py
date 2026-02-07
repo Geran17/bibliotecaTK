@@ -56,3 +56,17 @@ class FrameFavoritos(Frame):
         )
         self.table_view.pack(fill=BOTH, expand=True)
         ToolTip(self.table_view.view, "Doble clic en un documento para abrirlo.")
+
+    def actualizar_tabla(self):
+        """
+        Refrescar los datos de la tabla de favoritos.
+        Invoca el botón de refrescar para recargar los datos.
+        """
+        try:
+            if hasattr(self, 'btn_refrescar') and self.btn_refrescar.winfo_exists():
+                try:
+                    self.btn_refrescar.invoke()
+                except Exception:
+                    pass
+        except Exception:
+            pass

@@ -168,8 +168,7 @@ class ConsultaDAO(DAO):
 
     def get_documentos_por_coleccion(self, id_coleccion: int) -> List[Dict[str, Any]]:
         """
-        Obtiene los documentos asociados a una colección específica utilizando
-        la vista 'vista_asociaciones_documentos'.
+        Obtiene los documentos asociados a una colección específica.
 
         Args:
             id_coleccion (int): El ID de la colección.
@@ -177,21 +176,19 @@ class ConsultaDAO(DAO):
         Returns:
             Una lista de diccionarios que representan los documentos.
         """
-        sql = "SELECT * FROM vista_asociaciones_documentos WHERE id_coleccion = ? ORDER BY nombre"
-        # Se realiza un JOIN explícito con la tabla de asociación,
-        # ya que la vista principal no contiene el id_coleccion.
         sql = """
-            SELECT v.* FROM vista_asociaciones_documentos v
-            JOIN documento_coleccion dc ON v.id = dc.id_documento
-            WHERE dc.id_coleccion = ? ORDER BY v.nombre
+            SELECT d.*
+            FROM documento d
+            JOIN documento_coleccion dc ON d.id = dc.id_documento
+            WHERE dc.id_coleccion = ?
+            ORDER BY d.nombre
         """
         params = (id_coleccion,)
         return self._ejecutar_consulta(sql=sql, params=params)
 
     def get_documentos_por_grupo(self, id_grupo: int) -> List[Dict[str, Any]]:
         """
-        Obtiene los documentos asociados a un grupo específico utilizando
-        la vista 'vista_asociaciones_documentos'.
+        Obtiene los documentos asociados a un grupo específico.
 
         Args:
             id_grupo (int): El ID del grupo.
@@ -200,17 +197,18 @@ class ConsultaDAO(DAO):
             Una lista de diccionarios que representan los documentos.
         """
         sql = """
-            SELECT v.* FROM vista_asociaciones_documentos v
-            JOIN documento_grupo dg ON v.id = dg.id_documento
-            WHERE dg.id_grupo = ? ORDER BY v.nombre
+            SELECT d.*
+            FROM documento d
+            JOIN documento_grupo dg ON d.id = dg.id_documento
+            WHERE dg.id_grupo = ?
+            ORDER BY d.nombre
         """
         params = (id_grupo,)
         return self._ejecutar_consulta(sql=sql, params=params)
 
     def get_documentos_por_categoria(self, id_categoria: int) -> List[Dict[str, Any]]:
         """
-        Obtiene los documentos asociados a una categoría específica utilizando
-        la vista 'vista_asociaciones_documentos'.
+        Obtiene los documentos asociados a una categoría específica.
 
         Args:
             id_categoria (int): El ID de la categoría.
@@ -219,17 +217,18 @@ class ConsultaDAO(DAO):
             Una lista de diccionarios que representan los documentos.
         """
         sql = """
-            SELECT v.* FROM vista_asociaciones_documentos v
-            JOIN documento_categoria dc ON v.id = dc.id_documento
-            WHERE dc.id_categoria = ? ORDER BY v.nombre
+            SELECT d.*
+            FROM documento d
+            JOIN documento_categoria dc ON d.id = dc.id_documento
+            WHERE dc.id_categoria = ?
+            ORDER BY d.nombre
         """
         params = (id_categoria,)
         return self._ejecutar_consulta(sql=sql, params=params)
 
     def get_documentos_por_etiqueta(self, id_etiqueta: int) -> List[Dict[str, Any]]:
         """
-        Obtiene los documentos asociados a una etiqueta específica utilizando
-        la vista 'vista_asociaciones_documentos'.
+        Obtiene los documentos asociados a una etiqueta específica.
 
         Args:
             id_etiqueta (int): El ID de la etiqueta.
@@ -238,17 +237,18 @@ class ConsultaDAO(DAO):
             Una lista de diccionarios que representan los documentos.
         """
         sql = """
-            SELECT v.* FROM vista_asociaciones_documentos v
-            JOIN documento_etiqueta de ON v.id = de.id_documento
-            WHERE de.id_etiqueta = ? ORDER BY v.nombre
+            SELECT d.*
+            FROM documento d
+            JOIN documento_etiqueta de ON d.id = de.id_documento
+            WHERE de.id_etiqueta = ?
+            ORDER BY d.nombre
         """
         params = (id_etiqueta,)
         return self._ejecutar_consulta(sql=sql, params=params)
 
     def get_documentos_por_palabra_clave(self, id_palabra_clave: int) -> List[Dict[str, Any]]:
         """
-        Obtiene los documentos asociados a una palabra clave específica utilizando
-        la vista 'vista_asociaciones_documentos'.
+        Obtiene los documentos asociados a una palabra clave específica.
 
         Args:
             id_palabra_clave (int): El ID de la palabra clave.
@@ -257,9 +257,11 @@ class ConsultaDAO(DAO):
             Una lista de diccionarios que representan los documentos.
         """
         sql = """
-            SELECT v.* FROM vista_asociaciones_documentos v
-            JOIN documento_palabra_clave dpc ON v.id = dpc.id_documento
-            WHERE dpc.id_palabra_clave = ? ORDER BY v.nombre
+            SELECT d.*
+            FROM documento d
+            JOIN documento_palabra_clave dpc ON d.id = dpc.id_documento
+            WHERE dpc.id_palabra_clave = ?
+            ORDER BY d.nombre
         """
         params = (id_palabra_clave,)
         return self._ejecutar_consulta(sql=sql, params=params)

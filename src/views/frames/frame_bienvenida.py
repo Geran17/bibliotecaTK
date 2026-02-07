@@ -168,3 +168,10 @@ class FrameBienvenida(Frame):
             frame_pie, text="Versión 0.1.0", style="Pie.TLabel", bootstyle="secondary"
         )
         lbl_version.pack(side=RIGHT)
+
+    def actualizar_tabla(self):
+        """
+        Método para compatibilidad con el sistema de refrescado de pestañas.
+        La pestaña de bienvenida no tiene tabla que refrescar.
+        """
+        pass

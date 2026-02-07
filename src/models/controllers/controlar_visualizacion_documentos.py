@@ -31,6 +31,7 @@ class ControlarVisualizacionDocumentos:
         self.master = master
         self.map_widgets = map_widgets
         self.map_vars = map_vars
+        self.consulta = Consulta()
 
         # --- Widgets ---
         self.map_treeviews: Dict[str, Treeview] = self.map_widgets["treeviews"]
@@ -138,14 +139,14 @@ class ControlarVisualizacionDocumentos:
             tree_colecciones.delete(item)
 
         # Obtener datos
-        self.colecciones = Consulta().get_colecciones()
+        self.colecciones = self.consulta.get_colecciones()
         self.map_colecciones = {col.id: col for col in self.colecciones}
 
         # Poblar Treeview con colecciones y sus documentos
         if self.colecciones:
             for coleccion in self.colecciones:
                 # Obtener documentos para esta colección
-                documentos = Consulta().get_documentos_por_coleccion(coleccion.id)
+                documentos = self.consulta.get_documentos_por_coleccion(coleccion.id)
                 self.map_documentos_por_coleccion[coleccion.id] = documentos
 
                 # Insertar la colección como nodo padre
@@ -182,14 +183,14 @@ class ControlarVisualizacionDocumentos:
             tree_grupos.delete(item)
 
         # Obtener datos
-        self.grupos = Consulta().get_grupos()
+        self.grupos = self.consulta.get_grupos()
         self.map_grupos = {g.id: g for g in self.grupos}
 
         # Poblar Treeview con grupos y sus documentos
         if self.grupos:
             for grupo in self.grupos:
                 # Obtener documentos para este grupo
-                documentos = Consulta().get_documentos_por_grupo(grupo.id)
+                documentos = self.consulta.get_documentos_por_grupo(grupo.id)
                 self.map_documentos_por_grupo[grupo.id] = documentos
 
                 # Insertar el grupo como nodo padre
@@ -222,7 +223,7 @@ class ControlarVisualizacionDocumentos:
         for item in tree_categorias.get_children():
             tree_categorias.delete(item)
 
-        self.categorias = Consulta().get_categorias()
+        self.categorias = self.consulta.get_categorias()
         self.map_categorias = {cat.id: cat for cat in self.categorias}
 
         # Organizar categorías en un diccionario de hijos por padre
@@ -237,7 +238,7 @@ class ControlarVisualizacionDocumentos:
         def anadir_nodos(parent_id, parent_iid):
             if parent_id in nodos_hijos:
                 for cat in sorted(nodos_hijos[parent_id], key=lambda x: x.nombre):
-                    documentos = Consulta().get_documentos_por_categoria(cat.id)
+                    documentos = self.consulta.get_documentos_por_categoria(cat.id)
                     self.map_documentos_por_categoria[cat.id] = documentos
 
                     iid_categoria = f"cat_{cat.id}"
@@ -281,14 +282,14 @@ class ControlarVisualizacionDocumentos:
             tree_etiquetas.delete(item)
 
         # Obtener datos
-        self.etiquetas = Consulta().get_etiquetas()
+        self.etiquetas = self.consulta.get_etiquetas()
         self.map_etiquetas = {e.id: e for e in self.etiquetas}
 
         # Poblar Treeview con etiquetas y sus documentos
         if self.etiquetas:
             for etiqueta in self.etiquetas:
                 # Obtener documentos para esta etiqueta
-                documentos = Consulta().get_documentos_por_etiqueta(etiqueta.id)
+                documentos = self.consulta.get_documentos_por_etiqueta(etiqueta.id)
                 self.map_documentos_por_etiqueta[etiqueta.id] = documentos
 
                 # Insertar la etiqueta como nodo padre
@@ -323,14 +324,14 @@ class ControlarVisualizacionDocumentos:
             tree_palabras_clave.delete(item)
 
         # Obtener datos
-        self.palabras_clave = Consulta().get_palabras_clave()
+        self.palabras_clave = self.consulta.get_palabras_clave()
         self.map_palabras_clave = {pc.id: pc for pc in self.palabras_clave}
 
         # Poblar Treeview con palabras clave y sus documentos
         if self.palabras_clave:
             for pc in self.palabras_clave:
                 # Obtener documentos para esta palabra clave
-                documentos = Consulta().get_documentos_por_palabra_clave(pc.id)
+                documentos = self.consulta.get_documentos_por_palabra_clave(pc.id)
                 self.map_documentos_por_palabra_clave[pc.id] = documentos
 
                 # Insertar la palabra clave como nodo padre
@@ -388,7 +389,7 @@ class ControlarVisualizacionDocumentos:
             return
 
         # Llamar al método de búsqueda del DAO
-        resultados = Consulta().buscar_documentos_por_nombre(campo=campo, buscar=termino)
+        resultados = self.consulta.buscar_documentos_por_nombre(campo=campo, buscar=termino)
 
         # Actualizar el mapa de documentos con los resultados de la búsqueda
         for doc in resultados:

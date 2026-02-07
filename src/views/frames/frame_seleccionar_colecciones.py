@@ -10,13 +10,16 @@ from ttkbootstrap import (
     PanedWindow,
     Label,
     LabelFrame,
+    Button,
 )
 from ttkbootstrap.scrolled import ScrolledFrame
 from models.entities.consulta import Consulta
 from models.entities.coleccion import Coleccion
 from models.entities.documento import Documento
 from models.entities.documento_coleccion import DocumentoColeccion
+from views.dialogs.dialog_administrar_coleccion import DialogAdministrarColeccion
 from ttkbootstrap.constants import *
+from views.components.ui_tokens import PADDING_COMPACT, PADDING_OUTER, PADDING_PANEL
 from typing import List, Dict, Any
 
 
@@ -50,48 +53,57 @@ class FrameSeleccionarColecciones(Frame):
     # └────────────────────────────────────────────────────────────┘
 
     def crear_widgets(self):
-        frame_superior = Frame(self, padding=(1, 1))
+        frame_superior = Frame(self, padding=(PADDING_COMPACT, PADDING_COMPACT))
         self.panel_superior(frame=frame_superior)
-        frame_superior.pack(side=TOP, fill=X, padx=1, pady=1)
+        frame_superior.pack(side=TOP, fill=X, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
 
-        frame_central = Frame(self, padding=(1, 1))
+        frame_central = Frame(self, padding=(PADDING_COMPACT, PADDING_COMPACT))
         self.panel_central(frame=frame_central)
-        frame_central.pack(side=TOP, fill=BOTH, expand=True, padx=1, pady=1)
+        frame_central.pack(side=TOP, fill=BOTH, expand=True, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
 
-        frame_inferior = Frame(self, padding=(1, 1))
+        frame_inferior = Frame(self, padding=(PADDING_COMPACT, PADDING_COMPACT))
         self.panel_inferior(frame=frame_inferior)
-        frame_inferior.pack(side=TOP, fill=X, padx=1, pady=1)
+        frame_inferior.pack(side=TOP, fill=X, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
 
     def panel_superior(self, frame: Frame):
-        pass
+        label_titulo = Label(
+            frame, text="Asociar colecciones a los documentos", font=("Helvetica", 12, "bold")
+        )
+        label_titulo.pack(side=LEFT, padx=PADDING_OUTER * 2, pady=PADDING_OUTER)
 
     def panel_central(self, frame: Frame):
 
         paned_window = PanedWindow(frame, orient="vertical")
-        paned_window.pack(side=TOP, fill=BOTH, expand=True, padx=1, pady=1)
+        paned_window.pack(side=TOP, fill=BOTH, expand=True, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
 
         # --- Panel de Documentos ---
-        container_documentos = LabelFrame(paned_window, text="Documentos", padding=5)
+        container_documentos = LabelFrame(paned_window, text="Documentos", padding=PADDING_PANEL)
         paned_window.add(container_documentos)
 
         ent_buscar_documentos = Entry(container_documentos, textvariable=self.var_buscar_documentos)
-        ent_buscar_documentos.pack(fill=X, padx=2, pady=(0, 5))
+        ent_buscar_documentos.pack(fill=X, padx=PADDING_PANEL, pady=(0, PADDING_OUTER))
 
-        self.frame_documentos = ScrolledFrame(container_documentos, padding=(1, 1))
-        self.frame_documentos.pack(fill=BOTH, expand=True, padx=2, pady=2)
+        self.frame_documentos = ScrolledFrame(container_documentos, padding=(PADDING_COMPACT, PADDING_COMPACT))
+        self.frame_documentos.pack(fill=BOTH, expand=True, padx=PADDING_PANEL, pady=PADDING_PANEL)
 
         # --- Panel de Colecciones ---
-        container_colecciones = LabelFrame(paned_window, text="Colecciones", padding=5)
+        container_colecciones = LabelFrame(paned_window, text="Colecciones", padding=PADDING_PANEL)
         paned_window.add(container_colecciones)
 
         ent_colecciones = Entry(container_colecciones, textvariable=self.var_buscar_colecciones)
-        ent_colecciones.pack(fill=X, padx=2, pady=(0, 5))
+        ent_colecciones.pack(fill=X, padx=PADDING_PANEL, pady=(0, PADDING_OUTER))
 
-        self.frame_colecciones = ScrolledFrame(container_colecciones, padding=(1, 1))
-        self.frame_colecciones.pack(fill=BOTH, expand=True, padx=2, pady=2)
+        self.frame_colecciones = ScrolledFrame(container_colecciones, padding=(PADDING_COMPACT, PADDING_COMPACT))
+        self.frame_colecciones.pack(fill=BOTH, expand=True, padx=PADDING_PANEL, pady=PADDING_PANEL)
 
     def panel_inferior(self, frame: Frame):
-        pass
+        btn_administrar = Button(
+            frame,
+            text="Administrar Colecciones",
+            command=self.on_administrar_colecciones,
+            style="primary.Outline.TButton",
+        )
+        btn_administrar.pack(side=RIGHT, padx=PADDING_OUTER * 2, pady=PADDING_OUTER)
 
     # ┌────────────────────────────────────────────────────────────┐
     # │ Metodos de la clase
@@ -281,3 +293,7 @@ class FrameSeleccionarColecciones(Frame):
             showinfo(
                 parent=self, title="Seleccione", message="Seleccione un documentos", icon='info'
             )
+
+    def on_administrar_colecciones(self):
+        dialog = DialogAdministrarColeccion(master=self.master)
+        self.master.wait_window(dialog)

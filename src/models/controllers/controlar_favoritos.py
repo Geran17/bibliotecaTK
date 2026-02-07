@@ -1,5 +1,5 @@
 import math
-from os.path import join, exists
+from os.path import exists
 from tkinter.messagebox import showerror
 from typing import Dict, Any, List
 
@@ -9,11 +9,8 @@ from ttkbootstrap.tableview import Tableview
 from models.controllers.configuracion_controller import ConfiguracionController
 from models.entities.consulta import Consulta
 from utilities.auxiliar import (
-    generar_ruta_documento,
-    copiar_archivo,
-    abrir_archivo,
+    abrir_documento_desde_biblioteca,
 )
-from utilities.configuracion import DIRECTORIO_TEMPORAL
 
 
 class ControlarFavoritos:
@@ -81,26 +78,14 @@ class ControlarFavoritos:
             )
             return
 
-        nombre_archivo = f"{documento_data['nombre']}.{documento_data['extension']}"
-        ruta_origen = generar_ruta_documento(
-            ruta_biblioteca=ruta_biblioteca,
+        ok, error = abrir_documento_desde_biblioteca(
             id_documento=id_documento,
-            nombre_documento=nombre_archivo,
+            nombre_documento=documento_data["nombre"],
+            extension_documento=documento_data["extension"],
+            ruta_biblioteca=ruta_biblioteca,
         )
-
-        if not exists(ruta_origen):
-            showerror(
-                title="Archivo no encontrado",
-                message=f"El archivo no se encontró en la biblioteca:\n{ruta_origen}",
-            )
-            return
-
-        ruta_destino_temporal = join(DIRECTORIO_TEMPORAL, nombre_archivo)
-        try:
-            copiar_archivo(ruta_origen=ruta_origen, ruta_destino=ruta_destino_temporal)
-            abrir_archivo(ruta_origen=ruta_destino_temporal)
-        except Exception as e:
-            showerror(title="Error al abrir", message=f"No se pudo abrir el documento: {e}")
+        if not ok:
+            showerror(title="Error al abrir", message=error, parent=self.master)
 
     def _formatear_fila_documento(self, doc: Dict[str, Any]) -> list:
         """Formatea un diccionario de documento a una lista para la tabla."""

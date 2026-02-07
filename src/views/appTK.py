@@ -4,6 +4,7 @@ from views.frames.frame_menu import FrameMenu
 from views.frames.frame_central import FrameCentral
 from views.frames.frame_inferior import FrameInferior
 from models.controllers.configuracion_controller import ConfiguracionController
+from views.components.ui_tokens import DEFAULT_FONT, TABLE_ROWHEIGHT, TREE_ROWHEIGHT
 
 
 class AppTK:
@@ -23,24 +24,26 @@ class AppTK:
             resizable=(True, True),
         )
 
-        # intemamos establecer el tema
+        # intentamos establecer el tema
         try:
             self.raiz.style.theme_use(tema_user)
-            self.raiz.style.configure('.', font=('Noto Sans', 9))
+            self.raiz.style.configure(".", font=DEFAULT_FONT)
+            self._configurar_estilos_base()
         except Exception as e:
-            print(f"Ocurrio un error al establcer el tema: {e}")
+            print(f"Ocurrio un error al establecer el tema: {e}")
             self.raiz.style.theme_use("cosmo")
 
-        ancho_screen = self.raiz.winfo_screenwidth()
-        alto_screen = self.raiz.winfo_screenheight()
-
-        pos_x = ancho_screen - 1000 - 5
-        pos_y = alto_screen - 800 - 5
-
-        self.raiz.geometry(f"1000x800+{pos_x}+5")
+        self.centrar_ventana(1000, 800)
 
         # llamamos a los widgets
         self.crear_widgets()
+
+    def centrar_ventana(self, ancho, alto):
+        ancho_screen = self.raiz.winfo_screenwidth()
+        alto_screen = self.raiz.winfo_screenheight()
+        pos_x = (ancho_screen // 2) - (ancho // 2)
+        pos_y = (alto_screen // 2) - (alto // 2)
+        self.raiz.geometry(f"{ancho}x{alto}+{pos_x}+{pos_y}")
 
     def crear_widgets(self):
         # Para ir insertando los widgets principales de la aplicacion
@@ -62,6 +65,14 @@ class AppTK:
         # Conectamos el frame_menu con el FrameCentral
         frame_menu.set_frame_central(frame_central=frame_central)
 
-    def ejeuctar(self):
+    def _configurar_estilos_base(self):
+        # Densidad consistente de botones y tablas para pantallas medianas/pequeñas.
+        self.raiz.style.configure("TButton", padding=(10, 6))
+        self.raiz.style.configure("TEntry", padding=(6, 4))
+        self.raiz.style.configure("TCombobox", padding=(6, 4))
+        self.raiz.style.configure("Treeview", rowheight=TREE_ROWHEIGHT)
+        self.raiz.style.configure("Table.Treeview", rowheight=TABLE_ROWHEIGHT)
+
+    def ejecutar(self):
         # ejecutamos la aplicacion
         self.raiz.mainloop()

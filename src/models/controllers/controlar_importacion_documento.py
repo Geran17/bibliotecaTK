@@ -1,10 +1,11 @@
 import threading
 import time
+import logging
 from os.path import join, exists
 from pathlib import Path
 from ttkbootstrap import Label, Progressbar
 from ttkbootstrap.tableview import Tableview
-from typing import Dict
+from typing import Dict, Optional
 from models.entities.documento import Documento
 from models.entities.metadato import Metadato
 from utilities.auxiliar import (
@@ -20,45 +21,92 @@ from utilities.auxiliar import (
 )
 from models.controllers.configuracion_controller import ConfiguracionController
 
+# Configurar logging
+logger = logging.getLogger(__name__)
+
 
 class ControlarImporetacionDocumento:
+    """Controlador para gestionar la importación de documentos a la biblioteca.
+
+    Esta clase maneja todo el proceso de importación incluyendo:
+    - Validación y carga de documentos
+    - Inserción en la base de datos
+    - Generación de metadatos
+    - Copia o movimiento de archivos
+    - Generación de portadas para PDFs
+    - Actualización de progreso en la GUI
+    """
+
     def __init__(
         self,
         label_progress: Label,
         progress_bar: Progressbar,
         table_view: Tableview,
         tipo_importacion: str = "copiar",
-    ):
-        # creamos las variables para administrar el proceso
-        self.label_progress = label_progress
-        self.progress_bar = progress_bar
-        self.table_view = table_view
-        # creamos la variable que
+    ) -> None:
+        """Inicializa el controlador de importación.
+
+        Args:
+            label_progress: Widget Label para mostrar el progreso
+            progress_bar: Widget Progressbar para la barra de progreso
+            table_view: Widget Tableview que contiene los documentos a importar
+            tipo_importacion: Tipo de operación ('copiar' o 'mover'). Por defecto 'copiar'
+        """
+        self.label_progress: Label = label_progress
+        self.progress_bar: Progressbar = progress_bar
+        self.table_view: Tableview = table_view
         self.dict_data: Dict[str, tuple] = {}
-        # variable para el tipo de importacion
-        self.tipo_importacion = tipo_importacion
-        # Ruta biblioteca
-        self.ruta_biblioteca = ""
-        self.ruta_portadas = ""
-        configuracion = ConfiguracionController()
-        if exists(configuracion.obtener_ubicacion_biblioteca()):
-            self.ruta_biblioteca = configuracion.obtener_ubicacion_biblioteca()
-            self.ruta_portadas = configuracion.obtener_ubicacion_portadas()
+        self.tipo_importacion: str = tipo_importacion
+        self.ruta_biblioteca: str = ""
+        self.ruta_portadas: str = ""
 
-    def importar(self):
-        """Generamos el hilo de importacion"""
-        hilo_trabajo = threading.Thread(target=self._procesar_importacion)
-        hilo_trabajo.start()
+        try:
+            configuracion = ConfiguracionController()
+            if exists(configuracion.obtener_ubicacion_biblioteca()):
+                self.ruta_biblioteca = configuracion.obtener_ubicacion_biblioteca()
+                self.ruta_portadas = configuracion.obtener_ubicacion_portadas()
+                logger.info(f"Rutas configuradas - Biblioteca: {self.ruta_biblioteca}")
+        except Exception as e:
+            logger.error(f"Error al obtener configuración: {e}")
 
-    def _load_data(self):
-        items = self.table_view.view.get_children()
-        if items:
-            for item in items:
-                values = self.table_view.view.item(item, 'values')
-                if values:
-                    self.dict_data[item] = values
+    def importar(self) -> None:
+        """Inicia el hilo de trabajo para importar documentos de forma asíncrona."""
+        try:
+            hilo_trabajo = threading.Thread(target=self._procesar_importacion, daemon=True)
+            hilo_trabajo.start()
+            logger.info("Iniciando proceso de importación en hilo de trabajo")
+        except Exception as e:
+            logger.error(f"Error al iniciar importación: {e}")
+            self.table_view.after(0, lambda: self.label_progress.config(text=f"Error: {e}"))
 
-    def _procesar_importacion(self):
+    def _load_data(self) -> None:
+        """Carga los datos de la tabla en un diccionario.
+
+        Extrae todos los items de la Tableview y los almacena en dict_data
+        para procesarlos posteriormente.
+        """
+        try:
+            items = self.table_view.view.get_children()
+            if items:
+                for item in items:
+                    values = self.table_view.view.item(item, 'values')
+                    if values:
+                        self.dict_data[item] = values
+            logger.info(f"Datos cargados: {len(self.dict_data)} documentos")
+        except Exception as e:
+            logger.error(f"Error al cargar datos de la tabla: {e}")
+
+    def _procesar_importacion(self) -> None:
+        """Procesa la importación de todos los documentos en el hilo de trabajo.
+
+        Este método es ejecutado en un hilo separado para no bloquear la GUI.
+        Realiza:
+        - Validación de documentos
+        - Inserción en base de datos
+        - Gestión de metadatos
+        - Copia/movimiento de archivos
+        - Generación de portadas
+        """
         # cargamos los datos
         self._load_data()
 

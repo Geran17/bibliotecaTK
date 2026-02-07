@@ -80,3 +80,13 @@ class FrameVisorMetadatos(Frame):
         )
         self.table_view.pack(fill=BOTH, expand=True)
         ToolTip(self.table_view.view, "Doble clic en un documento para abrirlo.")
+
+    def actualizar_tabla(self):
+        """
+        Refrescar los datos del visor de metadatos.
+
+        Nota: El refrescado es manejado por el controlador cuando se selecciona
+        un elemento en el árbol. No requiere intervención manual.
+        """
+        # No hacer nada - el controlador maneja la actualización automáticamente
+        pass

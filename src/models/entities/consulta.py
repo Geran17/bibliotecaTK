@@ -404,19 +404,40 @@ class Consulta:
         # El DAO se encarga de la lógica de la consulta SQL
         return dao.buscar_en_contenido(termino=termino)
 
-    def buscar_en_estante(self, campo: str, termino: str) -> List[Dict[str, Any]]:
+    def buscar_en_estante(
+        self, campo: str, termino: str, limit: int = None, offset: int = 0
+    ) -> List[Dict[str, Any]]:
         """
         Busca documentos de forma dinámica para la vista de "Estante".
 
         Args:
             campo (str): Campo por el cual buscar (Nombre, Título, Colección, etc.).
             termino (str): Término de búsqueda.
+            limit (int): Número máximo de resultados.
+            offset (int): Desplazamiento para paginación.
 
         Returns:
             Lista de diccionarios con los documentos encontrados.
         """
         dao = ConsultaDAO(ruta_db=self.ruta_db)
-        return dao.buscar_en_estante(campo=campo, termino=termino)
+        if limit is None:
+            # Para compatibilidad, si no se pasa limit, obtener todos
+            return dao.buscar_en_estante(campo=campo, termino=termino, limit=10000, offset=offset)
+        return dao.buscar_en_estante(campo=campo, termino=termino, limit=limit, offset=offset)
+
+    def contar_resultados_busqueda(self, campo: str, termino: str) -> int:
+        """
+        Cuenta los documentos que coinciden con la búsqueda.
+
+        Args:
+            campo (str): Campo por el cual buscar.
+            termino (str): Término de búsqueda.
+
+        Returns:
+            Número total de resultados.
+        """
+        dao = ConsultaDAO(ruta_db=self.ruta_db)
+        return dao.count_buscar_en_estante(campo=campo, termino=termino)
 
     # ┌────────────────────────────────────────────────────────────┐
     # │ Capitulos

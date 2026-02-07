@@ -11,6 +11,9 @@ from os.path import exists, isfile, isdir, join
 from shutil import copy2, move
 from send2trash import send2trash  # type: ignore
 from typing import Dict, Any, Optional, List
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def obtener_datos_libros(isbn: str) -> Dict[str, Any]:
@@ -326,7 +329,7 @@ def editar_metadato(clave: str, valor: str, path_file: str) -> bool:
         raise FileExistsError("No existe el archivo")
 
 
-def abrir_archivo(ruta_origen: str):
+def abrir_archivo(ruta_origen: str, pagina: Optional[int] = None):
     """
     Abre un archivo con la aplicación predeterminada del sistema de forma multiplataforma.
 
@@ -355,6 +358,51 @@ def abrir_archivo(ruta_origen: str):
             print("No se encontró un comando para abrir archivos (xdg-open, gvfs-open, etc.).")
     except Exception as e:
         print(f"Error al tratar de abrir el archivo '{ruta_origen}': {e}")
+
+
+def abrir_documento_desde_biblioteca(
+    id_documento: int,
+    nombre_documento: str,
+    extension_documento: str,
+    pagina: Optional[int] = None,
+    ruta_biblioteca: Optional[str] = None,
+) -> tuple[bool, str]:
+    """
+    Abre un documento de biblioteca copiándolo primero al directorio temporal.
+
+    Returns:
+        tuple[bool, str]: (ok, mensaje_error). Si ok=True, mensaje_error es cadena vacía.
+    """
+    if not ruta_biblioteca:
+        from models.controllers.configuracion_controller import ConfiguracionController
+
+        ruta_biblioteca = ConfiguracionController().obtener_ubicacion_biblioteca()
+
+    if not ruta_biblioteca or not exists(ruta_biblioteca):
+        return False, "La ubicación de la biblioteca no está configurada o no existe."
+
+    nombre_archivo = f"{nombre_documento}.{extension_documento}"
+    ruta_origen = generar_ruta_documento(
+        ruta_biblioteca=ruta_biblioteca,
+        id_documento=id_documento,
+        nombre_documento=nombre_archivo,
+    )
+
+    if not ruta_origen or not exists(ruta_origen):
+        return False, f"El archivo no se encontró en la biblioteca:\n{ruta_origen}"
+
+    from utilities.configuracion import DIRECTORIO_TEMPORAL
+
+    ruta_destino_temporal = join(DIRECTORIO_TEMPORAL, nombre_archivo)
+    try:
+        copiar_archivo(ruta_origen=ruta_origen, ruta_destino=ruta_destino_temporal)
+        abrir_archivo(ruta_origen=ruta_destino_temporal) if pagina is None else abrir_archivo(
+            ruta_origen=ruta_destino_temporal
+        )
+        return True, ""
+    except Exception as ex:
+        logger.exception("Error al abrir documento desde biblioteca")
+        return False, f"No se pudo abrir el documento: {ex}"
 
 
 def obtener_datos_documento(ruta_origen: str) -> Dict[str, Any]:
@@ -456,26 +504,45 @@ def pdf_primera_pagina_a_png(pdf_path, output_path, dpi=72, thumbnail_size=(150,
 
 def pdf_miniatura(pdf_path, output_path=None, size=(150, 200), dpi=72):
     """
-    Extrae la primera página del PDF como miniatura optimizada.
+    Extrae la primera página del PDF o carga una imagen como miniatura optimizada.
     Ideal para TableView, listas, previews pequeñas.
 
     Args:
-        pdf_path (str): Ruta al archivo PDF
+        pdf_path (str): Ruta al archivo (PDF o imagen)
         output_path (str, optional): Ruta donde guardar. Si es None, retorna PhotoImage
         size (tuple): (ancho, alto) de la miniatura. Default: (150, 200)
-        dpi (int): Resolución baja para rapidez. Default: 72
+        dpi (int): Resolución baja para rapidez (solo PDF). Default: 72
 
     Returns:
         ImageTk.PhotoImage si output_path es None, bool si se guarda archivo
     """
     try:
-        # Convertir solo primera página con baja resolución
-        imagenes = convert_from_path(pdf_path, dpi=dpi, first_page=1, last_page=1)
+        img = None
+        # Verificar si es PDF
+        if str(pdf_path).lower().endswith('.pdf'):
+            # Convertir solo primera página con baja resolución
+            imagenes = convert_from_path(pdf_path, dpi=dpi, first_page=1, last_page=1)
+            if imagenes:
+                img = imagenes[0]
+        elif str(pdf_path).lower().endswith('.epub'):
+            try:
+                with fitz.open(pdf_path) as doc:
+                    page = doc[0]
+                    zoom = dpi / 72
+                    mat = fitz.Matrix(zoom, zoom)
+                    pix = page.get_pixmap(matrix=mat)
+                    mode = "RGBA" if pix.alpha else "RGB"
+                    img = Image.frombytes(mode, [pix.width, pix.height], pix.samples)
+            except RuntimeError as e:
+                print(f"Error al abrir EPUB (posible DRM o archivo corrupto): {e}")
+            except Exception as e:
+                print(f"Error inesperado procesando EPUB: {e}")
+        else:
+            # Intentar abrir como imagen
+            img = Image.open(pdf_path)
 
-        if not imagenes:
+        if img is None:
             return None if output_path is None else False
-
-        img = imagenes[0]
 
         # Redimensionar a miniatura manteniendo proporción
         img.thumbnail(size, Image.Resampling.LANCZOS)
@@ -494,26 +561,45 @@ def pdf_miniatura(pdf_path, output_path=None, size=(150, 200), dpi=72):
 
 def pdf_normal(pdf_path, output_path=None, max_size=(800, 1100), dpi=150):
     """
-    Extrae la primera página del PDF en tamaño normal con buena calidad.
+    Extrae la primera página del PDF o carga una imagen en tamaño normal con buena calidad.
     Ideal para visualización completa, impresión, vista detallada.
 
     Args:
-        pdf_path (str): Ruta al archivo PDF
+        pdf_path (str): Ruta al archivo (PDF o imagen)
         output_path (str, optional): Ruta donde guardar. Si es None, retorna PhotoImage
         max_size (tuple): Tamaño máximo (ancho, alto). Default: (800, 1100)
-        dpi (int): Resolución media-alta para calidad. Default: 150
+        dpi (int): Resolución media-alta para calidad (solo PDF). Default: 150
 
     Returns:
         ImageTk.PhotoImage si output_path es None, bool si se guarda archivo
     """
     try:
-        # Convertir primera página con buena resolución
-        imagenes = convert_from_path(pdf_path, dpi=dpi, first_page=1, last_page=1)
+        img = None
+        # Verificar si es PDF
+        if str(pdf_path).lower().endswith('.pdf'):
+            # Convertir primera página con buena resolución
+            imagenes = convert_from_path(pdf_path, dpi=dpi, first_page=1, last_page=1)
+            if imagenes:
+                img = imagenes[0]
+        elif str(pdf_path).lower().endswith('.epub'):
+            try:
+                with fitz.open(pdf_path) as doc:
+                    page = doc[0]
+                    zoom = dpi / 72
+                    mat = fitz.Matrix(zoom, zoom)
+                    pix = page.get_pixmap(matrix=mat)
+                    mode = "RGBA" if pix.alpha else "RGB"
+                    img = Image.frombytes(mode, [pix.width, pix.height], pix.samples)
+            except RuntimeError as e:
+                print(f"Error al abrir EPUB (posible DRM o archivo corrupto): {e}")
+            except Exception as e:
+                print(f"Error inesperado procesando EPUB: {e}")
+        else:
+            # Intentar abrir como imagen
+            img = Image.open(pdf_path)
 
-        if not imagenes:
+        if img is None:
             return None if output_path is None else False
-
-        img = imagenes[0]
 
         # Redimensionar si excede el tamaño máximo
         if max_size:

@@ -11,9 +11,8 @@ class DialogAcercaDe(Toplevel):
     def __init__(self, master=None, **kwargs):
         super().__init__(master, **kwargs)
         self.title("Acerca de Biblioteca Digital")
-        self.geometry("400x250")
         self.transient(master)
-        self.resizable(False, False)
+        self.resizable(True, True)
 
         # --- Estilos ---
         self.estilo = Style()
@@ -21,6 +20,21 @@ class DialogAcercaDe(Toplevel):
         self.estilo.configure("Info.TLabel", font=("Helvetica", 10))
 
         self._crear_widgets()
+
+        # Calcular el tamaño requerido del contenido
+        self.update_idletasks()
+        ancho = self.winfo_reqwidth()
+        alto = self.winfo_reqheight()
+
+        # Aplicar mínimos
+        ancho = max(ancho, 350)
+        alto = max(alto, 250)
+
+        # Centrar en la pantalla
+        x = (self.winfo_screenwidth() - ancho) // 2
+        y = (self.winfo_screenheight() - alto) // 2
+
+        self.geometry(f"{ancho}x{alto}+{x}+{y}")
         self.grab_set()
 
     def _crear_widgets(self):

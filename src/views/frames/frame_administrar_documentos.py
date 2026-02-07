@@ -28,6 +28,10 @@ from views.dialogs.dialog_seleccionar_palabras_clave import DialogSeleccionarPal
 from views.dialogs.dialog_adminstrar_bibliografia import DialogAdministrarBibliografia
 from views.dialogs.dialog_administrar_contenido import DialogAdministrarContenido
 from typing import Dict, Any
+from views.components.base_form_frame import BaseFormFrame
+from views.components.smart_table_frame import SmartTableFrame
+from views.components.context_menu_factory import ContextMenuFactory
+from views.components.ui_tokens import PADDING_COMPACT, PADDING_OUTER, PADDING_PANEL
 
 
 class AdministrarDocumentos(Frame):
@@ -95,12 +99,13 @@ class AdministrarDocumentos(Frame):
         }
 
         # Instaciamos el documento seleccionado en el TableView
-        ControlarDocumentoSeleccionado(
+        self.controlador_documento_seleccionado = ControlarDocumentoSeleccionado(
             table_view=self.table_view,
             map_vars=self.map_vars,
             map_widgets=self.map_widgets,
             master=self,
         )
+        self._crear_menu_contextual_tabla()
 
     # ┌────────────────────────────────────────────────────────────┐
     # │ Widgets
@@ -109,18 +114,24 @@ class AdministrarDocumentos(Frame):
     def crear_widgets(self):
 
         # Panel Superior
-        frame_superior = Frame(self, padding=(1, 1))
-        frame_superior.pack(side=TOP, fill=X, padx=1, pady=1)
+        frame_superior = Frame(self, padding=(PADDING_COMPACT, PADDING_COMPACT))
+        frame_superior.pack(side=TOP, fill=X, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
         self.panel_superior(frame=frame_superior)
 
         # Panel Central
-        frame_central = Frame(self, padding=(1, 1))
-        frame_central.pack(side=TOP, fill=BOTH, expand=True, padx=1, pady=1)
+        frame_central = Frame(self, padding=(PADDING_COMPACT, PADDING_COMPACT))
+        frame_central.pack(
+            side=TOP,
+            fill=BOTH,
+            expand=True,
+            padx=PADDING_COMPACT,
+            pady=PADDING_COMPACT,
+        )
         self.panel_central(frame=frame_central)
 
         # Panel Inferior
-        frame_inferior = Frame(self, padding=(1, 1))
-        frame_inferior.pack(side=TOP, fill=X, padx=1, pady=1)
+        frame_inferior = Frame(self, padding=(PADDING_COMPACT, PADDING_COMPACT))
+        frame_inferior.pack(side=TOP, fill=X, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
         self.panel_inferior(frame=frame_inferior)
 
     # ┌────────────────────────────────────────────────────────────┐
@@ -131,27 +142,12 @@ class AdministrarDocumentos(Frame):
         """Este panel sera para navegar y buscar en la base de datos los diferentes libros"""
 
         lbl_titulo = Label(frame, text="📂 Administrar Documentos", font=("Helvetica", 14, "bold"))
-        lbl_titulo.pack(side=TOP, fill=X, padx=10, pady=(5, 10))
+        lbl_titulo.pack(side=TOP, fill=X, padx=(PADDING_OUTER * 2), pady=(PADDING_OUTER, PADDING_OUTER * 2))
 
         # Button Menu
         btn_menu = Button(frame, text="☰", command=self.on_mostrar_menu, style="primary.Toolbutton")
-        btn_menu.pack(side=LEFT, padx=(5, 2), pady=5)
+        btn_menu.pack(side=LEFT, padx=(PADDING_OUTER, PADDING_COMPACT), pady=PADDING_OUTER)
         ToolTip(btn_menu, "Mostrar/Ocultar panel de acciones")
-
-        # Entry Buscar
-        ent_buscar = Entry(frame, textvariable=self.var_buscar)
-        ent_buscar.bind('<Return>', self._filtrar_documentos)
-        ent_buscar.pack(side=LEFT, fill=X, expand=True, padx=2, pady=5)
-        ToolTip(ent_buscar, "Escribe aquí para buscar y presiona Enter")
-
-        # Combobox Campos
-        self.cbx_campos = Combobox(frame, values=self.campos, state=READONLY)
-        self.cbx_campos.current(0)
-        self.cbx_campos.pack(side=LEFT, fill=X, padx=2, pady=5)
-
-        # Button Filtrar
-        btn_filtrar = Button(frame, text="Filtrar", command=self._filtrar_documentos)
-        btn_filtrar.pack(side=LEFT, fill=X, padx=1, pady=1)
 
     # ┌────────────────────────────────────────────────────────────┐
     # │ Panel Central
@@ -159,13 +155,13 @@ class AdministrarDocumentos(Frame):
 
     def panel_central(self, frame: Frame):
         # Frame Izquierdo
-        self.frame_izquierdo = Frame(frame, padding=(1, 1), width=250)
-        self.frame_izquierdo.pack(side=LEFT, fill=Y, padx=1, pady=1)
+        self.frame_izquierdo = Frame(frame, padding=(PADDING_COMPACT, PADDING_COMPACT), width=250)
+        self.frame_izquierdo.pack(side=LEFT, fill=Y, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
         self.panel_izquierdo(frame=self.frame_izquierdo)
 
         # Frame Derecho
-        self.frame_derecho = Frame(frame, padding=(1, 1))
-        self.frame_derecho.pack(side=LEFT, fill=BOTH, expand=True, padx=1, pady=1)
+        self.frame_derecho = Frame(frame, padding=(PADDING_COMPACT, PADDING_COMPACT))
+        self.frame_derecho.pack(side=LEFT, fill=BOTH, expand=True, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
         self.panel_derecho(frame=self.frame_derecho)
 
     def panel_izquierdo(self, frame: Frame):
@@ -177,13 +173,13 @@ class AdministrarDocumentos(Frame):
 
         lbl_asociar = Label(frame, text="Asociar documentos a: ", bootstyle="secondary")
         lbl_asociar.bind("<Double-Button-1>", self.on_mostrar_asociaciones)
-        lbl_asociar.pack(side=TOP, fill=X, padx=2, pady=2)
+        lbl_asociar.pack(side=TOP, fill=X, padx=PADDING_PANEL, pady=PADDING_PANEL)
 
         self.separador1 = Separator(frame, orient=HORIZONTAL)
-        self.separador1.pack(side=TOP, fill=X, padx=2, pady=2, ipady=2)
+        self.separador1.pack(side=TOP, fill=X, padx=PADDING_PANEL, pady=PADDING_PANEL, ipady=2)
 
-        self.frame_asociar = Frame(frame, padding=(1, 1))
-        self.frame_asociar.pack(side=TOP, fill=X, padx=1, pady=1)
+        self.frame_asociar = Frame(frame, padding=(PADDING_COMPACT, PADDING_COMPACT))
+        self.frame_asociar.pack(side=TOP, fill=X, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
 
         btn_coleccion = Button(
             self.frame_asociar,
@@ -191,7 +187,7 @@ class AdministrarDocumentos(Frame):
             style='Link.TButton',
             command=self.on_coleccion,
         )
-        btn_coleccion.pack(side=TOP, fill=X, padx=1, pady=1)
+        btn_coleccion.pack(side=TOP, fill=X, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
         ToolTip(btn_coleccion, "Asociar documentos a colecciones")
 
         btn_categoria = Button(
@@ -200,7 +196,7 @@ class AdministrarDocumentos(Frame):
             style='Link.TButton',
             command=self.on_categoria,
         )
-        btn_categoria.pack(side=TOP, fill=X, padx=1, pady=1)
+        btn_categoria.pack(side=TOP, fill=X, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
         ToolTip(btn_categoria, "Asociar documentos a categorías")
 
         btn_grupo = Button(
@@ -209,7 +205,7 @@ class AdministrarDocumentos(Frame):
             style='Link.TButton',
             command=self.on_grupo,
         )
-        btn_grupo.pack(side=TOP, fill=X, padx=1, pady=1)
+        btn_grupo.pack(side=TOP, fill=X, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
         ToolTip(btn_grupo, "Asociar documentos a grupos")
 
         btn_etiqueta = Button(
@@ -218,7 +214,7 @@ class AdministrarDocumentos(Frame):
             style='Link.TButton',
             command=self.on_etiqueta,
         )
-        btn_etiqueta.pack(side=TOP, fill=X, padx=1, pady=1)
+        btn_etiqueta.pack(side=TOP, fill=X, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
         ToolTip(btn_etiqueta, "Asociar documentos a etiquetas")
 
         btn_palabra_clave = Button(
@@ -227,7 +223,7 @@ class AdministrarDocumentos(Frame):
             style='Link.TButton',
             command=self.on_palabra_clave,
         )
-        btn_palabra_clave.pack(side=TOP, fill=X, padx=1, pady=1)
+        btn_palabra_clave.pack(side=TOP, fill=X, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
         ToolTip(btn_palabra_clave, "Asociar documentos a palabras clave")
 
         btn_favorito = Button(
@@ -236,7 +232,7 @@ class AdministrarDocumentos(Frame):
             style='Link.TButton',
             command=self.on_favoritos,
         )
-        btn_favorito.pack(side=TOP, fill=X, padx=1, pady=1)
+        btn_favorito.pack(side=TOP, fill=X, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
         ToolTip(btn_favorito, "Marcar/Desmarcar documentos como favoritos")
 
         # ┌────────────────────────────────────────────────────────────┐
@@ -244,13 +240,13 @@ class AdministrarDocumentos(Frame):
         # └────────────────────────────────────────────────────────────┘
         lbl_datos_bibliograficos = Label(frame, text="Datos del Libro: ", bootstyle="secondary")
         lbl_datos_bibliograficos.bind("<Double-Button-1>", self.on_mostrar_datos_bibliograficos)
-        lbl_datos_bibliograficos.pack(side=TOP, fill=X, padx=2, pady=2)
+        lbl_datos_bibliograficos.pack(side=TOP, fill=X, padx=PADDING_PANEL, pady=PADDING_PANEL)
 
         self.separador2 = Separator(frame, orient=HORIZONTAL)
-        self.separador2.pack(side=TOP, fill=X, padx=2, pady=2, ipady=2)
+        self.separador2.pack(side=TOP, fill=X, padx=PADDING_PANEL, pady=PADDING_PANEL, ipady=2)
 
-        self.frame_datos_bibliograficos = Frame(frame, padding=(1, 1))
-        self.frame_datos_bibliograficos.pack(side=TOP, fill=X, padx=1, pady=1)
+        self.frame_datos_bibliograficos = Frame(frame, padding=(PADDING_COMPACT, PADDING_COMPACT))
+        self.frame_datos_bibliograficos.pack(side=TOP, fill=X, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
 
         btn_bibliografia = Button(
             self.frame_datos_bibliograficos,
@@ -258,7 +254,7 @@ class AdministrarDocumentos(Frame):
             style='Link.TButton',
             command=self.on_bibliografia,
         )
-        btn_bibliografia.pack(side=TOP, fill=X, padx=1, pady=1)
+        btn_bibliografia.pack(side=TOP, fill=X, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
         ToolTip(btn_bibliografia, "Administrar la información bibliográfica")
 
         btn_contenido = Button(
@@ -267,24 +263,24 @@ class AdministrarDocumentos(Frame):
             style='Link.TButton',
             command=self.on_contenido,
         )
-        btn_contenido.pack(side=TOP, fill=X, padx=1, pady=1)
-        ToolTip(btn_contenido, "Administrar capítulos y secciones (no implementado)")
+        btn_contenido.pack(side=TOP, fill=X, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
+        ToolTip(btn_contenido, "Administrar capítulos y secciones")
 
         # ┌────────────────────────────────────────────────────────────┐
         # │ Operaciones de los seleccionados
         # └────────────────────────────────────────────────────────────┘
 
         lbl_operaciones = Label(
-            frame, text="Opereciones en los seleccionados: ", bootstyle="secondary"
+            frame, text="Operaciones en los seleccionados: ", bootstyle="secondary"
         )
         lbl_operaciones.bind("<Double-Button-1>", self.on_mostrar_operaciones)
-        lbl_operaciones.pack(side=TOP, fill=X, padx=2, pady=2)
+        lbl_operaciones.pack(side=TOP, fill=X, padx=PADDING_PANEL, pady=PADDING_PANEL)
 
         self.separador3 = Separator(frame, orient=HORIZONTAL)
-        self.separador3.pack(side=TOP, fill=X, padx=2, pady=2, ipady=2)
+        self.separador3.pack(side=TOP, fill=X, padx=PADDING_PANEL, pady=PADDING_PANEL, ipady=2)
 
-        self.frame_operaciones = Frame(frame, padding=(1, 1))
-        self.frame_operaciones.pack(side=TOP, fill=X, padx=1, pady=1)
+        self.frame_operaciones = Frame(frame, padding=(PADDING_COMPACT, PADDING_COMPACT))
+        self.frame_operaciones.pack(side=TOP, fill=X, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
 
         btn_copiar = Button(
             self.frame_operaciones,
@@ -292,7 +288,7 @@ class AdministrarDocumentos(Frame):
             style='Link.TButton',
             command=self.on_copiar_seleccionados,
         )
-        btn_copiar.pack(side=TOP, fill=X, padx=1, pady=1)
+        btn_copiar.pack(side=TOP, fill=X, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
 
         btn_mover = Button(
             self.frame_operaciones,
@@ -300,7 +296,7 @@ class AdministrarDocumentos(Frame):
             style='Link.TButton',
             command=self.on_mover_seleccionados,
         )
-        btn_mover.pack(side=TOP, fill=X, padx=1, pady=1)
+        btn_mover.pack(side=TOP, fill=X, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
 
         btn_eliminar = Button(
             self.frame_operaciones,
@@ -308,7 +304,7 @@ class AdministrarDocumentos(Frame):
             style='Link.TButton',
             command=self.on_eliminar_seleccionado,
         )
-        btn_eliminar.pack(side=TOP, fill=X, padx=1, pady=1)
+        btn_eliminar.pack(side=TOP, fill=X, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
 
         btn_eliminar_filas = Button(
             self.frame_operaciones,
@@ -316,7 +312,7 @@ class AdministrarDocumentos(Frame):
             style='Link.TButton',
             command=self.on_eliminar_filas_seleccionadas,
         )
-        btn_eliminar_filas.pack(side=TOP, fill=X, padx=1, pady=1)
+        btn_eliminar_filas.pack(side=TOP, fill=X, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
 
         btn_eliminar_registro = Button(
             self.frame_operaciones,
@@ -324,15 +320,29 @@ class AdministrarDocumentos(Frame):
             style='Link.TButton',
             command=self.on_eliminar_registros,
         )
-        btn_eliminar_registro.pack(side=TOP, fill=X, padx=1, pady=1)
+        btn_eliminar_registro.pack(side=TOP, fill=X, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
 
         btn_limpiar = Button(self.frame_operaciones, text="Limpiar", style='Link.TButton')
-        btn_limpiar.pack(side=TOP, fill=X, padx=1, pady=1)
+        btn_limpiar.pack(side=TOP, fill=X, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
 
     def panel_derecho(self, frame: Frame):
         """para mostrar la tabla de busqueda"""
-        self.table_view = Tableview(frame, bootstyle="primary", coldata=self.coldata)
-        self.table_view.pack(side=TOP, fill=BOTH, expand=True, padx=1, pady=1)
+        self.smart_table = SmartTableFrame(
+            frame,
+            coldata=self.coldata,
+            search_fields=self.campos,
+            on_search=self._filtrar_documentos,
+            var_buscar=self.var_buscar,
+            bootstyle="primary",
+            paginated=False,
+            searchable=False,
+            autofit=True,
+        )
+        self.smart_table.pack(side=TOP, fill=BOTH, expand=True, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
+
+        self.table_view = self.smart_table.table_view
+        self.cbx_campos = self.smart_table.cbx_campos
+        ToolTip(self.smart_table.ent_buscar, "Escribe aquí para buscar y presiona Enter")
 
     # ┌────────────────────────────────────────────────────────────┐
     # │ Panel Inferior
@@ -340,65 +350,74 @@ class AdministrarDocumentos(Frame):
 
     def panel_inferior(self, frame: Frame):
         """Para trabajar con el archivo seleccionado en la tabla"""
-        label_frame_seleccionado = LabelFrame(frame, text="Documento Seleccionado", padding=5)
-        label_frame_seleccionado.pack(side=TOP, fill=BOTH, expand=True, padx=1, pady=1)
+        label_frame_seleccionado = LabelFrame(frame, text="Documento Seleccionado", padding=PADDING_PANEL)
+        label_frame_seleccionado.pack(side=TOP, fill=BOTH, expand=True, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
 
-        # Frame id, nombre
-        frame_nombre = Frame(label_frame_seleccionado, padding=(1, 1))
-        frame_nombre.pack(side=TOP, fill=X, padx=1, pady=1)
-
-        ent_id = Entry(
-            frame_nombre, state=READONLY, justify=CENTER, width=10, textvariable=self.var_id
+        form_compacto = BaseFormFrame(
+            label_frame_seleccionado,
+            columns=2,
+            padding=(PADDING_COMPACT, PADDING_COMPACT),
         )
-        ent_id.pack(side=LEFT, fill=X, padx=1, pady=1)
+        form_compacto.pack(side=TOP, fill=X, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
 
-        ent_nombre = Entry(frame_nombre, textvariable=self.var_nombre)
-        ent_nombre.pack(side=LEFT, fill=X, expand=True, padx=1, pady=1)
+        ent_id = Entry(form_compacto, state=READONLY, justify=CENTER, width=10, textvariable=self.var_id)
+        form_compacto.add_labeled_widget("ID", ent_id, row=0, column=0)
 
-        frame_buttons = Frame(label_frame_seleccionado, padding=(1, 1))
-        frame_buttons.pack(side=TOP, fill=X, padx=1, pady=2)
+        ent_nombre = Entry(form_compacto, textvariable=self.var_nombre)
+        form_compacto.add_labeled_widget(
+            "Nombre",
+            ent_nombre,
+            row=1,
+            column=0,
+            widget_columnspan=3,
+        )
+
+        frame_buttons = Frame(label_frame_seleccionado, padding=(PADDING_COMPACT, PADDING_COMPACT))
+        frame_buttons.pack(side=TOP, fill=X, padx=PADDING_COMPACT, pady=PADDING_PANEL)
         frame_buttons.columnconfigure((0, 1, 2, 3, 4), weight=1)
 
-        self.btn_abrir = Button(frame_buttons, text="Abrir")
-        self.btn_abrir.grid(row=0, column=0, sticky=EW, padx=2, pady=2)
+        self.btn_abrir = Button(frame_buttons, text="Abrir", style="primary.Outline.TButton")
+        self.btn_abrir.grid(row=0, column=0, sticky=EW, padx=PADDING_PANEL, pady=PADDING_PANEL)
 
-        self.btn_abrir_carpeta = Button(frame_buttons, text="Abrir Carpeta")
-        self.btn_abrir_carpeta.grid(row=0, column=1, sticky=EW, padx=2, pady=2)
+        self.btn_abrir_carpeta = Button(frame_buttons, text="Abrir Carpeta", style="secondary.Outline.TButton")
+        self.btn_abrir_carpeta.grid(row=0, column=1, sticky=EW, padx=PADDING_PANEL, pady=PADDING_PANEL)
 
-        self.btn_renombrar = Button(frame_buttons, text="Renombar")
-        self.btn_renombrar.grid(row=0, column=2, sticky=EW, padx=2, pady=2)
+        self.btn_renombrar = Button(frame_buttons, text="Renombrar", style="info.Outline.TButton")
+        self.btn_renombrar.grid(row=0, column=2, sticky=EW, padx=PADDING_PANEL, pady=PADDING_PANEL)
 
-        self.btn_copiar = Button(frame_buttons, text="Copiar")
-        self.btn_copiar.grid(row=0, column=3, sticky=EW, padx=2, pady=2)
+        self.btn_copiar = Button(frame_buttons, text="Copiar", style="primary.Outline.TButton")
+        self.btn_copiar.grid(row=0, column=3, sticky=EW, padx=PADDING_PANEL, pady=PADDING_PANEL)
 
-        self.btn_mover = Button(frame_buttons, text="Mover")
-        self.btn_mover.grid(row=0, column=4, sticky=EW, padx=2, pady=2)
+        self.btn_mover = Button(frame_buttons, text="Mover", style="warning.Outline.TButton")
+        self.btn_mover.grid(row=0, column=4, sticky=EW, padx=PADDING_PANEL, pady=PADDING_PANEL)
 
-        self.btn_eliminar = Button(frame_buttons, text="Eliminar")
-        self.btn_eliminar.grid(row=1, column=0, sticky=EW, padx=2, pady=2)
+        self.btn_eliminar = Button(frame_buttons, text="Eliminar", style="danger.Outline.TButton")
+        self.btn_eliminar.grid(row=1, column=0, sticky=EW, padx=PADDING_PANEL, pady=PADDING_PANEL)
 
-        self.btn_papelera = Button(frame_buttons, text="Papelera")
-        self.btn_papelera.grid(row=1, column=1, sticky=EW, padx=2, pady=2)
+        self.btn_papelera = Button(frame_buttons, text="Papelera", style="secondary.TButton")
+        self.btn_papelera.grid(row=1, column=1, sticky=EW, padx=PADDING_PANEL, pady=PADDING_PANEL)
 
-        self.btn_propiedades = Button(frame_buttons, text="Propiedades")
-        self.btn_propiedades.grid(row=1, column=2, sticky=EW, padx=2, pady=2)
+        self.btn_propiedades = Button(frame_buttons, text="Propiedades", style="secondary.Outline.TButton")
+        self.btn_propiedades.grid(row=1, column=2, sticky=EW, padx=PADDING_PANEL, pady=PADDING_PANEL)
 
-        self.btn_metadatos = Button(frame_buttons, text="Metadatos")
-        self.btn_metadatos.grid(row=1, column=3, sticky=EW, padx=2, pady=2)
+        self.btn_metadatos = Button(frame_buttons, text="Metadatos", style="info.Outline.TButton")
+        self.btn_metadatos.grid(row=1, column=3, sticky=EW, padx=PADDING_PANEL, pady=PADDING_PANEL)
 
         self.btn_renombrar_bibliografico = Button(
-            frame_buttons, text="Renombrar Bibliográficamente"
+            frame_buttons,
+            text="Renombrar Bibliográficamente",
+            style="primary.TButton",
         )
-        self.btn_renombrar_bibliografico.grid(row=1, column=4, sticky=EW, padx=2, pady=2)
+        self.btn_renombrar_bibliografico.grid(row=1, column=4, sticky=EW, padx=PADDING_PANEL, pady=PADDING_PANEL)
 
-        frame_pregreso = Frame(frame, padding=(1, 1))
-        frame_pregreso.pack(side=TOP, fill=X, padx=1, pady=1)
+        frame_pregreso = Frame(frame, padding=(PADDING_COMPACT, PADDING_COMPACT))
+        frame_pregreso.pack(side=TOP, fill=X, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
 
         self.lbl_progreso = Label(frame_pregreso, text="")
-        self.lbl_progreso.pack(side=TOP, fill=X, padx=1, pady=1, expand=True)
+        self.lbl_progreso.pack(side=TOP, fill=X, padx=PADDING_COMPACT, pady=PADDING_COMPACT, expand=True)
 
         self.progress_bar = Progressbar(frame_pregreso, maximum=100, bootstyle="primary")
-        self.progress_bar.pack(side=TOP, fill=X, padx=1, pady=1, expand=True)
+        self.progress_bar.pack(side=TOP, fill=X, padx=PADDING_COMPACT, pady=PADDING_COMPACT, expand=True)
 
     # ┌────────────────────────────────────────────────────────────┐
     # │ Funciones Privadas
@@ -469,6 +488,7 @@ class AdministrarDocumentos(Frame):
 
         controlar.buscar_datos(campo=campo, buscar=buscar)
         controlar.ejecutar_encontrados()
+        self.smart_table.set_estado("Búsqueda ejecutada")
 
     def _copiar_seleccionados(self):
         # abrimos el archivo de configuraciones
@@ -604,7 +624,7 @@ class AdministrarDocumentos(Frame):
     def on_mostrar_asociaciones(self, event):
         conf = ConfiguracionController()
         if self.mostrar_asociaciones:
-            self.frame_asociar.pack(side=TOP, fill=X, padx=1, pady=1, before=self.separador1)
+            self.frame_asociar.pack(side=TOP, fill=X, padx=PADDING_COMPACT, pady=PADDING_COMPACT, before=self.separador1)
             self.mostrar_asociaciones = False
             conf.set_mostrar_asociaciones("1")
         else:
@@ -616,7 +636,7 @@ class AdministrarDocumentos(Frame):
         conf = ConfiguracionController()
         if self.mostrar_datos_bibliograficos:
             self.frame_datos_bibliograficos.pack(
-                side=TOP, fill=X, padx=1, pady=1, before=self.separador2
+                side=TOP, fill=X, padx=PADDING_COMPACT, pady=PADDING_COMPACT, before=self.separador2
             )
             self.mostrar_datos_bibliograficos = False
             conf.set_mostrar_datos_bibliograficos("1")
@@ -628,7 +648,7 @@ class AdministrarDocumentos(Frame):
     def on_mostrar_operaciones(self, event):
         conf = ConfiguracionController()
         if self.mostrar_operaciones:
-            self.frame_operaciones.pack(side=TOP, fill=X, padx=1, pady=1, before=self.separador3)
+            self.frame_operaciones.pack(side=TOP, fill=X, padx=PADDING_COMPACT, pady=PADDING_COMPACT, before=self.separador3)
             self.mostrar_operaciones = False
             conf.set_mostrar_operaciones("1")
         else:
@@ -638,8 +658,40 @@ class AdministrarDocumentos(Frame):
 
     def on_mostrar_menu(self):
         if self.mostrar_menu:
-            self.frame_izquierdo.pack(side=LEFT, fill=Y, padx=1, pady=1, before=self.frame_derecho)
+            self.frame_izquierdo.pack(side=LEFT, fill=Y, padx=PADDING_COMPACT, pady=PADDING_COMPACT, before=self.frame_derecho)
             self.mostrar_menu = False
         else:
             self.frame_izquierdo.pack_forget()
             self.mostrar_menu = True
+
+    def _sincronizar_documento_contextual(self):
+        if hasattr(self, "controlador_documento_seleccionado"):
+            self.controlador_documento_seleccionado._set_documento()
+
+    def _crear_menu_contextual_tabla(self):
+        acciones = [
+            {"label": "📖 Abrir documento", "command": self._on_contextual_abrir},
+            {"label": "📂 Abrir carpeta", "command": self._on_contextual_abrir_carpeta},
+            {"label": "🧾 Ver metadatos", "command": self._on_contextual_metadatos},
+            {"separator": True},
+            {"label": "📋 Copiar seleccionados", "command": self.on_copiar_seleccionados},
+            {"label": "✂️ Mover seleccionados", "command": self.on_mover_seleccionados},
+            {"label": "🗑️ Eliminar seleccionados", "command": self.on_eliminar_seleccionado},
+        ]
+        self.menu_contextual_tabla = ContextMenuFactory.build_for_treeview(
+            master=self,
+            treeview=self.table_view.view,
+            actions=acciones,
+        )
+
+    def _on_contextual_abrir(self):
+        self._sincronizar_documento_contextual()
+        self.controlador_documento_seleccionado.on_abrir_documento()
+
+    def _on_contextual_abrir_carpeta(self):
+        self._sincronizar_documento_contextual()
+        self.controlador_documento_seleccionado.on_abrir_carpeta()
+
+    def _on_contextual_metadatos(self):
+        self._sincronizar_documento_contextual()
+        self.controlador_documento_seleccionado.on_visualizar_metadatos()

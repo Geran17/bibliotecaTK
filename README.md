@@ -1,67 +1,236 @@
 # BibliotecaTK
 
-BibliotecaTK es una aplicación en Python para la gestión de documentos electronicos. Ya sea
-libros u otros tipos de documentos que se puedan guardar en la memoria. No se es una aplicacion
-multi-usuario, ya que funcion principar es la de organizar y detectar documentos duplicados mediante el hash de cada archivo.
-Una de sus funciones principales es la registrar los contenidos de los documentos, para que el
-usuario pueda buscar contenidos especificos dentro los diferentes documentos.
-Ofrece funcionalidades para agregar, ver, actualizar y eliminar documentos de la biblioteca.
+BibliotecaTK es una aplicación de escritorio en **Python** para la gestión integral de documentos digitales. Permite organizar, catalogar y buscar documentos de forma eficiente mediante una interfaz gráfica intuitiva.
 
-## Características
+## 🎯 Descripción
 
-- **Gestión de Documentos**: Agregar nuevos documentos, ver la lista completa,
-    actualizar detalles o eliminar documentos de la biblioteca.
-- **Búsqueda y Filtros**: Buscar fácilmente documentos o usuarios según
-    distintos criterios.
-- **Interfaz Intuitiva**: Una interfaz gráfica amigable construida con
-    Tkinter, que facilita la navegación y la interacción.
+Una aplicación moderna y funcional para la gestión de bibliotecas personales o pequeñas colecciones de documentos. Su función principal es organizar documentos, detectar duplicados mediante hash SHA-256, registrar metadatos y permitir búsquedas avanzadas de contenido dentro de los documentos.
 
-## Tecnologías Utilizadas
+### Características Principales
 
-- **Python**: Lenguaje principal del proyecto.
-- **Tkinter**: Para crear la interfaz gráfica de usuario.
-- **SQLite3**: Para la gestión de la base de datos que almacena
-    información de libros, usuarios y préstamos.
+- **📚 Gestión de Documentos**: Importar, renombrar, copiar, mover y eliminar documentos
+- **🔍 Búsqueda Avanzada**: Buscar contenido dentro de documentos PDF y EPUB
+- **🏷️ Catalogación**: Agregar información bibliográfica, categorías, etiquetas y palabras clave
+- **📊 Detección de Duplicados**: Identificar archivos duplicados mediante hash SHA-256
+- **📑 Extracción de Contenido**: Registrar capítulos y secciones de documentos
+- **⭐ Favoritos**: Marcar documentos como favoritos para acceso rápido
+- **🎨 Interfaz Moderna**: Interfaz gráfica con tema ttkbootstrap, responsive y fácil de usar
+- **🔒 Almacenamiento Seguro**: Base de datos SQLite con validación de integridad
+- **⚙️ Configuración Flexible**: Configurar ubicación de biblioteca y preferencias de usuario
 
-## Instalación
+## 🛠️ Tecnologías Utilizadas
 
-Para tener una copia local funcionando, sigue estos pasos sencillos.
+- **Python 3.12+**: Lenguaje de programación
+- **Tkinter + ttkbootstrap**: Interfaz gráfica de usuario moderna
+- **SQLite3**: Base de datos relacional
+- **PyMuPDF (fitz)**: Procesamiento de archivos PDF
+- **pdf2image**: Generación de miniaturas de PDF
+- **send2trash**: Eliminación segura de archivos
+- **exiftool**: Extracción de metadatos
 
-### Requisitos Previos
+## 📋 Requisitos
 
-- Tener Python 3.x instalado en tu sistema.
+- Python 3.12 o superior
+- Pipenv (gestor de dependencias)
+- SQLite3 (incluido en Python)
 
-### Pasos
+## 🚀 Instalación
 
-1. **Clona el repositorio:**
+### 1. Clonar el repositorio
 
-    ``` bash
-    git clone https://github.com/your-username/BibliotecaTK.git
-    cd BibliotecaTK
-    ```
+```bash
+git clone https://github.com/usuario/bibliotecaTK.git
+cd bibliotecaTK
+```
 
-2. **Instala las dependencias (si las hubiera, aunque este proyecto usa
-    principalmente módulos incorporados):**
+### 2. Instalar Pipenv (si no lo tienes)
 
-    ``` bash
-    # No se requieren dependencias externas para una app básica con Tkinter/SQLite3.
-    # Si agregas alguna, inclúyela aquí junto con las instrucciones de instalación.
-    ```
+```bash
+pip install pipenv
+```
 
-3. **Ejecuta la aplicación:**
+### 3. Instalar dependencias
 
-    ``` bash
-    python main.py
-    ```
+```bash
+pipenv install
+```
 
-## Uso
+### 4. Ejecutar la aplicación
 
-Una vez que la aplicación esté en ejecución, puedes:
+```bash
+pipenv run python src/main.py
+```
 
-- Navegar por las distintas pestañas.
-- Usar los botones "Agregar", "Editar" y "Eliminar" para gestionar
-    registros.
-- Utilizar las barras de búsqueda para encontrar elementos
-    específicos.
+## 📁 Estructura del Proyecto
 
-## Estructura del Proyecto
+```
+bibliotecaTK/
+├── src/
+│   ├── main.py                    # Punto de entrada
+│   ├── models/
+│   │   ├── controllers/           # Lógica de negocio
+│   │   │   ├── controlar_documento_seleccionado.py
+│   │   │   ├── controlar_importacion_documento.py
+│   │   │   ├── controlar_seleccion_documentos.py
+│   │   │   ├── controlar_todos.py
+│   │   │   ├── controlar_existentes.py
+│   │   │   └── ... (más controladores)
+│   │   ├── daos/                  # Acceso a datos
+│   │   │   ├── dao.py
+│   │   │   ├── documento_dao.py
+│   │   │   ├── categoria_dao.py
+│   │   │   └── ... (más DAOs)
+│   │   ├── dtos/                  # Objetos de transferencia
+│   │   └── entities/              # Entidades de dominio
+│   │       ├── documento.py
+│   │       ├── categoria.py
+│   │       └── ... (más entidades)
+│   ├── views/
+│   │   ├── appTK.py              # Aplicación principal
+│   │   ├── frames/               # Componentes de UI
+│   │   │   ├── frame_importar_documento.py
+│   │   │   ├── frame_administrar_documentos.py
+│   │   │   └── ... (más frames)
+│   │   └── dialogs/              # Diálogos modales
+│   └── utilities/                # Funciones auxiliares
+│       ├── configuracion.py
+│       ├── auxiliar.py
+│       └── fileINI.py
+├── tests/                        # Pruebas unitarias
+├── Pipfile                       # Dependencias del proyecto
+├── pytest.ini                    # Configuración de pytest
+└── README.md
+```
+
+## 🎮 Uso
+
+### Importar Documentos
+
+1. Ir a **Importar → Seleccionar archivos**
+2. Elegir documentos PDF, EPUB o MOBI
+3. Opción de copiar o mover a la biblioteca
+4. Los documentos se registran en la BD automáticamente
+
+### Administrar Documentos
+
+1. Ir a **Administración**
+2. Seleccionar un documento haciendo doble clic
+3. Usar los botones para:
+   - **Abrir**: Abrir en aplicación asociada
+   - **Renombrar**: Cambiar nombre del documento
+   - **Copiar**: Copiar a ubicación externa
+   - **Mover**: Mover fuera de la biblioteca
+   - **Papelera**: Enviar a papelera
+   - **Eliminar**: Eliminar permanentemente
+
+### Buscar Contenido
+
+1. Ir a **Búsqueda**
+2. Escribir término de búsqueda
+3. Los resultados muestran documentos y páginas donde aparece
+
+### Ver Favoritos
+
+1. Ir a **Favoritos**
+2. Ver documentos marcados como favoritos
+3. Hacer clic para abrir
+
+## 🔧 Configuración
+
+Los datos de configuración se almacenan en:
+
+- **Linux/Mac**: `~/.config/bibliotecaTK/`
+- **Windows**: `%APPDATA%/bibliotecaTK/`
+
+La base de datos se almacena en:
+
+- **Linux/Mac**: `~/.local/share/bibliotecaTK/`
+- **Windows**: `%LOCALAPPDATA%/bibliotecaTK/`
+
+## 🏗️ Arquitectura
+
+BibliotecaTK sigue el patrón **MVC** (Modelo-Vista-Controlador):
+
+- **Vistas** (`src/views/`): Interfaz gráfica con Tkinter y ttkbootstrap
+- **Controladores** (`src/models/controllers/`): Lógica de negocio y manejo de eventos
+- **Modelos** (`src/models/`): DAOs, DTOs y Entidades para acceso a datos
+- **Base de Datos**: SQLite con validación de integridad referencial
+
+### Flujo de Datos
+
+```
+UI Event → Controller → DAO → SQLite Database
+    ↓
+   UI Update
+```
+
+## 📊 Mejoras Recientes
+
+### Calidad del Código
+
+✅ Logging completo en todos los controladores
+✅ Type hints para mejor análisis estático
+✅ Docstrings exhaustivos en métodos
+✅ Error handling robusto con try-except
+✅ Métodos privados bien organizados
+
+### Interfaz de Usuario
+
+✅ Emojis Unicode para feedback visual
+✅ Colores temáticos (info, danger, warning, success)
+✅ Interfaz responsiva con ttkbootstrap
+✅ Tabs (Notebook) para mejor organización
+✅ Barra de progreso para operaciones largas
+
+### Funcionalidades
+
+✅ Sincronización correcta de datos después de renombrar
+✅ Operaciones en masa (copiar, mover, eliminar, papelera)
+✅ Detección de archivos existentes en biblioteca
+✅ Generación automática de portadas y miniaturas
+✅ Búsqueda avanzada de contenido
+
+## 🧪 Pruebas
+
+Ejecutar pruebas unitarias:
+
+```bash
+pipenv run pytest
+```
+
+Pruebas disponibles:
+
+- Tests de DAOs (documento, categoría, colección, etc.)
+- Tests de DTOs (validación de datos)
+- Tests de Entidades (lógica de negocio)
+- Tests de conexión SQLite
+
+## 🐛 Problemas Conocidos
+
+Ninguno en la versión actual.
+
+## 📝 Convenciones de Código
+
+- **Nombres en español**: Métodos y variables en español
+- **Nombres en inglés**: Entidades y clases en inglés
+- **Type hints**: Todos los métodos públicos con type hints
+- **Docstrings**: Formato Google Style
+- **Logging**: Usar `logger.info()`, `logger.debug()`, `logger.error()`
+
+## 🤝 Contribuir
+
+Se aceptan pull requests para mejoras y corrección de bugs.
+
+## 📄 Licencia
+
+Este proyecto está bajo licencia MIT. Ver archivo LICENSE para detalles.
+
+## 👤 Autor
+
+**Geran** - Desarrollo y mantenimiento
+
+## 🙏 Agradecimientos
+
+- ttkbootstrap por el tema moderno
+- PyMuPDF por procesamiento de PDFs
+- La comunidad de Python por las herramientas

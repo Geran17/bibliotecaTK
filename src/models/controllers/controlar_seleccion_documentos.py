@@ -1,45 +1,68 @@
 import threading
 import time
 import datetime
+import logging
 from pathlib import Path
 from os.path import isfile
+from typing import List
 from utilities.auxiliar import hash_sha256, obtener_datos_documento
 from models.entities.documento import Documento
 from ttkbootstrap import Label, Progressbar
 from ttkbootstrap.tableview import Tableview
 
+# Configurar logging
+logger = logging.getLogger(__name__)
+
 
 class ControlarSeleccionDocumentos:
-    """Esta clase de encargara de controllar la seleccion de documentos"""
+    """Controlador para gestionar la selección y carga de documentos en la tabla.
+
+    Esta clase procesa archivos seleccionados y los carga en la interfaz,
+    generando metadatos como hash, tamaño, fechas, etc.
+    """
 
     def __init__(
         self,
         label_progreso: Label,
         progress_bar: Progressbar,
         table_view: Tableview,
-        lista_archivos: list,
-    ):
-        self.label_progreso = label_progreso
-        self.progress_bar = progress_bar
-        self.table_view = table_view
-        self.lista_archivos = lista_archivos
-        self.formato = "%Y-%m-%d %H:%M:%S"
+        lista_archivos: List[str],
+    ) -> None:
+        """Inicializa el controlador de selección.
 
-    def cargar_archivos_seleccionados(self):
+        Args:
+            label_progreso: Widget Label para mostrar el progreso
+            progress_bar: Widget Progressbar para la barra de progreso
+            table_view: Widget Tableview donde se mostrarán los archivos
+            lista_archivos: Lista de rutas de archivos a procesar
         """
-        Inicia un hilo de trabajo para procesar y cargar
-        todos los archivos seleccionados de forma asíncrona.
+        self.label_progreso: Label = label_progreso
+        self.progress_bar: Progressbar = progress_bar
+        self.table_view: Tableview = table_view
+        self.lista_archivos: List[str] = lista_archivos
+        self.formato: str = "%Y-%m-%d %H:%M:%S"
+
+    def cargar_archivos_seleccionados(self) -> None:
+        """Inicia un hilo de trabajo para cargar los archivos seleccionados.
+
+        Procesa todos los archivos de forma asíncrona sin bloquear la GUI.
         """
         if self.lista_archivos:
-            # 1. Creamos e iniciamos el hilo de trabajo.
-            hilo_trabajo = threading.Thread(target=self._procesar_y_cargar_archivos)
-            hilo_trabajo.start()
+            try:
+                logger.info(f"Iniciando carga de {len(self.lista_archivos)} archivos")
+                hilo_trabajo = threading.Thread(
+                    target=self._procesar_y_cargar_archivos, daemon=True
+                )
+                hilo_trabajo.start()
+            except Exception as e:
+                logger.error(f"Error al iniciar carga de archivos: {e}")
+                self.table_view.after(0, lambda: self.label_progreso.config(text=f"Error: {e}"))
 
-    def _procesar_y_cargar_archivos(self):
-        """
-        Función ejecutada por el hilo de trabajo.
-        Se encarga de generar y insertar todas las filas de manera secuencial,
-        pero sin bloquear la interfaz de usuario.
+    def _procesar_y_cargar_archivos(self) -> None:
+        """Procesa y carga todos los archivos en el hilo de trabajo.
+
+        Genera filas con metadatos para cada archivo y las inserta
+        en la tabla de forma segura para la GUI.
         """
 
         # 1. Configurar el progreso inicial
@@ -47,33 +70,38 @@ class ControlarSeleccionDocumentos:
         self.table_view.after(0, lambda: self.progress_bar.config(maximum=total_archivos, value=0))
 
         for i, ruta_archivo in enumerate(self.lista_archivos):
+            try:
+                # Actualizar la etiqueta (DELEGADO a la GUI)
+                self.table_view.after(
+                    0, lambda r=ruta_archivo: self.label_progreso.config(text=f"Procesando: {r}")
+                )
 
-            # Actualizar la etiqueta (DELEGADO a la GUI)
-            self.table_view.after(
-                0, lambda r=ruta_archivo: self.label_progreso.config(text=f"Procesando: {r}")
-            )
+                fila = self._generar_fila(ruta_archivo=ruta_archivo)
 
-            fila = self._generar_fila(ruta_archivo=ruta_archivo)
+                if fila:
+                    # Insertar la fila en el hilo de trabajo
+                    self.insertar_fila(values=fila)
 
-            if fila:
-                # Insertar la fila, incluyendo el sleep(5) en el hilo de trabajo
-                self.insertar_fila(values=fila)
+                # Actualizar el progreso (DELEGADO a la GUI)
+                self.table_view.after(0, lambda v=i + 1: self.progress_bar.config(value=v))
+            except Exception as e:
+                logger.error(f"Error procesando archivo {ruta_archivo}: {e}")
 
-            # 2. Actualizar el progreso (DELEGADO a la GUI)
-            self.table_view.after(0, lambda v=i + 1: self.progress_bar.config(value=v))
-
-        # 3. Limpiar y finalizar (DELEGADO a la GUI)
+        # Finalizar (DELEGADO a la GUI)
         self.table_view.after(0, self._finalizar_carga_gui)
 
-    def insertar_fila(self, values: list):
-        """
-        Simula una operación de I/O que toma tiempo (5 segundos)
-        y luego delega la inserción de la fila al hilo principal de Tkinter.
-        """
-        time.sleep(2)  # El retraso ocurre aquí, en el HILO DE TRABAJO.
+    def insertar_fila(self, values: List) -> None:
+        """Inserta una fila en la tabla de forma segura para la GUI.
 
-        # Usamos 'after' para ejecutar el método GUI-safe en el hilo principal
-        self.table_view.after(0, self._insertar_en_gui, values)
+        Args:
+            values: Lista de valores para la fila
+        """
+        try:
+            time.sleep(1.5)  # Simular operación I/O
+            # Usamos 'after' para ejecutar en el hilo principal de Tkinter
+            self.table_view.after(0, self._insertar_en_gui, values)
+        except Exception as e:
+            logger.error(f"Error al insertar fila: {e}")
 
     def _insertar_en_gui(self, values: list):
         """Método seguro para la GUI: inserta la fila en la Tableview."""

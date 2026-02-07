@@ -252,4 +252,8 @@ INNER JOIN vista_documento_asociaciones vda ON d.id = vda.id_documento;"""
         "CREATE INDEX IF NOT EXISTS idx_seccion_nivel ON seccion(nivel);",
         "CREATE INDEX IF NOT EXISTS idx_documento_grupo_documento ON documento_grupo(id_documento);",
         "CREATE INDEX IF NOT EXISTS idx_documento_grupo_grupo ON documento_grupo(id_grupo);",
+        "CREATE INDEX IF NOT EXISTS idx_documento_coleccion_coleccion ON documento_coleccion(id_coleccion);",
+        "CREATE INDEX IF NOT EXISTS idx_documento_categoria_categoria ON documento_categoria(id_categoria);",
+        "CREATE INDEX IF NOT EXISTS idx_documento_etiqueta_etiqueta ON documento_etiqueta(id_etiqueta);",
+        "CREATE INDEX IF NOT EXISTS idx_documento_palabra_clave_palabra_clave ON documento_palabra_clave(id_palabra_clave);",
     ]

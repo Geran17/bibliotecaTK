@@ -1,18 +1,17 @@
 from ttkbootstrap import (
     Frame,
     LabelFrame,
-    Entry,
-    Combobox,
-    Button,
     StringVar,
     Separator,
 )
 from ttkbootstrap.constants import *
-from ttkbootstrap.tableview import Tableview
 from ttkbootstrap.tooltip import ToolTip
 from models.controllers.controlar_visualizar_biblioteca import (
     ControlarVisualizarBiblioteca,
 )
+from views.components.smart_table_frame import SmartTableFrame
+from views.components.context_menu_factory import ContextMenuFactory
+from views.components.ui_tokens import PADDING_OUTER, PADDING_PANEL
 
 
 class FrameVisualizarBiblioteca(Frame):
@@ -43,48 +42,71 @@ class FrameVisualizarBiblioteca(Frame):
         self.crear_widgets()
 
         # --- Instanciar Controlador ---
-        ControlarVisualizarBiblioteca(
+        self.controlador = ControlarVisualizarBiblioteca(
             table_view=self.table_view,
             ent_buscar=self.ent_buscar,
             cbx_campos=self.cbx_campos,
             btn_buscar=self.btn_buscar,
             master=self,
         )
+        self._crear_menu_contextual_tabla()
 
     def crear_widgets(self):
         """Crea y organiza los widgets principales del frame."""
-        frame_principal = LabelFrame(self, text="Búsqueda Bibliográfica", padding=5)
-        frame_principal.pack(fill=BOTH, expand=True, padx=5, pady=5)
+        frame_principal = LabelFrame(self, text="Búsqueda Bibliográfica", padding=PADDING_PANEL)
+        frame_principal.pack(fill=BOTH, expand=True, padx=PADDING_OUTER, pady=PADDING_OUTER)
 
-        # --- Frame para la búsqueda ---
-        frame_busqueda = Frame(frame_principal)
-        frame_busqueda.pack(fill=X, pady=(0, 5))
+        Separator(frame_principal, orient=HORIZONTAL).pack(fill=X, pady=PADDING_PANEL)
 
-        self.ent_buscar = Entry(frame_busqueda, textvariable=self.var_buscar)
-        self.ent_buscar.pack(side=LEFT, fill=X, expand=True, padx=(0, 5))
-        ToolTip(self.ent_buscar, "Escribe aquí para buscar y presiona Enter")
-
-        self.cbx_campos = Combobox(
-            frame_busqueda, values=self.campos_busqueda, state=READONLY, width=12
-        )
-        self.cbx_campos.current(0)
-        self.cbx_campos.pack(side=LEFT, padx=5)
-        ToolTip(self.cbx_campos, "Selecciona en qué campo buscar")
-
-        self.btn_buscar = Button(frame_busqueda, text="Buscar", style="primary")
-        self.btn_buscar.pack(side=LEFT)
-        ToolTip(self.btn_buscar, "Realizar la búsqueda bibliográfica")
-
-        Separator(frame_principal, orient=HORIZONTAL).pack(fill=X, pady=5)
-
-        # --- Tabla de Resultados ---
-        self.table_view = Tableview(
+        self.smart_table = SmartTableFrame(
             master=frame_principal,
             coldata=self.coldata,
+            search_fields=self.campos_busqueda,
+            var_buscar=self.var_buscar,
+            on_search=self.on_buscar,
+            on_refresh=self.actualizar_tabla,
+            show_refresh=True,
             paginated=True,
             searchable=False,
             autofit=True,
             bootstyle=PRIMARY,
         )
-        self.table_view.pack(fill=BOTH, expand=True)
+        self.smart_table.pack(fill=BOTH, expand=True)
+
+        self.ent_buscar = self.smart_table.ent_buscar
+        self.cbx_campos = self.smart_table.cbx_campos
+        self.btn_buscar = self.smart_table.btn_buscar
+        self.btn_refrescar = self.smart_table.btn_refrescar
+        self.table_view = self.smart_table.table_view
+
+        ToolTip(self.ent_buscar, "Escribe aquí para buscar y presiona Enter")
+        ToolTip(self.cbx_campos, "Selecciona en qué campo buscar")
+        ToolTip(self.btn_buscar, "Realizar la búsqueda bibliográfica")
         ToolTip(self.table_view.view, "Doble clic en un resultado para abrir el documento.")
+
+    def actualizar_tabla(self):
+        """
+        Refrescar los datos de la tabla bibliográfica.
+
+        Nota: El refrescado es manejado automáticamente por el controlador
+        cuando hay cambios en la búsqueda.
+        """
+        if hasattr(self, "controlador"):
+            self.controlador.recargar_resultados()
+
+    def on_buscar(self):
+        if hasattr(self, "controlador"):
+            self.controlador.on_buscar()
+
+    def _crear_menu_contextual_tabla(self):
+        acciones = [
+            {"label": "📖 Abrir documento", "command": self.controlador._abrir_documento_seleccionado},
+            {"label": "🔎 Buscar", "command": self.on_buscar},
+            {"separator": True},
+            {"label": "🔄 Refrescar", "command": self.actualizar_tabla},
+        ]
+        self.menu_contextual_tabla = ContextMenuFactory.build_for_treeview(
+            master=self,
+            treeview=self.table_view.view,
+            actions=acciones,
+        )

@@ -1,4 +1,4 @@
-from os.path import join
+import traceback
 from models.daos.database_dao import DataBaseDAO
 from utilities.configuracion import inicializar_directorios, RUTA_DATA
 from views.appTK import AppTK
@@ -14,9 +14,10 @@ def main():
         inicializar_directorios()
         # Abrimos la aplicacion principal
         appTK = AppTK()
-        appTK.ejeuctar()
+        appTK.ejecutar()
     except Exception as e:
-        print(f"Error: {e}")
+        # Imprime el error y el traceback completo para una mejor depuración
+        traceback.print_exc()
 
 
 if __name__ == "__main__":

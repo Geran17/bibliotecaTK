@@ -1,5 +1,5 @@
 import pytest
-from src.models.dtos.grupo_dto import GrupoDTO
+from models.dtos.grupo_dto import GrupoDTO
 
 
 def test_grupo_dto_creacion_instancia_completa():

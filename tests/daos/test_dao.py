@@ -2,8 +2,7 @@ import pytest
 import sqlite3
 from typing import List, Dict, Any, Optional
 
-from src.models.daos.dao import DAO
-from src.models.daos.connection_sqlite import Database
+from models.daos.dao import DAO
 
 # --- Implementación Concreta para Pruebas ---
 
@@ -72,16 +71,13 @@ class MockDAO(DAO):
 
 
 @pytest.fixture
-def mock_dao_en_memoria():
+def mock_dao_en_memoria(tmp_path):
     """
-    Fixture que crea un MockDAO con una base de datos en memoria.
+    Fixture que crea un MockDAO con una base de datos temporal en archivo.
     """
-    Database.resetear()
-    # El __init__ de DAO llama a crear_tabla()
-    dao = MockDAO(ruta_db=":memory:")
+    ruta_db = tmp_path / "mock.sqlite3"
+    dao = MockDAO(ruta_db=str(ruta_db))
     yield dao
-    dao._db.cerrar()
-    Database.resetear()
 
 
 # --- Tests para la clase base DAO ---

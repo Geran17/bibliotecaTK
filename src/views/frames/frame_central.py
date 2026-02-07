@@ -1,6 +1,8 @@
 from ttkbootstrap import Frame, Button, Separator, Checkbutton, Notebook, IntVar, Style
 from ttkbootstrap.constants import *
 from ttkbootstrap.tooltip import ToolTip
+from tkinter.messagebox import showwarning
+import logging
 from models.controllers.configuracion_controller import ConfiguracionController
 from views.dialogs.dialog_importar import DialogImportar
 from views.dialogs.dialog_administrar_coleccion import DialogAdministrarColeccion
@@ -14,6 +16,7 @@ from views.dialogs.dialog_administrar_categorias import (
 )
 from views.dialogs.dialog_administrar_documentos import DialogAdministrarDocumentos
 from views.dialogs.dialog_configurar_vistas import DialogConfigurarVistas
+from views.dialogs.dialog_visor_metadatos import DialogVisorMetadatos
 from views.frames.frame_bienvenida import FrameBienvenida
 from views.frames.frame_visualizar_documentos import FrameVisualizarDocumentos
 from views.frames.frame_favoritos import FrameFavoritos
@@ -21,6 +24,8 @@ from views.frames.frame_visualizar_biblioteca import FrameVisualizarBiblioteca
 from views.frames.frame_visualizar_contenido import FrameVisualizarContenido
 from views.frames.frame_visor_metadatos import FrameVisorMetadatos
 from views.frames.frame_visualizar_estante import FrameVisualizarEstante
+
+logger = logging.getLogger(__name__)
 
 
 class FrameCentral(Frame):
@@ -45,6 +50,14 @@ class FrameCentral(Frame):
         self.var_organizar = IntVar(value=0)
         self.notebook_central = None
         self.tab_bienvenida = None
+
+        # --- Referencias a las pestañas para refrescar ---
+        self.tab_visualizar = None
+        self.tab_favoritos = None
+        self.tab_biblioteca = None
+        self.tab_contenido = None
+        self.tab_metadatos = None
+        self.tab_estante = None
 
         # --- Estilos ---
         self.estilo = Style()
@@ -111,9 +124,10 @@ class FrameCentral(Frame):
             self.panel_archivos,
             text="📝 Metadatos",
             style="Link.TButton",
+            command=self.on_dialog_metadatos,
         )
         btn_metadato.pack(side=TOP, fill=X, padx=5, pady=2)
-        ToolTip(btn_metadato, "Ver y editar metadatos (función no implementada)")
+        ToolTip(btn_metadato, "Abrir el visor de metadatos")
 
         btn_cerrar = Button(
             self.panel_archivos,
@@ -192,6 +206,18 @@ class FrameCentral(Frame):
         )
         btn_palabra_clave.pack(side=TOP, fill=X, padx=5, pady=2)
         ToolTip(btn_palabra_clave, "Administrar palabras clave")
+
+        # --- Separador final y botón de refrescar ---
+        Separator(self.panel_lateral).pack(side=TOP, fill=X, padx=1, pady=5)
+
+        btn_refrescar = Button(
+            self.panel_lateral,
+            text="🔄 Refrescar",
+            style="Link.TButton",
+            command=self.on_refrescar_pestanas,
+        )
+        btn_refrescar.pack(side=TOP, fill=X, padx=5, pady=2)
+        ToolTip(btn_refrescar, "Refrescar todas las pestañas")
 
     def _crear_panel_central(self):
         """Crea el panel central que contendrá el contenido principal."""
@@ -393,3 +419,43 @@ class FrameCentral(Frame):
         dialog = DialogAdministrarDocumentos()
         dialog.update_idletasks()
         dialog.grab_set()
+
+    def on_dialog_metadatos(self):
+        """Abre la vista de metadatos desde el panel lateral."""
+        if self.tab_metadatos and self.notebook_central:
+            self.notebook_central.select(self.tab_metadatos)
+            return
+
+        dialog = DialogVisorMetadatos(master=self)
+        dialog.update_idletasks()
+        dialog.grab_set()
+
+    def on_refrescar_pestanas(self):
+        """Refrescar todas las pestañas activas."""
+        pestanas = [
+            ("Visualizar", self.tab_visualizar),
+            ("Favoritos", self.tab_favoritos),
+            ("Biblioteca", self.tab_biblioteca),
+            ("Contenido", self.tab_contenido),
+            ("Metadatos", self.tab_metadatos),
+            ("Estante", self.tab_estante),
+        ]
+        errores = []
+
+        for nombre, tab in pestanas:
+            if tab and hasattr(tab, "actualizar_tabla"):
+                try:
+                    tab.actualizar_tabla()
+                except Exception as ex:
+                    logger.exception("Error al refrescar pestaña '%s'", nombre)
+                    errores.append(f"{nombre}: {ex}")
+
+        if errores:
+            detalle = "\n".join(f"- {error}" for error in errores[:5])
+            if len(errores) > 5:
+                detalle += f"\n- ... y {len(errores) - 5} error(es) adicional(es)"
+            showwarning(
+                title="Refresco incompleto",
+                message=f"Algunas pestañas no se pudieron refrescar:\n{detalle}",
+                parent=self,
+            )
