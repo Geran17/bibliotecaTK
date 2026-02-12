@@ -23,93 +23,57 @@ class FrameMenu(Frame):
         self.frame_central = frame_central
 
     def crear_widgets(self):
-        """
-        Crea los botones de la barra de menú a partir de una lista de diccionarios
-        para mejorar la escalabilidad y mantenibilidad del código.
-        """
-        # --- Definición de los botones ---
-        botones_derecha = [
-            {
-                "text": "🛠️",
-                "command": self.abrir_dialog_configurar,
-                "tooltip": "Abrir configuración",
-                "padx": (2, 5),
-            },
-            {
-                "text": "❓",
-                "command": self.abrir_dialog_acerca_de,
-                "tooltip": "Ayuda / Acerca de",
-                "padx": (2, 2),
-            },
-        ]
+        """Barra superior compacta y funcional."""
+        btn_panel = Button(
+            self,
+            text="Panel",
+            style="primary.Outline.TButton",
+            command=self.toggle_panel_lateral,
+        )
+        btn_panel.pack(side=LEFT, padx=(5, 2), pady=5)
+        ToolTip(btn_panel, "Mostrar u ocultar navegación lateral")
 
-        botones_izquierda = [
-            {
-                "text": "☰",
-                "command": self.toggle_panel_lateral,
-                "tooltip": "Mostrar/Ocultar panel lateral",
-                "padx": (5, 2),
-            },
-            {
-                "text": "📜",
-                "command": self.on_administrar_documentos,
-                "tooltip": "Administrar documentos",
-                "padx": 2,
-            },
-            {
-                "text": "📥",
-                "command": self.on_importar,
-                "tooltip": "Importar documentos",
-                "padx": 2,
-            },
-        ]
+        menu_acciones_btn = Menubutton(self, text="Acciones", style="primary.Outline.TButton")
+        menu_acciones_btn.pack(side=LEFT, padx=2, pady=5)
+        ToolTip(menu_acciones_btn, "Acciones principales de la biblioteca")
 
-        # --- Creación de botones (los de la derecha primero) ---
-        for config in botones_derecha:
-            btn = Button(
-                self,
-                text=config["text"],
-                style="primary.Outline.TButton",
-                command=config["command"],
-            )
-            btn.pack(side=RIGHT, padx=config["padx"], pady=5)
-            ToolTip(btn, config["tooltip"])
+        menu_acciones = Menu(menu_acciones_btn, tearoff=0)
+        menu_acciones.add_command(label="Importar documentos", command=self.on_importar)
+        menu_acciones.add_command(
+            label="Administrar documentos",
+            command=self.on_administrar_documentos,
+        )
+        menu_acciones.add_separator()
+        menu_acciones.add_command(label="Colecciones", command=self.on_administrar_colecciones)
+        menu_acciones.add_command(label="Grupos", command=self.on_administrar_grupos)
+        menu_acciones.add_command(label="Categorías", command=self.on_administrar_categorias)
+        menu_acciones.add_command(label="Etiquetas", command=self.on_administrar_etiquetas)
+        menu_acciones.add_command(
+            label="Palabras clave",
+            command=self.on_administrar_palabras_clave,
+        )
+        menu_acciones_btn["menu"] = menu_acciones
 
-        # --- Separador vertical ---
         separator = Separator(self, orient=VERTICAL)
         separator.pack(side=RIGHT, fill=Y, padx=5, pady=8)
 
-        # --- Menú desplegable "Administrar" ---
-        menu_administrar_btn = Menubutton(
-            self, text="🗄️ Administrar", style="primary.Outline.TButton"
+        btn_config = Button(
+            self,
+            text="Config",
+            style="primary.Outline.TButton",
+            command=self.abrir_dialog_configurar,
         )
-        menu_administrar_btn.pack(side=LEFT, padx=2, pady=5)
-        ToolTip(menu_administrar_btn, "Administrar elementos de la biblioteca")
+        btn_config.pack(side=RIGHT, padx=(2, 5), pady=5)
+        ToolTip(btn_config, "Configuración")
 
-        # Crear el menú asociado
-        menu_items = [
-            {"label": "📚 Colecciones", "command": self.on_administrar_colecciones},
-            {"label": "🗂️ Grupos", "command": self.on_administrar_grupos},
-            {"label": "🗃️ Categorías", "command": self.on_administrar_categorias},
-            {"label": "🏷️ Etiquetas", "command": self.on_administrar_etiquetas},
-            {"label": "🔑 Palabras Clave", "command": self.on_administrar_palabras_clave},
-        ]
-
-        menu_desplegable = Menu(menu_administrar_btn, tearoff=0)
-        for item in menu_items:
-            menu_desplegable.add_command(label=item["label"], command=item["command"])
-
-        menu_administrar_btn["menu"] = menu_desplegable
-
-        for config in botones_izquierda:
-            btn = Button(
-                self,
-                text=config["text"],
-                style="primary.Outline.TButton",
-                command=config["command"],
-            )
-            btn.pack(side=LEFT, padx=config["padx"], pady=5)
-            ToolTip(btn, config["tooltip"])
+        btn_ayuda = Button(
+            self,
+            text="Ayuda",
+            style="primary.Outline.TButton",
+            command=self.abrir_dialog_acerca_de,
+        )
+        btn_ayuda.pack(side=RIGHT, padx=(2, 2), pady=5)
+        ToolTip(btn_ayuda, "Ayuda y acerca de")
 
     def abrir_dialog_configurar(self):
         dialog = DialogConfigurar()

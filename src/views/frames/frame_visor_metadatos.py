@@ -3,6 +3,7 @@ from ttkbootstrap.constants import *
 from ttkbootstrap.tableview import Tableview
 from ttkbootstrap.tooltip import ToolTip
 from tkinter.ttk import Treeview, Scrollbar
+from views.components.ui_tokens import PADDING_COMPACT
 
 from models.controllers.controlar_visor_metadatos import ControlarVisorMetadatos
 
@@ -47,10 +48,10 @@ class FrameVisorMetadatos(Frame):
     def crear_widgets(self):
         """Crea y organiza los widgets principales del frame."""
         pane = PanedWindow(self, orient=HORIZONTAL, style="Separador.TPanedwindow")
-        pane.pack(fill=BOTH, expand=True, padx=5, pady=5)
+        pane.pack(fill=BOTH, expand=True, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
 
         # --- Panel Izquierdo: Treeview de Metadatos ---
-        frame_izquierdo = LabelFrame(pane, text="Claves de Metadatos")
+        frame_izquierdo = LabelFrame(pane, text="Claves de metadatos")
         pane.add(frame_izquierdo, weight=1)
 
         self.tree_metadatos = Treeview(
@@ -67,7 +68,7 @@ class FrameVisorMetadatos(Frame):
         ToolTip(self.tree_metadatos, "Selecciona una clave para ver los documentos asociados.")
 
         # --- Panel Derecho: Tabla de Documentos ---
-        frame_derecho = LabelFrame(pane, text="Documentos Asociados")
+        frame_derecho = LabelFrame(pane, text="Documentos asociados")
         pane.add(frame_derecho, weight=3)
 
         self.table_view = Tableview(
@@ -79,7 +80,7 @@ class FrameVisorMetadatos(Frame):
             bootstyle=PRIMARY,
         )
         self.table_view.pack(fill=BOTH, expand=True)
-        ToolTip(self.table_view.view, "Doble clic en un documento para abrirlo.")
+        ToolTip(self.table_view.view, "Doble clic para abrir. Clic derecho para más acciones.")
 
     def actualizar_tabla(self):
         """

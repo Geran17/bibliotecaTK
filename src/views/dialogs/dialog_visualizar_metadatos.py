@@ -4,7 +4,7 @@ from models.entities.documento import Documento
 
 
 class DialogVisualizarMetadatos(Toplevel):
-    def __init__(self, title="Visualizar Metadatos", **kwargs):
+    def __init__(self, title="Visualizar metadatos", **kwargs):
         super().__init__(title=title, **kwargs)
         # Configuraciones de la ventana
         self.resizable(True, True)

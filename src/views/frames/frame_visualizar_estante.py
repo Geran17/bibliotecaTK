@@ -5,7 +5,12 @@ from ttkbootstrap.constants import *
 
 # Import the new controller
 from models.controllers.controlar_visualizar_estante import ControlarVisualizarEstante
-from views.components.ui_tokens import PADDING_COMPACT, PADDING_OUTER, PADDING_PANEL
+from views.components.ui_tokens import (
+    PADDING_COMPACT,
+    PADDING_OUTER,
+    PADDING_PANEL,
+    FONT_TITLE,
+)
 
 
 class FrameVisualizarEstante(Frame):
@@ -17,6 +22,7 @@ class FrameVisualizarEstante(Frame):
 
         # --- Variables ---
         self.var_buscar = StringVar()
+        self.var_modo_visualizacion = StringVar(value="Cuadrícula")
         self.campos_busqueda = [
             "Todo",
             "Nombre",
@@ -33,6 +39,7 @@ class FrameVisualizarEstante(Frame):
         self.map_widgets = {}  # Initialize empty, populate after widgets are created
         self.map_vars = {
             "var_buscar": self.var_buscar,
+            "var_modo_visualizacion": self.var_modo_visualizacion,
         }
 
         self._crear_widgets()  # Creates widgets and populates self.map_widgets
@@ -76,6 +83,7 @@ class FrameVisualizarEstante(Frame):
         self.map_widgets = {
             "ent_buscar": self.ent_buscar,
             "cbx_campos": self.cbx_campos,
+            "cbx_modo_visualizacion": self.cbx_modo_visualizacion,
             "btn_buscar": self.btn_buscar,
             "btn_anterior": self.btn_anterior,
             "btn_siguiente": self.btn_siguiente,
@@ -87,10 +95,28 @@ class FrameVisualizarEstante(Frame):
     # └────────────────────────────────────────────────────────────┘
 
     def _panel_superior(self, frame: Frame):
-        lbl_titulo = Label(
-            frame, text="📚 Estante de la Biblioteca", font=("Helvetica", 14, "bold")
+        frame_header = Frame(frame)
+        frame_header.pack(side=TOP, fill=X, padx=PADDING_OUTER, pady=(5, 10))
+
+        lbl_titulo = Label(frame_header, text="📚 Estante de la Biblioteca", font=FONT_TITLE)
+        lbl_titulo.pack(side=LEFT, fill=X, expand=True)
+
+        lbl_vista = Label(frame_header, text="Vista:")
+        lbl_vista.pack(side=LEFT, padx=(0, PADDING_COMPACT))
+
+        self.cbx_modo_visualizacion = Combobox(
+            frame_header,
+            values=["Cuadrícula", "Lista"],
+            state=READONLY,
+            width=12,
+            textvariable=self.var_modo_visualizacion,
         )
-        lbl_titulo.pack(side=TOP, fill=X, padx=10, pady=(5, 10))
+        self.cbx_modo_visualizacion.current(0)
+        self.cbx_modo_visualizacion.pack(side=LEFT)
+        ToolTip(
+            self.cbx_modo_visualizacion,
+            "Cambia cómo se muestran los documentos en el estante",
+        )
 
         Separator(frame, orient=HORIZONTAL).pack(
             fill=X,

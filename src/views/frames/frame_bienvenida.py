@@ -1,5 +1,13 @@
 from ttkbootstrap import Frame, Label, Separator, Button, Style
 from ttkbootstrap.constants import *
+from views.components.ui_tokens import (
+    FONT_TITLE,
+    FONT_SUBTITLE,
+    FONT_SECTION,
+    FONT_CAPTION,
+    PADDING_OUTER,
+    PADDING_PANEL,
+)
 
 
 class FrameBienvenida(Frame):
@@ -24,19 +32,19 @@ class FrameBienvenida(Frame):
             master: El widget padre.
             command_importar: Función a ejecutar para el botón 'Importar'.
             command_documentos: Función a ejecutar para el botón 'Administrar Documentos'.
-            command_config: Función a ejecutar para el botón 'Configuraciones'.
+            command_config: Función a ejecutar para el botón 'Configuración'.
             **kwargs: Argumentos adicionales para el Frame.
         """
         super().__init__(master, **kwargs)
 
         # --- Estilos ---
         self.estilo = Style()
-        self.estilo.configure("Titulo.TLabel", font=("Helvetica", 24, "bold"))
-        self.estilo.configure("Subtitulo.TLabel", font=("Helvetica", 14))
-        self.estilo.configure("Seccion.TLabel", font=("Helvetica", 12, "bold"))
-        self.estilo.configure("Pie.TLabel", font=("Helvetica", 8, "italic"))
+        self.estilo.configure("Titulo.TLabel", font=FONT_TITLE)
+        self.estilo.configure("Subtitulo.TLabel", font=FONT_SUBTITLE)
+        self.estilo.configure("Seccion.TLabel", font=FONT_SECTION)
+        self.estilo.configure("Pie.TLabel", font=FONT_CAPTION)
         # Estilo para los botones de acceso rápido con fuente más grande
-        self.estilo.configure("Grande.Outline.TButton", font=("Helvetica", 11, "bold"))
+        self.estilo.configure("Grande.Outline.TButton", font=FONT_SECTION)
 
         # --- Comandos ---
         self.command_importar = command_importar
@@ -61,7 +69,7 @@ class FrameBienvenida(Frame):
             bootstyle="primary",
             style="Titulo.TLabel",
         )
-        lbl_titulo.pack(pady=(20, 10))
+        lbl_titulo.pack(pady=(PADDING_OUTER * 2, PADDING_PANEL))
 
         # --- Subtítulo o Lema ---
         lbl_subtitulo = Label(
@@ -70,10 +78,10 @@ class FrameBienvenida(Frame):
             bootstyle="secondary",
             style="Subtitulo.TLabel",
         )
-        lbl_subtitulo.pack(pady=(0, 25))
+        lbl_subtitulo.pack(pady=(0, PADDING_OUTER * 3))
 
         # --- Separador Visual ---
-        Separator(frame_contenido).pack(fill=X, padx=50, pady=10)
+        Separator(frame_contenido).pack(fill=X, padx=PADDING_OUTER * 6, pady=PADDING_OUTER)
 
         # --- Sección de "Primeros Pasos" ---
         lbl_primeros_pasos = Label(
@@ -82,11 +90,11 @@ class FrameBienvenida(Frame):
             bootstyle="info",
             style="Seccion.TLabel",
         )
-        lbl_primeros_pasos.pack(pady=(15, 10))
+        lbl_primeros_pasos.pack(pady=(PADDING_OUTER * 2, PADDING_OUTER))
 
         # Contenedor para los pasos, para que se alineen correctamente
         frame_pasos = Frame(frame_contenido)
-        frame_pasos.pack(pady=5, padx=20)
+        frame_pasos.pack(pady=PADDING_PANEL, padx=PADDING_OUTER * 2)
 
         # Paso 1: Importar
         lbl_paso1 = Label(
@@ -110,7 +118,11 @@ class FrameBienvenida(Frame):
         lbl_paso3.pack(anchor=W, pady=2)
 
         # --- Separador Visual ---
-        Separator(frame_contenido).pack(fill=X, padx=50, pady=(25, 10))
+        Separator(frame_contenido).pack(
+            fill=X,
+            padx=PADDING_OUTER * 6,
+            pady=(PADDING_OUTER * 3, PADDING_OUTER),
+        )
 
         # --- Sección de "Acceso Rápido" ---
         lbl_acceso_rapido = Label(
@@ -119,10 +131,10 @@ class FrameBienvenida(Frame):
             bootstyle="info",
             style="Seccion.TLabel",
         )
-        lbl_acceso_rapido.pack(pady=(15, 10))
+        lbl_acceso_rapido.pack(pady=(PADDING_OUTER * 2, PADDING_OUTER))
 
         frame_botones_rapidos = Frame(frame_contenido)
-        frame_botones_rapidos.pack(pady=10)
+        frame_botones_rapidos.pack(pady=PADDING_OUTER)
 
         # Botón Importar Documentos
         btn_importar = Button(
@@ -132,7 +144,15 @@ class FrameBienvenida(Frame):
             compound=TOP,
             command=self.command_importar,
         )
-        btn_importar.grid(row=0, column=0, padx=10, pady=5, ipady=10, ipadx=10, sticky="nswe")
+        btn_importar.grid(
+            row=0,
+            column=0,
+            padx=PADDING_OUTER,
+            pady=PADDING_PANEL,
+            ipady=PADDING_OUTER,
+            ipadx=PADDING_OUTER,
+            sticky="nswe",
+        )
 
         # Botón Administrar Documentos
         btn_admin_docs = Button(
@@ -142,22 +162,38 @@ class FrameBienvenida(Frame):
             compound=TOP,
             command=self.command_documentos,
         )
-        btn_admin_docs.grid(row=0, column=1, padx=10, pady=5, ipady=10, ipadx=10, sticky="nswe")
+        btn_admin_docs.grid(
+            row=0,
+            column=1,
+            padx=PADDING_OUTER,
+            pady=PADDING_PANEL,
+            ipady=PADDING_OUTER,
+            ipadx=PADDING_OUTER,
+            sticky="nswe",
+        )
 
-        # Botón Configuraciones
+        # Botón Configuración
         btn_config = Button(
             frame_botones_rapidos,
-            text="⚙️\nConfiguraciones",
+            text="⚙️\nConfiguración",
             style="Grande.Outline.TButton",  # Aplicar el nuevo estilo
             compound=TOP,
             command=self.command_config,
         )
-        btn_config.grid(row=0, column=2, padx=10, pady=5, ipady=10, ipadx=10, sticky="nswe")
+        btn_config.grid(
+            row=0,
+            column=2,
+            padx=PADDING_OUTER,
+            pady=PADDING_PANEL,
+            ipady=PADDING_OUTER,
+            ipadx=PADDING_OUTER,
+            sticky="nswe",
+        )
 
         # --- Pie de Página con información del creador ---
         # Este frame se empaqueta en 'self' (el FrameBienvenida) para que se alinee en la parte inferior.
-        frame_pie = Frame(self, padding=5)
-        frame_pie.pack(side=BOTTOM, fill=X, padx=10, pady=5)
+        frame_pie = Frame(self, padding=PADDING_PANEL)
+        frame_pie.pack(side=BOTTOM, fill=X, padx=PADDING_OUTER, pady=PADDING_PANEL)
 
         lbl_creador = Label(
             frame_pie, text="Creado por: Geran @ 2025", style="Pie.TLabel", bootstyle="secondary"

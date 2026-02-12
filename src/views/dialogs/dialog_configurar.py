@@ -1,14 +1,20 @@
 from ttkbootstrap import Toplevel, LabelFrame, Frame, Label, Entry, Button, StringVar, Combobox
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
 from ttkbootstrap.scrolled import ScrolledFrame
 from ttkbootstrap.constants import *
 from ttkbootstrap.tooltip import ToolTip
 from os.path import expanduser
 from models.controllers.configuracion_controller import ConfiguracionController
+from views.components.ui_tokens import (
+    FONT_TITLE,
+    FONT_CAPTION,
+    PADDING_OUTER,
+    PADDING_PANEL,
+)
 
 
 class DialogConfigurar(Toplevel):
-    def __init__(self, title="Configuraciones", **kwargs):
+    def __init__(self, title="Configuración", **kwargs):
         super().__init__(title=title, **kwargs)
 
         # Configuración de la ventana
@@ -17,6 +23,7 @@ class DialogConfigurar(Toplevel):
         # variables
         self.ubicacion_biblioteca = StringVar()
         self.temas = self.style.theme_names()
+        self.entornos_ui = ["tkinter"]
         self.estilo_citacion = StringVar()
         self.estilos_citacion_lista = [
             "APA",
@@ -70,14 +77,22 @@ class DialogConfigurar(Toplevel):
         excede el tamaño de la ventana.
         """
         # Frame principal que contendrá todo
-        frame_principal = Frame(self, padding=10)
-        frame_principal.pack(side=TOP, fill=BOTH, expand=TRUE, padx=10, pady=5)
+        frame_principal = Frame(self, padding=PADDING_OUTER)
+        frame_principal.pack(
+            side=TOP,
+            fill=BOTH,
+            expand=TRUE,
+            padx=PADDING_OUTER,
+            pady=PADDING_PANEL,
+        )
 
         # Título de la ventana
         lbl_titulo = Label(
-            frame_principal, text="🛠️ Configuraciones Generales", font=("Helvetica", 14, "bold")
+            frame_principal,
+            text="Configuración general",
+            font=FONT_TITLE,
         )
-        lbl_titulo.pack(side=TOP, fill=X, pady=(0, 15))
+        lbl_titulo.pack(side=TOP, fill=X, pady=(0, PADDING_OUTER * 2))
 
         # Frame con scroll para el contenido de las configuraciones
         scrolled_content = ScrolledFrame(frame_principal, autohide=True)
@@ -99,7 +114,7 @@ class DialogConfigurar(Toplevel):
         Args:
             parent (Frame): El widget padre donde se colocará esta sección.
         """
-        lf_biblioteca = LabelFrame(parent, text="Ubicación de la Biblioteca", padding=10)
+        lf_biblioteca = LabelFrame(parent, text="Ubicación de la biblioteca", padding=10)
         lf_biblioteca.pack(side=TOP, fill=X, pady=5, padx=5)
         lf_biblioteca.columnconfigure(0, weight=1)
 
@@ -120,15 +135,15 @@ class DialogConfigurar(Toplevel):
             lf_biblioteca, text="Seleccionar", command=self.seleccionar_carpeta
         )
         btn_seleccionar.grid(column=1, row=1, sticky=EW, padx=5, pady=5)
-        ToolTip(btn_seleccionar, "Abrir explorador para seleccionar una carpeta")
+        ToolTip(btn_seleccionar, "Seleccionar una carpeta")
 
-        # Label Info Ubicacion
+        # Label info ubicación
         lbl_info_ubicacion = Label(
             lf_biblioteca,
             text="*En la ubicación seleccionada se creará la carpeta 'BibliotecaTK' para almacenar los archivos.",
             bootstyle="secondary",
         )
-        lbl_info_ubicacion.configure(font=("", 8, "italic"))
+        lbl_info_ubicacion.configure(font=FONT_CAPTION)
         lbl_info_ubicacion.grid(column=0, row=2, sticky=W, columnspan=2, padx=5, pady=(5, 0))
 
     def _crear_seccion_apariencia(self, parent: Frame):
@@ -152,14 +167,33 @@ class DialogConfigurar(Toplevel):
         btn_aplicar_tema.grid(column=2, row=0, sticky=EW, padx=5, pady=5)
         ToolTip(btn_aplicar_tema, "Aplicar el tema seleccionado a la aplicación")
 
-        # Label Info Ubicacion
+        lbl_seleccionar_entorno = Label(lf_tema, text="Entorno visual:")
+        lbl_seleccionar_entorno.grid(column=0, row=1, sticky=W, padx=5, pady=5)
+
+        self.combobox_entorno_ui = Combobox(
+            lf_tema,
+            state=READONLY,
+            values=self.entornos_ui,
+            bootstyle="info",
+        )
+        self.combobox_entorno_ui.grid(column=1, row=1, sticky=EW, padx=5, pady=5)
+
+        btn_aplicar_entorno = Button(
+            lf_tema,
+            text="Aplicar",
+            command=self.on_entorno_ui_seleccionado,
+        )
+        btn_aplicar_entorno.grid(column=2, row=1, sticky=EW, padx=5, pady=5)
+        ToolTip(btn_aplicar_entorno, "Guardar el entorno visual para el proximo inicio")
+
+        # Label info tema
         lbl_info_tema = Label(
             lf_tema,
-            text="*El tema se aplicará de inmediato, pero se guardará para futuros inicios.",
+            text="*El tema se aplica al instante. El entorno visual se aplica al reiniciar.",
             bootstyle="secondary",
         )
-        lbl_info_tema.configure(font=("", 8, "italic"))
-        lbl_info_tema.grid(column=0, row=1, sticky=W, columnspan=3, padx=5, pady=(5, 0))
+        lbl_info_tema.configure(font=FONT_CAPTION)
+        lbl_info_tema.grid(column=0, row=2, sticky=W, columnspan=3, padx=5, pady=(5, 0))
 
     def _crear_seccion_citacion(self, parent: Frame):
         """
@@ -168,7 +202,7 @@ class DialogConfigurar(Toplevel):
         Args:
             parent (Frame): El widget padre donde se colocará esta sección.
         """
-        lf_citacion = LabelFrame(parent, text="Estilo de Citación Bibliográfica", padding=10)
+        lf_citacion = LabelFrame(parent, text="Estilo de citación bibliográfica", padding=10)
         lf_citacion.pack(side=TOP, fill=X, pady=5, padx=5)
         lf_citacion.columnconfigure(1, weight=1)
 
@@ -202,7 +236,7 @@ class DialogConfigurar(Toplevel):
             wraplength=450,  # Ajustar para que el texto no se salga
             justify=LEFT,
         )
-        lbl_ejemplo.configure(font=("", 8, "italic"))
+        lbl_ejemplo.configure(font=FONT_CAPTION)
         lbl_ejemplo.grid(column=0, row=2, sticky=W, columnspan=3, padx=5, pady=(0, 5))
 
     def on_estilo_citacion_cambiado(self, event=None):
@@ -223,6 +257,12 @@ class DialogConfigurar(Toplevel):
         tema = configuracion.obtener_tema()
         if tema:
             self.combobox_temas.set(tema)
+
+        entorno_ui = configuracion.obtener_entorno_ui()
+        if entorno_ui:
+            self.combobox_entorno_ui.set(entorno_ui)
+        else:
+            self.combobox_entorno_ui.set("tkinter")
 
         # Cargar estilo de citación
         estilo = configuracion.obtener_estilo_citacion()
@@ -245,9 +285,27 @@ class DialogConfigurar(Toplevel):
             configuracion = ConfiguracionController()
             configuracion.establecer_estilo_citacion(estilo=estilo)
 
+    def on_entorno_ui_seleccionado(self):
+        entorno_ui = self.combobox_entorno_ui.get()
+        if entorno_ui:
+            try:
+                configuracion = ConfiguracionController()
+                if configuracion.establecer_entorno_ui(entorno_ui=entorno_ui):
+                    messagebox.showinfo(
+                        "Entorno visual guardado",
+                        f"Se guardo '{entorno_ui}'. Se aplicara al reiniciar la aplicacion.",
+                        parent=self,
+                    )
+            except Exception as e:
+                messagebox.showerror(
+                    "Error al guardar",
+                    f"No se pudo guardar el entorno visual: {e}",
+                    parent=self,
+                )
+
     def seleccionar_carpeta(self):
         carpeta = filedialog.askdirectory(
-            title="Seleccione la ubicacion para la biblioteca",
+            title="Seleccione la ubicación de la biblioteca",
             initialdir=expanduser("~"),
             parent=self,
         )

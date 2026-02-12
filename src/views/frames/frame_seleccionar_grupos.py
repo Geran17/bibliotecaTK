@@ -19,7 +19,7 @@ from models.entities.documento import Documento
 from models.entities.documento_grupo import DocumentoGrupo
 from views.dialogs.dialog_administrar_grupo import DialogAdministrarGrupos
 from ttkbootstrap.constants import *
-from views.components.ui_tokens import PADDING_COMPACT, PADDING_OUTER, PADDING_PANEL
+from views.components.ui_tokens import FONT_SECTION, PADDING_COMPACT, PADDING_OUTER, PADDING_PANEL
 from typing import List, Dict, Any
 
 
@@ -66,9 +66,7 @@ class FrameSeleccionarGrupos(Frame):
         frame_inferior.pack(side=TOP, fill=X, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
 
     def panel_superior(self, frame: Frame):
-        label_titulo = Label(
-            frame, text="Asociar grupos a los documentos", font=("Helvetica", 12, "bold")
-        )
+        label_titulo = Label(frame, text="Asociar grupos a los documentos", font=FONT_SECTION)
         label_titulo.pack(side=LEFT, padx=PADDING_OUTER * 2, pady=PADDING_OUTER)
 
     def panel_central(self, frame: Frame):
@@ -109,9 +107,9 @@ class FrameSeleccionarGrupos(Frame):
     # │ Metodos de la clase
     # └────────────────────────────────────────────────────────────┘
 
-    def obtener_documentos_seleccionados(self, documetos_seleccionados: List[Documento]):
-        if documetos_seleccionados:
-            self.documentos_seleccionados = documetos_seleccionados
+    def obtener_documentos_seleccionados(self, documentos_seleccionados: List[Documento]):
+        if documentos_seleccionados:
+            self.documentos_seleccionados = documentos_seleccionados
             self._cargar_documentos_seleccionados()
 
     def procesar_grupos_seleccionados(self, id_documento):
@@ -121,13 +119,13 @@ class FrameSeleccionarGrupos(Frame):
 
             # caso: en que no exista
             if not documento_grupo.existe():
-                """Si no existe la relaccion y se seleccionado la asociamos"""
+                """Si no existe la relación y está seleccionado, la asociamos."""
                 if var.get():
                     documento_grupo.asociar()
 
             # caso: en existe
             if documento_grupo.existe():
-                """Si existe la relaccion y se saco la seleccion lo desasociamos"""
+                """Si existe la relación y se quitó la selección, la desasociamos."""
                 if not var.get():
                     documento_grupo.desasociar()
 
@@ -281,13 +279,13 @@ class FrameSeleccionarGrupos(Frame):
         if self.cargando_asociaciones:
             return
 
-        # verificamos que se halla seleccionado un libro o documento
+        # verificamos que se haya seleccionado un libro o documento
         id_documento = self.var_radio_documento.get()
         if id_documento != 0:
             self.procesar_grupos_seleccionados(id_documento=id_documento)
         else:
             showinfo(
-                parent=self, title="Seleccione", message="Seleccione un documentos", icon='info'
+                parent=self, title="Seleccione", message="Seleccione un documento.", icon='info'
             )
 
     def on_administrar_grupos(self):

@@ -10,6 +10,8 @@ from ttkbootstrap import (
     LabelFrame,
     IntVar,
     Progressbar,
+    Menubutton,
+    Menu,
 )
 from ttkbootstrap.tableview import Tableview
 from ttkbootstrap.tooltip import ToolTip
@@ -25,13 +27,25 @@ from views.dialogs.dialog_seleccionar_grupos import DialogSeleccionarGrupos
 from views.dialogs.dialog_seleccionar_categorias import DialogSeleccionarCategorias
 from views.dialogs.dialog_seleccionar_etiquetas import DialogSeleccionarEtiquetas
 from views.dialogs.dialog_seleccionar_palabras_clave import DialogSeleccionarPalabrasClave
-from views.dialogs.dialog_adminstrar_bibliografia import DialogAdministrarBibliografia
+from views.dialogs.dialog_administrar_bibliografia import DialogAdministrarBibliografia
 from views.dialogs.dialog_administrar_contenido import DialogAdministrarContenido
 from typing import Dict, Any
 from views.components.base_form_frame import BaseFormFrame
 from views.components.smart_table_frame import SmartTableFrame
 from views.components.context_menu_factory import ContextMenuFactory
-from views.components.ui_tokens import PADDING_COMPACT, PADDING_OUTER, PADDING_PANEL
+from views.components.ui_tokens import (
+    BUTTON_STYLE_OUTLINE_DANGER,
+    BUTTON_STYLE_OUTLINE_INFO,
+    BUTTON_STYLE_OUTLINE_PRIMARY,
+    BUTTON_STYLE_OUTLINE_SECONDARY,
+    BUTTON_STYLE_OUTLINE_WARNING,
+    BUTTON_STYLE_PRIMARY,
+    BUTTON_STYLE_SECONDARY,
+    PADDING_COMPACT,
+    PADDING_OUTER,
+    PADDING_PANEL,
+    FONT_TITLE,
+)
 
 
 class AdministrarDocumentos(Frame):
@@ -141,7 +155,7 @@ class AdministrarDocumentos(Frame):
     def panel_superior(self, frame: Frame):
         """Este panel sera para navegar y buscar en la base de datos los diferentes libros"""
 
-        lbl_titulo = Label(frame, text="📂 Administrar Documentos", font=("Helvetica", 14, "bold"))
+        lbl_titulo = Label(frame, text="📂 Administrar Documentos", font=FONT_TITLE)
         lbl_titulo.pack(side=TOP, fill=X, padx=(PADDING_OUTER * 2), pady=(PADDING_OUTER, PADDING_OUTER * 2))
 
         # Button Menu
@@ -171,7 +185,7 @@ class AdministrarDocumentos(Frame):
         # │ Asociaciones en los libros
         # └────────────────────────────────────────────────────────────┘
 
-        lbl_asociar = Label(frame, text="Asociar documentos a: ", bootstyle="secondary")
+        lbl_asociar = Label(frame, text="Asociar documentos a:", bootstyle="secondary")
         lbl_asociar.bind("<Double-Button-1>", self.on_mostrar_asociaciones)
         lbl_asociar.pack(side=TOP, fill=X, padx=PADDING_PANEL, pady=PADDING_PANEL)
 
@@ -238,7 +252,7 @@ class AdministrarDocumentos(Frame):
         # ┌────────────────────────────────────────────────────────────┐
         # │ Datos Bibliograficos
         # └────────────────────────────────────────────────────────────┘
-        lbl_datos_bibliograficos = Label(frame, text="Datos del Libro: ", bootstyle="secondary")
+        lbl_datos_bibliograficos = Label(frame, text="Datos del libro:", bootstyle="secondary")
         lbl_datos_bibliograficos.bind("<Double-Button-1>", self.on_mostrar_datos_bibliograficos)
         lbl_datos_bibliograficos.pack(side=TOP, fill=X, padx=PADDING_PANEL, pady=PADDING_PANEL)
 
@@ -270,9 +284,7 @@ class AdministrarDocumentos(Frame):
         # │ Operaciones de los seleccionados
         # └────────────────────────────────────────────────────────────┘
 
-        lbl_operaciones = Label(
-            frame, text="Operaciones en los seleccionados: ", bootstyle="secondary"
-        )
+        lbl_operaciones = Label(frame, text="Operaciones en seleccionados:", bootstyle="secondary")
         lbl_operaciones.bind("<Double-Button-1>", self.on_mostrar_operaciones)
         lbl_operaciones.pack(side=TOP, fill=X, padx=PADDING_PANEL, pady=PADDING_PANEL)
 
@@ -350,7 +362,7 @@ class AdministrarDocumentos(Frame):
 
     def panel_inferior(self, frame: Frame):
         """Para trabajar con el archivo seleccionado en la tabla"""
-        label_frame_seleccionado = LabelFrame(frame, text="Documento Seleccionado", padding=PADDING_PANEL)
+        label_frame_seleccionado = LabelFrame(frame, text="Documento seleccionado", padding=PADDING_PANEL)
         label_frame_seleccionado.pack(side=TOP, fill=BOTH, expand=True, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
 
         form_compacto = BaseFormFrame(
@@ -376,39 +388,60 @@ class AdministrarDocumentos(Frame):
         frame_buttons.pack(side=TOP, fill=X, padx=PADDING_COMPACT, pady=PADDING_PANEL)
         frame_buttons.columnconfigure((0, 1, 2, 3, 4), weight=1)
 
-        self.btn_abrir = Button(frame_buttons, text="Abrir", style="primary.Outline.TButton")
+        # Acciones primarias visibles
+        self.btn_abrir = Button(frame_buttons, text="Abrir", style=BUTTON_STYLE_OUTLINE_PRIMARY)
         self.btn_abrir.grid(row=0, column=0, sticky=EW, padx=PADDING_PANEL, pady=PADDING_PANEL)
+        ToolTip(self.btn_abrir, "Abrir el documento seleccionado")
 
-        self.btn_abrir_carpeta = Button(frame_buttons, text="Abrir Carpeta", style="secondary.Outline.TButton")
+        self.btn_abrir_carpeta = Button(
+            frame_buttons,
+            text="Carpeta",
+            style=BUTTON_STYLE_OUTLINE_SECONDARY,
+        )
         self.btn_abrir_carpeta.grid(row=0, column=1, sticky=EW, padx=PADDING_PANEL, pady=PADDING_PANEL)
+        ToolTip(self.btn_abrir_carpeta, "Abrir la carpeta que contiene el documento")
 
-        self.btn_renombrar = Button(frame_buttons, text="Renombrar", style="info.Outline.TButton")
-        self.btn_renombrar.grid(row=0, column=2, sticky=EW, padx=PADDING_PANEL, pady=PADDING_PANEL)
+        self.btn_metadatos = Button(frame_buttons, text="Metadatos", style=BUTTON_STYLE_OUTLINE_INFO)
+        self.btn_metadatos.grid(row=0, column=2, sticky=EW, padx=PADDING_PANEL, pady=PADDING_PANEL)
+        ToolTip(self.btn_metadatos, "Ver metadatos del documento")
 
-        self.btn_copiar = Button(frame_buttons, text="Copiar", style="primary.Outline.TButton")
+        self.btn_copiar = Button(frame_buttons, text="Copiar", style=BUTTON_STYLE_OUTLINE_PRIMARY)
         self.btn_copiar.grid(row=0, column=3, sticky=EW, padx=PADDING_PANEL, pady=PADDING_PANEL)
+        ToolTip(self.btn_copiar, "Copiar el documento a otra ubicación")
 
-        self.btn_mover = Button(frame_buttons, text="Mover", style="warning.Outline.TButton")
-        self.btn_mover.grid(row=0, column=4, sticky=EW, padx=PADDING_PANEL, pady=PADDING_PANEL)
-
-        self.btn_eliminar = Button(frame_buttons, text="Eliminar", style="danger.Outline.TButton")
-        self.btn_eliminar.grid(row=1, column=0, sticky=EW, padx=PADDING_PANEL, pady=PADDING_PANEL)
-
-        self.btn_papelera = Button(frame_buttons, text="Papelera", style="secondary.TButton")
-        self.btn_papelera.grid(row=1, column=1, sticky=EW, padx=PADDING_PANEL, pady=PADDING_PANEL)
-
-        self.btn_propiedades = Button(frame_buttons, text="Propiedades", style="secondary.Outline.TButton")
-        self.btn_propiedades.grid(row=1, column=2, sticky=EW, padx=PADDING_PANEL, pady=PADDING_PANEL)
-
-        self.btn_metadatos = Button(frame_buttons, text="Metadatos", style="info.Outline.TButton")
-        self.btn_metadatos.grid(row=1, column=3, sticky=EW, padx=PADDING_PANEL, pady=PADDING_PANEL)
-
+        # Botones secundarios (siguen existiendo para mantener compatibilidad con el controlador)
+        self.btn_renombrar = Button(frame_buttons, text="Renombrar", style=BUTTON_STYLE_OUTLINE_INFO)
+        self.btn_mover = Button(frame_buttons, text="Mover", style=BUTTON_STYLE_OUTLINE_WARNING)
+        self.btn_eliminar = Button(frame_buttons, text="Eliminar", style=BUTTON_STYLE_OUTLINE_DANGER)
+        self.btn_papelera = Button(frame_buttons, text="Papelera", style=BUTTON_STYLE_SECONDARY)
+        self.btn_propiedades = Button(frame_buttons, text="Propiedades", style=BUTTON_STYLE_OUTLINE_SECONDARY)
         self.btn_renombrar_bibliografico = Button(
             frame_buttons,
             text="Renombrar Bibliográficamente",
-            style="primary.TButton",
+            style=BUTTON_STYLE_PRIMARY,
         )
-        self.btn_renombrar_bibliografico.grid(row=1, column=4, sticky=EW, padx=PADDING_PANEL, pady=PADDING_PANEL)
+
+        # Menú de acciones secundarias para reducir ruido visual
+        self.btn_mas_acciones = Menubutton(
+            frame_buttons,
+            text="Acciones",
+            style=BUTTON_STYLE_OUTLINE_SECONDARY,
+        )
+        self.btn_mas_acciones.grid(row=0, column=4, sticky=EW, padx=PADDING_PANEL, pady=PADDING_PANEL)
+        ToolTip(self.btn_mas_acciones, "Operaciones adicionales sobre el documento")
+
+        menu_acciones = Menu(self.btn_mas_acciones, tearoff=0)
+        menu_acciones.add_command(label="Renombrar...", command=lambda: self.btn_renombrar.invoke())
+        menu_acciones.add_command(label="Mover...", command=lambda: self.btn_mover.invoke())
+        menu_acciones.add_command(label="Eliminar", command=lambda: self.btn_eliminar.invoke())
+        menu_acciones.add_command(label="Enviar a papelera", command=lambda: self.btn_papelera.invoke())
+        menu_acciones.add_command(label="Propiedades", command=lambda: self.btn_propiedades.invoke())
+        menu_acciones.add_separator()
+        menu_acciones.add_command(
+            label="Renombrar bibliográficamente...",
+            command=lambda: self.btn_renombrar_bibliografico.invoke(),
+        )
+        self.btn_mas_acciones["menu"] = menu_acciones
 
         frame_pregreso = Frame(frame, padding=(PADDING_COMPACT, PADDING_COMPACT))
         frame_pregreso.pack(side=TOP, fill=X, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
@@ -451,7 +484,7 @@ class AdministrarDocumentos(Frame):
         documentos_seleccionados = controlar.get_documentos_seleccionados()
 
         if not documentos_seleccionados:
-            showinfo(title="Error", message="No hay documentos seleccionados")
+            showinfo(title="Error", message="No hay documentos seleccionados.")
             return
 
         # abrimos el Dialog
@@ -468,11 +501,11 @@ class AdministrarDocumentos(Frame):
         documentos_seleccionados = controlar.get_documentos_seleccionados()
 
         if not documentos_seleccionados:
-            showinfo(title="Error", message="No hay documentos seleccionados")
+            showinfo(title="Error", message="No hay documentos seleccionados.")
             return
 
         controlar.controlar_favoritos()
-        showinfo(title="Favoritos", message="Lista de favoritos actualizados")
+        showinfo(title="Favoritos", message="La lista de favoritos se actualizó.")
 
     def _filtrar_documentos(self, event=None):
         controlar = ControlarAdministrarDocumentos(
@@ -493,14 +526,14 @@ class AdministrarDocumentos(Frame):
     def _copiar_seleccionados(self):
         # abrimos el archivo de configuraciones
         conf = ConfiguracionController()
-        # obtenmos la ultima ubicacion de copiado
+        # obtenemos la última ubicación de copiado
         last_copy = conf.get_copiar_ubicacion()
         if not last_copy:
             last_copy = expanduser("~")
-        path_copy = askdirectory(initialdir=last_copy, title="Seleccione la ubicacion", parent=self)
+        path_copy = askdirectory(initialdir=last_copy, title="Seleccione la ubicación", parent=self)
 
         if not path_copy:
-            showinfo(title="Cancelado", message="Operacion cancelada por el usuario", parent=self)
+            showinfo(title="Cancelado", message="Operación cancelada por el usuario.", parent=self)
             return
 
         operaciones = ControlarOperacionesDocumentos(
@@ -517,14 +550,14 @@ class AdministrarDocumentos(Frame):
     def _mover_seleccionados(self):
         # abrimos el archivo de configuraciones
         conf = ConfiguracionController()
-        # obtenmos la ultima ubicacion de copiado
+        # obtenemos la última ubicación de copiado
         last_move = conf.get_mover_ubicacion()
         if not last_move:
             last_move = expanduser("~")
-        path_move = askdirectory(initialdir=last_move, title="Seleccione la ubicacion", parent=self)
+        path_move = askdirectory(initialdir=last_move, title="Seleccione la ubicación", parent=self)
 
         if not path_move:
-            showinfo(title="Cancelado", message="Operacion cancelada por el usuario", parent=self)
+            showinfo(title="Cancelado", message="Operación cancelada por el usuario.", parent=self)
             return
 
         operaciones = ControlarOperacionesDocumentos(
@@ -536,13 +569,13 @@ class AdministrarDocumentos(Frame):
         operaciones.set_path_move(path_move=path_move)
         operaciones.ejecutar_mover_seleccionados()
 
-        # cargamos en la configuracion la ubicacion seleccioda por el usuario
+        # cargamos en la configuración la ubicación seleccionada por el usuario
         conf.set_mover_ubicacion(valor=path_move)
 
     def _eliminar_seleccionados(self):
         resp = askokcancel(
             title="Advertencia",
-            message="Esto eliminara los archivos y los registro de los documentos en la BD",
+            message="Esto eliminará los archivos y los registros de los documentos en la BD.",
             icon="warning",
         )
         if resp:
@@ -557,7 +590,7 @@ class AdministrarDocumentos(Frame):
     def _eliminar_registros(self):
         resp = askokcancel(
             title="Advertencia",
-            message="Esto eliminara los registro de los documentos en la BD",
+            message="Esto eliminará los registros de los documentos en la BD.",
             icon="warning",
         )
         if resp:
@@ -672,6 +705,7 @@ class AdministrarDocumentos(Frame):
         acciones = [
             {"label": "📖 Abrir documento", "command": self._on_contextual_abrir},
             {"label": "📂 Abrir carpeta", "command": self._on_contextual_abrir_carpeta},
+            {"label": "ℹ️ Propiedades", "command": self._on_contextual_propiedades},
             {"label": "🧾 Ver metadatos", "command": self._on_contextual_metadatos},
             {"separator": True},
             {"label": "📋 Copiar seleccionados", "command": self.on_copiar_seleccionados},
@@ -695,3 +729,7 @@ class AdministrarDocumentos(Frame):
     def _on_contextual_metadatos(self):
         self._sincronizar_documento_contextual()
         self.controlador_documento_seleccionado.on_visualizar_metadatos()
+
+    def _on_contextual_propiedades(self):
+        self._sincronizar_documento_contextual()
+        self.controlador_documento_seleccionado.on_propiedades()

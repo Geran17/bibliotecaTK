@@ -1,5 +1,6 @@
 from ttkbootstrap import Toplevel, Label, Button, Separator, Frame, Style
 from ttkbootstrap.constants import *
+from views.components.ui_tokens import FONT_TITLE, FONT_SUBTITLE, PADDING_OUTER
 
 
 class DialogAcercaDe(Toplevel):
@@ -16,8 +17,8 @@ class DialogAcercaDe(Toplevel):
 
         # --- Estilos ---
         self.estilo = Style()
-        self.estilo.configure("Titulo.TLabel", font=("Helvetica", 18, "bold"))
-        self.estilo.configure("Info.TLabel", font=("Helvetica", 10))
+        self.estilo.configure("Titulo.TLabel", font=FONT_TITLE)
+        self.estilo.configure("Info.TLabel", font=FONT_SUBTITLE)
 
         self._crear_widgets()
 
@@ -39,13 +40,13 @@ class DialogAcercaDe(Toplevel):
 
     def _crear_widgets(self):
         """Crea y organiza los widgets del diálogo."""
-        frame_contenido = Frame(self, padding=20)
+        frame_contenido = Frame(self, padding=PADDING_OUTER * 2)
         frame_contenido.pack(expand=True, fill=BOTH)
 
         # --- Título ---
         lbl_titulo = Label(
             frame_contenido,
-            text="📚 Biblioteca Digital",
+            text="Biblioteca Digital",
             style="Titulo.TLabel",
             bootstyle="primary",
         )

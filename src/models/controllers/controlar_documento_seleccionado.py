@@ -1,7 +1,7 @@
 from ttkbootstrap.tableview import Tableview
 from ttkbootstrap import Button, IntVar, StringVar
 from typing import Dict, Any, Optional
-from tkinter.messagebox import showerror, showwarning
+from tkinter.messagebox import showerror, showwarning, showinfo
 from models.entities.documento import Documento
 from models.entities.bibliografia import Bibliografia
 from os.path import join, exists
@@ -17,6 +17,7 @@ from utilities.auxiliar import (
     papelera_archivo,
     eliminar_archivo,
 )
+from views.components.resizable_input_dialog import ask_resizable_string
 from views.dialogs.dialog_visualizar_metadatos import DialogVisualizarMetadatos
 
 
@@ -68,6 +69,7 @@ class ControlarDocumentoSeleccionado:
         self.btn_mover.config(command=self.on_mover)
         self.btn_eliminar.config(command=self.on_eliminar)
         self.btn_papelera.config(command=self.on_papelera)
+        self.btn_propiedades.config(command=self.on_propiedades)
         self.btn_metadatos.config(command=self.on_visualizar_metadatos)
         self.btn_renombrar_bibliografico.config(command=self.on_renombrar_bibliografico)
 
@@ -173,9 +175,119 @@ class ControlarDocumentoSeleccionado:
 
     def _actualizar_y_renombrar(self, nuevo_nombre: str):
         """Función auxiliar para encapsular la lógica de renombrado."""
-        self.var_nombre_documento.set(nuevo_nombre)
-        # Llama a la lógica de renombrado existente con el nuevo nombre
-        self.on_renombrar()
+        self._renombrar_documento(nombre_objetivo=nuevo_nombre)
+
+    def _renombrar_documento(self, nombre_objetivo: Optional[str] = None):
+        if not self.documento:
+            showwarning(
+                title="Seleccione el documento",
+                message="Error: No hay documento seleccionado para renombrar. Doble click para seleccionar",
+                icon="warning",
+                parent=self.master,
+            )
+            return
+
+        # Validar que el archivo existe
+        if not exists(self.ruta_documento):
+            showerror(
+                title="Error",
+                message=f"El documento no existe en la biblioteca: {self.ruta_documento}",
+                parent=self.master,
+            )
+            return
+
+        # Obtener nombre objetivo: desde parámetro o mediante diálogo.
+        if nombre_objetivo is None:
+            nombre_objetivo = ask_resizable_string(
+                master=self.master,
+                title="Renombrar documento",
+                prompt="Nuevo nombre del documento:",
+                initialvalue=self.var_nombre_documento.get().strip() or self.documento.nombre,
+            )
+            if nombre_objetivo is None:
+                return
+
+        var_nombre = nombre_objetivo.strip()
+        var_id = self.var_id_documento.get()
+
+        # Validar nombre no vacío
+        if not var_nombre:
+            showwarning(
+                title="Nombre vacío",
+                message="El nombre del documento no puede estar vacío.",
+                parent=self.master,
+            )
+            return
+
+        # Validar caracteres inválidos en el nombre
+        caracteres_invalidos = ['<', '>', ':', '"', '/', '\\', '|', '?', '*']
+        if any(char in var_nombre for char in caracteres_invalidos):
+            showwarning(
+                title="Nombre inválido",
+                message=f"El nombre no puede contener los siguientes caracteres: {' '.join(caracteres_invalidos)}",
+                parent=self.master,
+            )
+            return
+
+        # Guardar datos anteriores
+        ruta_origen = self.ruta_documento
+        ruta_padre = Path(self.ruta_documento).parent
+        nombre_anterior = self.documento.nombre
+
+        # Si el nombre no cambió, no hacer nada
+        if var_nombre == nombre_anterior:
+            return
+
+        # Actualizar el nombre en el objeto
+        self.documento.nombre = var_nombre
+
+        # Intentar actualizar en la base de datos
+        if not self.documento.actualizar():
+            showerror(
+                title="Error de base de datos",
+                message="No se pudo actualizar el documento en la base de datos.",
+                parent=self.master,
+            )
+            self.documento.nombre = nombre_anterior  # Revertir cambio
+            return
+
+        # Construir rutas
+        nuevo_nombre = f"{var_id}_{var_nombre}.{self.documento.extension}"
+        ruta_destino = join(ruta_padre, nuevo_nombre)
+
+        # Validar que no exista ya un archivo con ese nombre
+        if exists(ruta_destino):
+            showerror(
+                title="Archivo existente",
+                message=f"Ya existe un archivo con el nombre: {nuevo_nombre}",
+                parent=self.master,
+            )
+            # Revertir cambio en BD
+            self.documento.nombre = nombre_anterior
+            self.documento.actualizar()
+            return
+
+        # Intentar renombrar el archivo
+        try:
+            renombrar_archivo(ruta_origen=ruta_origen, ruta_destino=ruta_destino)
+            # Actualizar la ruta del documento en memoria
+            self.ruta_documento = ruta_destino
+
+            # Actualizar la variable del entry con el nombre nuevo
+            self.var_nombre_documento.set(value=self.documento.nombre)
+
+            # Refrescar la fila en la tabla sin perder la selección
+            self._actualizar_fila_tabla()
+
+        except Exception as e:
+            # Revertir cambios si falla el renombrado
+            self.documento.nombre = nombre_anterior
+            self.documento.actualizar()
+            showerror(
+                title="Error al renombrar",
+                message=f"No se pudo renombrar el archivo: {str(e)}",
+                parent=self.master,
+            )
 
     # ┌────────────────────────────────────────────────────────────┐
     # │ Eventos
@@ -239,6 +351,56 @@ class ControlarDocumentoSeleccionado:
                 parent=self.master,
             )
 
+    def _formatear_tamano(self, bytes_value: int) -> str:
+        if not bytes_value:
+            return "0 B"
+        unidades = ["B", "KB", "MB", "GB", "TB"]
+        valor = float(bytes_value)
+        indice = 0
+        while valor >= 1024 and indice < len(unidades) - 1:
+            valor /= 1024
+            indice += 1
+        if indice == 0:
+            return f"{int(valor)} {unidades[indice]}"
+        return f"{valor:.2f} {unidades[indice]}"
+
+    def on_propiedades(self):
+        if not self.documento:
+            showwarning(
+                title="Seleccione el documento",
+                message="Error: No hay documento seleccionado para ver propiedades. Doble click para seleccionar",
+                icon="warning",
+                parent=self.master,
+            )
+            return
+
+        if not self.ruta_documento:
+            self.ruta_documento = generar_ruta_documento(
+                ruta_biblioteca=self.ruta_biblioteca,
+                nombre_documento=f"{self.documento.nombre}.{self.documento.extension}",
+                id_documento=self.documento.id,
+            )
+
+        existe_archivo = bool(self.ruta_documento and exists(self.ruta_documento))
+        estado = "Activo" if self.documento.esta_activo else "Inactivo"
+        propiedades = [
+            f"ID: {self.documento.id}",
+            f"Nombre: {self.documento.nombre}",
+            f"Extensión: {self.documento.extension}",
+            f"Tamaño: {self._formatear_tamano(self.documento.tamano)}",
+            f"Estado: {estado}",
+            f"Hash: {self.documento.hash}",
+            f"Creado en: {self.documento.creado_en or '-'}",
+            f"Actualizado en: {self.documento.actualizado_en or '-'}",
+            f"Ruta: {self.ruta_documento or '-'}",
+            f"Existe en disco: {'Sí' if existe_archivo else 'No'}",
+        ]
+        showinfo(
+            title="Propiedades del documento",
+            message="\n".join(propiedades),
+            parent=self.master,
+        )
+
     def on_renombrar_bibliografico(self):
         """
         Renombra el documento seleccionado utilizando sus datos bibliográficos
@@ -274,106 +436,7 @@ class ControlarDocumentoSeleccionado:
             self._actualizar_y_renombrar(nuevo_nombre)
 
     def on_renombrar(self):
-        if not self.documento:
-            showwarning(
-                title="Seleccione el documento",
-                message="Error: No hay documento seleccionado para renombrar. Doble click para seleccionar",
-                icon="warning",
-                parent=self.master,
-            )
-            return
-
-        # Validar que el archivo existe
-        if not exists(self.ruta_documento):
-            showerror(
-                title="Error",
-                message=f"El documento no existe en la biblioteca: {self.ruta_documento}",
-                parent=self.master,
-            )
-            return
-
-        # Obtener datos de los campos
-        var_nombre = self.var_nombre_documento.get().strip()
-        var_id = self.var_id_documento.get()
-
-        # Validar nombre no vacío
-        if not var_nombre:
-            showwarning(
-                title="Nombre vacío",
-                message="El nombre del documento no puede estar vacío",
-                parent=self.master,
-            )
-            return
-
-        # Validar caracteres inválidos en el nombre
-        caracteres_invalidos = ['<', '>', ':', '"', '/', '\\', '|', '?', '*']
-        if any(char in var_nombre for char in caracteres_invalidos):
-            showwarning(
-                title="Nombre inválido",
-                message=f"El nombre no puede contener los siguientes caracteres: {' '.join(caracteres_invalidos)}",
-                parent=self.master,
-            )
-            return
-
-        # Guardar datos anteriores
-        ruta_origen = self.ruta_documento
-        ruta_padre = Path(self.ruta_documento).parent
-        nombre_anterior = self.documento.nombre
-
-        # Si el nombre no cambió, no hacer nada
-        if var_nombre == nombre_anterior:
-            return
-
-        # Actualizar el nombre en el objeto
-        self.documento.nombre = var_nombre
-
-        # Intentar actualizar en la base de datos
-        if not self.documento.actualizar():
-            showerror(
-                title="Error de base de datos",
-                message="No se pudo actualizar el documento en la base de datos",
-                parent=self.master,
-            )
-            self.documento.nombre = nombre_anterior  # Revertir cambio
-            return
-
-        # Construir rutas
-        nuevo_nombre = f"{var_id}_{var_nombre}.{self.documento.extension}"
-        ruta_destino = join(ruta_padre, nuevo_nombre)
-
-        # Validar que no exista ya un archivo con ese nombre
-        if exists(ruta_destino):
-            showerror(
-                title="Archivo existente",
-                message=f"Ya existe un archivo con el nombre: {nuevo_nombre}",
-                parent=self.master,
-            )
-            # Revertir cambio en BD
-            self.documento.nombre = nombre_anterior
-            self.documento.actualizar()
-            return
-
-        # Intentar renombrar el archivo
-        try:
-            renombrar_archivo(ruta_origen=ruta_origen, ruta_destino=ruta_destino)
-            # Actualizar la ruta del documento en memoria
-            self.ruta_documento = ruta_destino
-
-            # Actualizar la variable del entry con el nombre nuevo
-            self.var_nombre_documento.set(value=self.documento.nombre)
-
-            # Refrescar la fila en la tabla sin perder la selección
-            self._actualizar_fila_tabla()
-
-        except Exception as e:
-            # Revertir cambios si falla el renombrado
-            self.documento.nombre = nombre_anterior
-            self.documento.actualizar()
-            showerror(
-                title="Error al renombrar",
-                message=f"No se pudo renombrar el archivo: {str(e)}",
-                parent=self.master,
-            )
+        self._renombrar_documento()
 
     def on_copiar(self):
         """

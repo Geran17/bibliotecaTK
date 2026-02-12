@@ -1,5 +1,10 @@
 # -*- mode: python ; coding: utf-8 -*-
+import os
+
 from PyInstaller.utils.hooks import collect_all
+
+SRC_DIR = os.path.abspath(SPECPATH)
+MAIN_SCRIPT = os.path.join(SRC_DIR, 'main.py')
 
 datas = []
 binaries = []
@@ -9,8 +14,8 @@ datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 
 
 a = Analysis(
-    ['main.py'],
-    pathex=['.'],
+    [MAIN_SCRIPT],
+    pathex=[SRC_DIR],
     binaries=binaries,
     datas=datas,
     hiddenimports=hiddenimports,

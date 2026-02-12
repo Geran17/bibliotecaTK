@@ -14,7 +14,13 @@ from ttkbootstrap import (
     Scrollbar,
 )
 from ttkbootstrap.constants import *
-from views.components.ui_tokens import PADDING_COMPACT, PADDING_OUTER, PADDING_PANEL
+from views.components.ui_tokens import (
+    PADDING_COMPACT,
+    PADDING_OUTER,
+    PADDING_PANEL,
+    FONT_TITLE,
+    FONT_SECTION,
+)
 from ttkbootstrap.scrolled import ScrolledFrame
 from tkinter import filedialog, messagebox
 from typing import List, Dict, Any
@@ -107,7 +113,7 @@ class FrameAdministrarContenido(Frame):
     # └────────────────────────────────────────────────────────────┘
 
     def panel_superior(self, frame: Frame):
-        lbl_titulo = Label(frame, text="📑 Administrar Contenidos", font=('Helvetica', 14, 'bold'))
+        lbl_titulo = Label(frame, text="Administrar contenidos", font=FONT_TITLE)
         lbl_titulo.pack(side=TOP, fill=X, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
 
         Separator(frame, orient='horizontal').pack(side=TOP, fill=X, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
@@ -135,7 +141,7 @@ class FrameAdministrarContenido(Frame):
 
     def panel_documentos(self, frame: Frame):
         # Título de la sección
-        Label(frame, text="Documentos", font=('Helvetica', 10, 'bold')).pack(
+        Label(frame, text="Documentos", font=FONT_SECTION).pack(
             side=TOP, fill=X, padx=PADDING_OUTER, pady=PADDING_OUTER
         )
 
@@ -152,7 +158,7 @@ class FrameAdministrarContenido(Frame):
     # └────────────────────────────────────────────────────────────┘
     def panel_contenido(self, frame: Frame):
 
-        Label(frame, text="Contenido", font=('Helvetica', 10, 'bold')).pack(
+        Label(frame, text="Contenido", font=FONT_SECTION).pack(
             side=TOP, fill=X, padx=PADDING_OUTER, pady=PADDING_OUTER
         )
 
@@ -377,10 +383,10 @@ class FrameAdministrarContenido(Frame):
                 ruta_archivo, id_documento
             )
 
-            mensaje = f"✅ Se importaron {registros_importados} capítulos exitosamente.\n"
+            mensaje = f"Se importaron {registros_importados} capítulos correctamente.\n"
 
             if errores:
-                mensaje += f"\n⚠️ Se encontraron {len(errores)} errores:\n"
+                mensaje += f"\nSe encontraron {len(errores)} errores:\n"
                 mensaje += "\n".join(errores[:10])  # Mostrar primeros 10 errores
                 if len(errores) > 10:
                     mensaje += f"\n... y {len(errores) - 10} errores más"
@@ -442,10 +448,10 @@ class FrameAdministrarContenido(Frame):
                 ruta_archivo, id_capitulo
             )
 
-            mensaje = f"✅ Se importaron {registros_importados} secciones exitosamente.\n"
+            mensaje = f"Se importaron {registros_importados} secciones correctamente.\n"
 
             if errores:
-                mensaje += f"\n⚠️ Se encontraron {len(errores)} errores:\n"
+                mensaje += f"\nSe encontraron {len(errores)} errores:\n"
                 mensaje += "\n".join(errores[:10])  # Mostrar primeros 10 errores
                 if len(errores) > 10:
                     mensaje += f"\n... y {len(errores) - 10} errores más"

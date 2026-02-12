@@ -74,7 +74,7 @@ class DocumentoColeccionDAO(DAO):
         Consulta asociaciones.
         """
         if sql is None:
-            sql = "SELECT * FROM documento_coleccion"
+            sql = "SELECT * FROM documento_coleccion WHERE id_documento = ?"
         return self._ejecutar_consulta(sql, params)
 
     def actualizar_todo(self, sql: str = None, params: tuple = ()) -> bool:

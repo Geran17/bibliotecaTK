@@ -204,7 +204,7 @@ class FrameVisualizarMetadatos(Frame):
         # 2. Editar el metadato en el archivo físico
         if not editar_metadato(clave=clave, valor=valor, path_file=ruta_documento):
             showerror(
-                "Error de Archivo", f"No se pudo actualizar el metadato '{clave}' en el archivo."
+                "Error de archivo", f"No se pudo actualizar el metadato '{clave}' en el archivo."
             )
             return
 
@@ -219,7 +219,7 @@ class FrameVisualizarMetadatos(Frame):
         if metadato.existe():
             if not metadato.actualizar():
                 showerror(
-                    "Error de Base de Datos",
+                    "Error de base de datos",
                     "No se pudo actualizar el registro en la base de datos.",
                 )
                 return

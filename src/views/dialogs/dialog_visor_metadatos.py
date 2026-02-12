@@ -4,7 +4,7 @@ from views.frames.frame_visor_metadatos import FrameVisorMetadatos
 
 
 class DialogVisorMetadatos(Toplevel):
-    def __init__(self, title="Visor de Metadatos", **kwargs):
+    def __init__(self, title="Visor de metadatos", **kwargs):
         super().__init__(title=title, **kwargs)
         self.resizable(True, True)
 

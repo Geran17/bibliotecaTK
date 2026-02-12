@@ -36,6 +36,7 @@
 | [CHANGELOG.md](CHANGELOG.md) | Historial de cambios y versiones |
 | [TESTING_GUIDE.md](TESTING_GUIDE.md) | Guía para testing y verificación |
 | [RESUMEN_VISUAL.txt](RESUMEN_VISUAL.txt) | Arquitectura visual de la implementación |
+| [UI_TEXT_GUIDELINES.md](UI_TEXT_GUIDELINES.md) | Guía de estilo de textos para la UI |
 
 ### Código Fuente
 | Archivo | Cambio | Descripción |
@@ -194,6 +195,7 @@ Puedes copiar y adaptar estos archivos para tus necesidades.
 - [Documentación Técnica](IMPORTACION_CSV.md)
 - [Testing](TESTING_GUIDE.md)
 - [Changelog](CHANGELOG.md)
+- [Guía de microcopy UI](UI_TEXT_GUIDELINES.md)
 
 ### Ejemplos
 - [CSV Capítulos](docs/ejemplo_capitulos.csv)

@@ -39,7 +39,7 @@ class FrameVisualizarContenido(Frame):
 
     def crear_widgets(self):
         """Crea y organiza los widgets principales del frame."""
-        frame_principal = LabelFrame(self, text="Búsqueda en Contenido", padding=PADDING_PANEL)
+        frame_principal = LabelFrame(self, text="Búsqueda en contenido", padding=PADDING_PANEL)
         frame_principal.pack(fill=BOTH, expand=True, padx=PADDING_OUTER, pady=PADDING_OUTER)
 
         # --- Frame para la búsqueda ---
@@ -55,7 +55,7 @@ class FrameVisualizarContenido(Frame):
 
         self.btn_buscar = Button(frame_busqueda, text="Buscar", style="primary")
         self.btn_buscar.pack(side=LEFT)
-        ToolTip(self.btn_buscar, "Realizar la búsqueda en el contenido")
+        ToolTip(self.btn_buscar, "Buscar en el contenido")
 
         self.btn_refrescar = Button(
             frame_busqueda,
@@ -64,6 +64,7 @@ class FrameVisualizarContenido(Frame):
             style="secondary-toolbutton",
         )
         self.btn_refrescar.pack(side=LEFT, padx=(PADDING_PANEL, 0))
+        ToolTip(self.btn_refrescar, "Recargar resultados")
 
         Separator(frame_principal, orient=HORIZONTAL).pack(fill=X, pady=PADDING_PANEL)
 
@@ -77,7 +78,7 @@ class FrameVisualizarContenido(Frame):
         self.tree_view.pack(fill=BOTH, expand=True)
 
         # Configuración de encabezados y columnas
-        self.tree_view.heading("#0", text="Documento / Contenido", anchor=W)
+        self.tree_view.heading("#0", text="Documento / contenido", anchor=W)
         self.tree_view.heading("tipo", text="Tipo", anchor=W)
         self.tree_view.heading("titulo", text="Título", anchor=W)
         self.tree_view.heading("pagina", text="Página", anchor=E)

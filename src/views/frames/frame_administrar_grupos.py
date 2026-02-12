@@ -14,7 +14,16 @@ from ttkbootstrap import (
 from typing import List
 from tkinter import messagebox
 from ttkbootstrap.constants import *
-from views.components.ui_tokens import PADDING_COMPACT, PADDING_OUTER, PADDING_PANEL
+from views.components.ui_tokens import (
+    BUTTON_STYLE_OUTLINE_DANGER,
+    BUTTON_STYLE_OUTLINE_SECONDARY,
+    BUTTON_STYLE_OUTLINE_SUCCESS,
+    BUTTON_STYLE_PRIMARY,
+    FONT_TITLE,
+    PADDING_COMPACT,
+    PADDING_OUTER,
+    PADDING_PANEL,
+)
 from ttkbootstrap.tableview import Tableview
 from models.entities.grupo import Grupo
 from models.entities.consulta import Consulta
@@ -67,12 +76,10 @@ class AdministrarGrupos(Frame):
 
     def panel_superior(self, frame: Frame):
 
-        estilo_fuente_titulo = ('Helvetica', 14, 'bold')
-
         label_titulo = Label(
             frame,
             text="🗂️ Administrar Grupos",
-            font=estilo_fuente_titulo,  # Aplicamos la fuente
+            font=FONT_TITLE,
         )
         label_titulo.pack(side=TOP, fill=X, padx=PADDING_PANEL, pady=PADDING_PANEL)
 
@@ -100,7 +107,7 @@ class AdministrarGrupos(Frame):
 
     def tab_datos(self, frame):
         # --- Frame para Detalles del Grupo ---
-        lf_detalles = LabelFrame(frame, text="Detalles del Grupo", padding=10)
+        lf_detalles = LabelFrame(frame, text="Detalles del Grupo", padding=PADDING_PANEL)
         lf_detalles.pack(side=TOP, fill=X, padx=PADDING_OUTER, pady=PADDING_OUTER)
         lf_detalles.columnconfigure(1, weight=1)
 
@@ -121,7 +128,7 @@ class AdministrarGrupos(Frame):
         ent_grupo.grid(row=1, column=1, sticky=EW, padx=PADDING_OUTER, pady=PADDING_OUTER)
 
         # --- Frame para Descripción ---
-        lf_descripcion = LabelFrame(frame, text="Descripción", padding=10)
+        lf_descripcion = LabelFrame(frame, text="Descripción", padding=PADDING_PANEL)
         lf_descripcion.pack(side=TOP, fill=BOTH, padx=PADDING_OUTER, pady=PADDING_OUTER, expand=True)
 
         scrollbar = Scrollbar(lf_descripcion)
@@ -137,21 +144,21 @@ class AdministrarGrupos(Frame):
         frame_buttons.pack(side=TOP, fill=X, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
         frame_buttons.columnconfigure((0, 1, 2), weight=1)
 
-        Button(frame_buttons, text="Aplicar", command=self.on_aplicar, style="primary.TButton").pack(
+        Button(frame_buttons, text="Aplicar", command=self.on_aplicar, style=BUTTON_STYLE_PRIMARY).pack(
             side=LEFT, fill=X, expand=TRUE, padx=PADDING_PANEL, pady=PADDING_PANEL
         )
-        Button(frame_buttons, text="Eliminar", command=self.on_eliminar, style="danger.Outline.TButton").pack(
+        Button(frame_buttons, text="Eliminar", command=self.on_eliminar, style=BUTTON_STYLE_OUTLINE_DANGER).pack(
             side=LEFT, fill=X, expand=TRUE, padx=PADDING_PANEL, pady=PADDING_PANEL
         )
-        Button(frame_buttons, text="Nuevo", command=self.on_nuevo, style="success.Outline.TButton").pack(
+        Button(frame_buttons, text="Nuevo", command=self.on_nuevo, style=BUTTON_STYLE_OUTLINE_SUCCESS).pack(
             side=LEFT, fill=X, expand=TRUE, padx=PADDING_PANEL, pady=PADDING_PANEL
         )
 
         # Botones de navegación
-        Button(frame_buttons, text="|<", command=self.on_primer_elemento, style="secondary.Outline.TButton").pack(side=LEFT)
-        Button(frame_buttons, text="<", command=self.on_anterior_elemento, style="secondary.Outline.TButton").pack(side=LEFT)
-        Button(frame_buttons, text=">", command=self.on_siguiente_elemento, style="secondary.Outline.TButton").pack(side=LEFT)
-        Button(frame_buttons, text=">|", command=self.on_ultimo_elemento, style="secondary.Outline.TButton").pack(side=LEFT)
+        Button(frame_buttons, text="|<", command=self.on_primer_elemento, style=BUTTON_STYLE_OUTLINE_SECONDARY).pack(side=LEFT)
+        Button(frame_buttons, text="<", command=self.on_anterior_elemento, style=BUTTON_STYLE_OUTLINE_SECONDARY).pack(side=LEFT)
+        Button(frame_buttons, text=">", command=self.on_siguiente_elemento, style=BUTTON_STYLE_OUTLINE_SECONDARY).pack(side=LEFT)
+        Button(frame_buttons, text=">|", command=self.on_ultimo_elemento, style=BUTTON_STYLE_OUTLINE_SECONDARY).pack(side=LEFT)
 
     def tab_explorar(self, frame):
         self.table_view = Tableview(frame, searchable=True, coldata=self.coldata, bootstyle=PRIMARY)
@@ -309,7 +316,7 @@ class AdministrarGrupos(Frame):
         resp = messagebox.askokcancel(
             parent=self,
             title="Advertencia",
-            message="Se eliminara el registro de la base de datos. ¿Esta seguro?",
+            message="Se eliminará el registro de la base de datos. ¿Está seguro?",
         )
         if resp:
             grupo = self._get_grupo()

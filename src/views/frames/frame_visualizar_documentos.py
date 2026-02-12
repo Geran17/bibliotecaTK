@@ -16,7 +16,6 @@ from models.controllers.controlar_visualizacion_documentos import (
     ControlarVisualizacionDocumentos,
 )
 from views.components.smart_table_frame import SmartTableFrame
-from views.components.context_menu_factory import ContextMenuFactory
 from views.components.ui_tokens import PADDING_COMPACT, PADDING_OUTER, PADDING_PANEL
 
 
@@ -160,7 +159,7 @@ class FrameVisualizarDocumentos(Frame):
         ToolTip(self.ent_buscar, "Escribe aquí para buscar y presiona Enter")
         ToolTip(self.cbx_campos, "Selecciona en qué campo buscar")
         ToolTip(self.btn_buscar, "Realizar la búsqueda de documentos")
-        self._crear_menu_contextual_tabla()
+        ToolTip(self.table_view.view, "Doble clic para abrir. Clic derecho para más operaciones.")
 
     # ┌────────────────────────────────────────────────────────────┐
     # │ Eventos (a implementar)
@@ -182,17 +181,4 @@ class FrameVisualizarDocumentos(Frame):
             self.controlador.recargar_datos()
 
     def _crear_menu_contextual_tabla(self):
-        acciones = [
-            {
-                "label": "📖 Abrir documento",
-                "command": lambda: self.controlador.on_doble_clic_tabla_documentos(None),
-            },
-            {"label": "🔎 Buscar", "command": self.on_buscar_documentos},
-            {"separator": True},
-            {"label": "🔄 Refrescar", "command": self.actualizar_tabla},
-        ]
-        self.menu_contextual_tabla = ContextMenuFactory.build_for_treeview(
-            master=self,
-            treeview=self.table_view.view,
-            actions=acciones,
-        )
+        pass

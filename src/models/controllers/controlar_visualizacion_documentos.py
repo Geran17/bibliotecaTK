@@ -3,6 +3,7 @@ from ttkbootstrap import Treeview, Button, Entry, Combobox, StringVar
 from typing import Dict, Any, List
 from os.path import join, exists
 from tkinter.messagebox import showerror, showwarning
+from tkinter import Menu
 import math
 from models.entities.consulta import Consulta
 from models.entities.coleccion import Coleccion
@@ -11,6 +12,9 @@ from models.entities.etiqueta import Etiqueta
 from models.entities.palabra_clave import PalabraClave
 from models.entities.grupo import Grupo
 from models.controllers.configuracion_controller import ConfiguracionController
+from models.controllers.controlar_menu_contextual_documento import (
+    ControlarMenuContextualDocumento,
+)
 from utilities.configuracion import DIRECTORIO_TEMPORAL
 from utilities.auxiliar import (
     generar_ruta_documento,
@@ -66,9 +70,21 @@ class ControlarVisualizacionDocumentos:
         self.map_palabras_clave: Dict[int, PalabraClave] = {}
         self.map_documentos_por_palabra_clave: Dict[int, List[Dict[str, Any]]] = {}
         self.map_documentos: Dict[int, Dict[str, Any]] = {}
+        self.tree_contextual_nombre: str = ""
 
         # --- Inicialización ---
+        self.menu_ops_tabla = ControlarMenuContextualDocumento(
+            master=self.master,
+            get_documento_data=self._get_documento_contextual_tabla,
+            on_refresh=self.recargar_datos,
+        )
+        self.menu_ops_organizacion = ControlarMenuContextualDocumento(
+            master=self.master,
+            get_documento_data=self._get_documento_contextual_organizacion,
+            on_refresh=self.recargar_datos,
+        )
         self._vincular_eventos()
+        self._crear_menus_contextuales()
         self._cargar_datos_iniciales()
 
     # ┌────────────────────────────────────────────────────────────┐
@@ -81,29 +97,35 @@ class ControlarVisualizacionDocumentos:
         tree_colecciones = self.map_treeviews.get("Colecciones")
         if tree_colecciones:
             tree_colecciones.bind("<Double-1>", self.on_doble_clic_tree_coleccion)
+            tree_colecciones.bind("<Button-3>", lambda event: self._on_click_derecho_tree(event, "Colecciones"))
 
         # Vincular evento de selección en el Treeview de Grupos
         tree_grupos = self.map_treeviews.get("Grupos")
         if tree_grupos:
             tree_grupos.bind("<Double-1>", self.on_doble_clic_tree_grupo)
+            tree_grupos.bind("<Button-3>", lambda event: self._on_click_derecho_tree(event, "Grupos"))
 
         # Vincular evento de selección en el Treeview de Categorías
         tree_categorias = self.map_treeviews.get("Categorías")
         if tree_categorias:
             tree_categorias.bind("<Double-1>", self.on_doble_clic_tree_categoria)
+            tree_categorias.bind("<Button-3>", lambda event: self._on_click_derecho_tree(event, "Categorías"))
 
         # Vincular evento de selección en el Treeview de Etiquetas
         tree_etiquetas = self.map_treeviews.get("Etiquetas")
         if tree_etiquetas:
             tree_etiquetas.bind("<Double-1>", self.on_doble_clic_tree_etiqueta)
+            tree_etiquetas.bind("<Button-3>", lambda event: self._on_click_derecho_tree(event, "Etiquetas"))
 
         # Vincular evento de selección en el Treeview de Palabras Clave
         tree_palabras_clave = self.map_treeviews.get("Palabras Clave")
         if tree_palabras_clave:
             tree_palabras_clave.bind("<Double-1>", self.on_doble_clic_tree_palabra_clave)
+            tree_palabras_clave.bind("<Button-3>", lambda event: self._on_click_derecho_tree(event, "Palabras Clave"))
 
         # Vincular evento de doble clic en la tabla de documentos
         self.table_view.view.bind("<Double-1>", self.on_doble_clic_tabla_documentos)
+        self.table_view.view.bind("<Button-3>", self._on_click_derecho_tabla)
 
         # Vincular botón de búsqueda
         self.btn_buscar.config(command=self.on_buscar_documentos)
@@ -111,6 +133,91 @@ class ControlarVisualizacionDocumentos:
 
         # Vincular botón de refrescar
         self.btn_refrescar.config(command=self.recargar_datos)
+
+    def _crear_menus_contextuales(self):
+        self.menu_contextual_tabla = Menu(self.master, tearoff=0)
+        self.menu_contextual_tabla.add_command(label="📖 Abrir documento", command=self.menu_ops_tabla.on_abrir_documento)
+        self.menu_contextual_tabla.add_command(label="📂 Abrir carpeta", command=self.menu_ops_tabla.on_abrir_carpeta)
+        self.menu_contextual_tabla.add_command(label="ℹ️ Propiedades", command=self.menu_ops_tabla.on_propiedades)
+        self.menu_contextual_tabla.add_command(label="🧾 Ver metadatos", command=self.menu_ops_tabla.on_ver_metadatos)
+        self.menu_contextual_tabla.add_separator()
+        self.menu_contextual_tabla.add_command(label="✏️ Renombrar documento", command=self.menu_ops_tabla.on_renombrar_documento)
+        self.menu_contextual_tabla.add_command(label="🧬 Renombrar bibliográficamente", command=self.menu_ops_tabla.on_renombrar_bibliografico)
+        self.menu_contextual_tabla.add_separator()
+        self.menu_contextual_tabla.add_command(label="📋 Copiar documento", command=self.menu_ops_tabla.on_copiar_documento)
+        self.menu_contextual_tabla.add_command(label="✂️ Mover documento", command=self.menu_ops_tabla.on_mover_documento)
+        self.menu_contextual_tabla.add_command(label="🗑️ Enviar a papelera", command=self.menu_ops_tabla.on_enviar_papelera)
+        self.menu_contextual_tabla.add_command(label="🗑️ Eliminar documento", command=self.menu_ops_tabla.on_eliminar_documento)
+        self.menu_contextual_tabla.add_separator()
+        self.menu_contextual_tabla.add_command(label="🔄 Cambiar estado", command=self.menu_ops_tabla.on_cambiar_estado)
+
+        self.menu_contextual_organizacion = Menu(self.master, tearoff=0)
+        self.menu_contextual_organizacion.add_command(label="📂 Ver documentos", command=self._on_ver_documentos_organizacion)
+        self.menu_contextual_organizacion.add_separator()
+        self.menu_contextual_organizacion.add_command(label="📖 Abrir documento", command=self.menu_ops_organizacion.on_abrir_documento)
+        self.menu_contextual_organizacion.add_command(label="📂 Abrir carpeta", command=self.menu_ops_organizacion.on_abrir_carpeta)
+        self.menu_contextual_organizacion.add_command(label="ℹ️ Propiedades", command=self.menu_ops_organizacion.on_propiedades)
+        self.menu_contextual_organizacion.add_command(label="🧾 Ver metadatos", command=self.menu_ops_organizacion.on_ver_metadatos)
+        self.menu_contextual_organizacion.add_separator()
+        self.menu_contextual_organizacion.add_command(label="✏️ Renombrar documento", command=self.menu_ops_organizacion.on_renombrar_documento)
+        self.menu_contextual_organizacion.add_command(label="🧬 Renombrar bibliográficamente", command=self.menu_ops_organizacion.on_renombrar_bibliografico)
+        self.menu_contextual_organizacion.add_separator()
+        self.menu_contextual_organizacion.add_command(label="📋 Copiar documento", command=self.menu_ops_organizacion.on_copiar_documento)
+        self.menu_contextual_organizacion.add_command(label="✂️ Mover documento", command=self.menu_ops_organizacion.on_mover_documento)
+        self.menu_contextual_organizacion.add_command(label="🗑️ Enviar a papelera", command=self.menu_ops_organizacion.on_enviar_papelera)
+        self.menu_contextual_organizacion.add_command(label="🗑️ Eliminar documento", command=self.menu_ops_organizacion.on_eliminar_documento)
+        self.menu_contextual_organizacion.add_separator()
+        self.menu_contextual_organizacion.add_command(label="🔄 Cambiar estado", command=self.menu_ops_organizacion.on_cambiar_estado)
+
+    def _on_click_derecho_tabla(self, event):
+        item_id = self.table_view.view.identify_row(event.y)
+        if item_id:
+            self.table_view.view.selection_set(item_id)
+            self.table_view.view.focus(item_id)
+        self.menu_contextual_tabla.tk_popup(event.x_root, event.y_root)
+
+    def _on_click_derecho_tree(self, event, nombre_tree: str):
+        tree = self.map_treeviews.get(nombre_tree)
+        if not tree:
+            return
+        item_id = tree.identify_row(event.y)
+        if item_id:
+            tree.selection_set(item_id)
+            tree.focus(item_id)
+        self.tree_contextual_nombre = nombre_tree
+        self.menu_contextual_organizacion.tk_popup(event.x_root, event.y_root)
+
+    def _on_ver_documentos_organizacion(self):
+        if self.tree_contextual_nombre == "Colecciones":
+            self.on_doble_clic_tree_coleccion()
+        elif self.tree_contextual_nombre == "Grupos":
+            self.on_doble_clic_tree_grupo()
+        elif self.tree_contextual_nombre == "Categorías":
+            self.on_doble_clic_tree_categoria()
+        elif self.tree_contextual_nombre == "Etiquetas":
+            self.on_doble_clic_tree_etiqueta()
+        elif self.tree_contextual_nombre == "Palabras Clave":
+            self.on_doble_clic_tree_palabra_clave()
+
+    def _get_documento_contextual_tabla(self):
+        selected_row = self.table_view.get_rows(selected=True)
+        if not selected_row or not selected_row[0].values:
+            return None
+        id_documento = selected_row[0].values[0]
+        return self.map_documentos.get(id_documento)
+
+    def _get_documento_contextual_organizacion(self):
+        tree = self.map_treeviews.get(self.tree_contextual_nombre)
+        if not tree:
+            return None
+        iid = tree.focus()
+        if not iid or "_doc_" not in iid:
+            return None
+        try:
+            id_documento = int(iid.split("_doc_")[-1])
+        except ValueError:
+            return None
+        return self.map_documentos.get(id_documento)
 
     def _cargar_datos_iniciales(self):
         """Carga los datos necesarios al iniciar el controlador."""

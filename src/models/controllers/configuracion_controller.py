@@ -1,9 +1,10 @@
 from os import mkdir
 from os.path import join, isdir
+import json
 from utilities.fileINI import FileINI
 from utilities.configuracion import CONFIG_INI
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Any
 
 
 class ConfiguracionController:
@@ -21,6 +22,7 @@ class ConfiguracionController:
         self.key_ubicacion_portadas = "ubicacion_portadas"
         self.key_tema = "tema"
         self.key_estilo_citacion = "estilo_citacion"
+        self.key_entorno_ui = "entorno_ui"
         self.key_panel_laterial = "panel_lateral"
         self.key_panel_archivo = "panel_archivo"
         self.key_ultima_ubicacion = "ultima_ubicacion"
@@ -29,6 +31,9 @@ class ConfiguracionController:
         self.key_mostrar_asociaciones = "mostrar_asociaciones"
         self.key_mostrar_datos_bibliograficos = "mostrar_datos_bibliograficos"
         self.key_mostrar_operaciones = "mostrar_operaciones"
+        self.key_estado_vista_documentos = "estado_vista_documentos"
+        self.key_estado_vista_estante = "estado_vista_estante"
+        self.key_pestana_activa_principal = "pestana_activa_principal"
         # ----- Keys Pestañas -----
         self.key_pestana_bienvenida = "pestana_bienvenida"
         self.key_pestana_visualizar = "pestana_visualizar"
@@ -139,6 +144,23 @@ class ConfiguracionController:
 
     def obtener_estilo_citacion(self) -> str:
         return self.iniFile.get_value(section=self.section_estilo, key=self.key_estilo_citacion)
+
+    def establecer_entorno_ui(self, entorno_ui: str) -> bool:
+        entorno_normalizado = (entorno_ui or "").strip().lower()
+        if entorno_normalizado == "tkinter":
+            return self.iniFile.add_value(
+                section=self.section_estilo,
+                key=self.key_entorno_ui,
+                value=entorno_normalizado,
+            )
+        return False
+
+    def obtener_entorno_ui(self) -> str:
+        entorno_ui = self.iniFile.get_value(section=self.section_estilo, key=self.key_entorno_ui)
+        entorno_normalizado = (entorno_ui or "").strip().lower()
+        if entorno_normalizado == "tkinter":
+            return entorno_normalizado
+        return ""
 
     def obtener_ubicacion_biblioteca(self) -> str:
         ubicacion_biblioteca = self.iniFile.get_value(
@@ -311,3 +333,76 @@ class ConfiguracionController:
             ini_key = f"pestana_{key_short}"
             value_str = str(is_visible)  # Convierte True a 'True' y False a 'False'
             self.iniFile.add_value(section=self.section_toggle, key=ini_key, value=value_str)
+
+    def guardar_estado_vista_documentos(self, estado: Dict[str, Any]) -> bool:
+        if not isinstance(estado, dict):
+            return False
+        try:
+            value = json.dumps(estado, ensure_ascii=True)
+            return self.iniFile.add_value(
+                section=self.section_toggle,
+                key=self.key_estado_vista_documentos,
+                value=value,
+            )
+        except Exception:
+            return False
+
+    def obtener_estado_vista_documentos(self) -> Dict[str, Any]:
+        raw = self.iniFile.get_value(
+            section=self.section_toggle,
+            key=self.key_estado_vista_documentos,
+        )
+        if not raw:
+            return {}
+        try:
+            data = json.loads(raw)
+            if isinstance(data, dict):
+                return data
+        except Exception:
+            pass
+        return {}
+
+    def guardar_estado_vista_estante(self, estado: Dict[str, Any]) -> bool:
+        if not isinstance(estado, dict):
+            return False
+        try:
+            value = json.dumps(estado, ensure_ascii=True)
+            return self.iniFile.add_value(
+                section=self.section_toggle,
+                key=self.key_estado_vista_estante,
+                value=value,
+            )
+        except Exception:
+            return False
+
+    def obtener_estado_vista_estante(self) -> Dict[str, Any]:
+        raw = self.iniFile.get_value(
+            section=self.section_toggle,
+            key=self.key_estado_vista_estante,
+        )
+        if not raw:
+            return {}
+        try:
+            data = json.loads(raw)
+            if isinstance(data, dict):
+                return data
+        except Exception:
+            pass
+        return {}
+
+    def guardar_pestana_activa_principal(self, nombre_pestana: str) -> bool:
+        nombre_normalizado = (nombre_pestana or "").strip().lower()
+        if not nombre_normalizado:
+            return False
+        return self.iniFile.add_value(
+            section=self.section_toggle,
+            key=self.key_pestana_activa_principal,
+            value=nombre_normalizado,
+        )
+
+    def obtener_pestana_activa_principal(self) -> str:
+        valor = self.iniFile.get_value(
+            section=self.section_toggle,
+            key=self.key_pestana_activa_principal,
+        )
+        return (valor or "").strip().lower()

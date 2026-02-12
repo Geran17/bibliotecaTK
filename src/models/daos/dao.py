@@ -88,6 +88,9 @@ class DAO(ABC):
         """
         Ejecuta una sentencia de inserción thread-safe.
         """
+        params = self._normalizar_params(params)
+        if not self._validar_parametros_sql(sql, params):
+            return None
         try:
             with self._get_connection() as con:
                 cursor = con.cursor()
@@ -101,6 +104,9 @@ class DAO(ABC):
         """
         Ejecuta una consulta SELECT thread-safe.
         """
+        params = self._normalizar_params(params)
+        if not self._validar_parametros_sql(sql, params):
+            return []
         try:
             with self._get_connection() as con:
                 cursor = con.cursor()
@@ -115,6 +121,9 @@ class DAO(ABC):
         """
         Ejecuta una actualización o eliminación thread-safe.
         """
+        params = self._normalizar_params(params)
+        if not self._validar_parametros_sql(sql, params):
+            return False
         try:
             with self._get_connection() as con:
                 cursor = con.cursor()
@@ -143,3 +152,24 @@ class DAO(ABC):
         """
         con = self._conectar()
         return con.cursor()
+
+    def _normalizar_params(self, params) -> tuple:
+        if params is None or params is ...:
+            return ()
+        if isinstance(params, tuple):
+            return params
+        if isinstance(params, list):
+            return tuple(params)
+        return (params,)
+
+    def _validar_parametros_sql(self, sql: str, params: tuple) -> bool:
+        placeholders = sql.count("?")
+        if placeholders != len(params):
+            logger.error(
+                "SQL/params no coinciden. placeholders=%s params=%s sql=%r",
+                placeholders,
+                len(params),
+                sql,
+            )
+            return False
+        return True

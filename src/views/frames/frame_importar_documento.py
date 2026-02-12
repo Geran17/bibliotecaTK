@@ -5,6 +5,8 @@ from ttkbootstrap import (
     Frame as TTFrame,
     Combobox,
     Button as TTButton,
+    Menubutton,
+    Menu,
     Label as TTLabel,
     Progressbar,
     Radiobutton,
@@ -178,47 +180,40 @@ class FrameImportarDocumento(TTFrame):
 
         # --- Pestaña "Todos los documentos" ---
         frame_todos = TTFrame(notebook, padding=8)
-        notebook.add(frame_todos, text="📦 Todos")
+        notebook.add(frame_todos, text="Todos")
 
         btn_copiar_todos = TTButton(
-            frame_todos, text="📋 Copiar todos", command=self.on_copiar_todos, style="info.TButton"
+            frame_todos,
+            text="Copiar todos",
+            command=self.on_copiar_todos,
+            style="info.TButton",
         )
         btn_copiar_todos.pack(side=TOP, fill=X, padx=3, pady=3)
         ToolTip(btn_copiar_todos, "Copiar todos los archivos de la tabla a una nueva ubicación")
 
         btn_mover_todos = TTButton(
-            frame_todos, text="✂️ Mover todos", command=self.on_mover_todos, style="warning.TButton"
+            frame_todos,
+            text="Mover todos",
+            command=self.on_mover_todos,
+            style="warning.TButton",
         )
         btn_mover_todos.pack(side=TOP, fill=X, padx=3, pady=3)
         ToolTip(btn_mover_todos, "Mover todos los archivos de la tabla a una nueva ubicación")
 
-        btn_eliminar_todos = TTButton(
-            frame_todos,
-            text="🗑️ Eliminar todos",
-            command=self.on_eliminar_todos,
-            style="danger.TButton",
-        )
-        btn_eliminar_todos.pack(side=TOP, fill=X, padx=3, pady=3)
-        ToolTip(btn_eliminar_todos, "Eliminar permanentemente todos los archivos de la tabla")
-
-        btn_papelera_todos = TTButton(
-            frame_todos,
-            text="♻️ Papelera todos",
-            command=self.on_papelera_todos,
-            style="secondary.TButton",
-        )
-        btn_papelera_todos.pack(side=TOP, fill=X, padx=3, pady=3)
-        ToolTip(
-            btn_papelera_todos, "Mover todos los archivos de la tabla a la papelera de reciclaje"
-        )
+        btn_mas_todos = Menubutton(frame_todos, text="Más", style="secondary.Outline.TButton")
+        btn_mas_todos.pack(side=TOP, fill=X, padx=3, pady=3)
+        menu_todos = Menu(btn_mas_todos, tearoff=0)
+        menu_todos.add_command(label="Eliminar todos", command=self.on_eliminar_todos)
+        menu_todos.add_command(label="Enviar todos a papelera", command=self.on_papelera_todos)
+        btn_mas_todos["menu"] = menu_todos
 
         # --- Pestaña "Existentes en la biblioteca" ---
         frame_existentes = TTFrame(notebook, padding=8)
-        notebook.add(frame_existentes, text="📖 Existentes")
+        notebook.add(frame_existentes, text="Existentes")
 
         btn_copiar_existentes = TTButton(
             frame_existentes,
-            text="📋 Copiar existentes",
+            text="Copiar existentes",
             command=self.on_copiar_existentes,
             style="info.TButton",
         )
@@ -227,78 +222,66 @@ class FrameImportarDocumento(TTFrame):
 
         btn_mover_existentes = TTButton(
             frame_existentes,
-            text="✂️ Mover existentes",
+            text="Mover existentes",
             command=self.on_mover_existentes,
             style="warning.TButton",
         )
         btn_mover_existentes.pack(side=TOP, fill=X, padx=3, pady=3)
         ToolTip(btn_mover_existentes, "Mover solo los archivos que ya existen en la biblioteca")
 
-        btn_eliminar_existentes = TTButton(
-            frame_existentes,
-            text="🗑️ Eliminar existentes",
-            command=self.on_eliminar_existentes,
-            style="danger.TButton",
-        )
-        btn_eliminar_existentes.pack(side=TOP, fill=X, padx=3, pady=3)
-        ToolTip(
-            btn_eliminar_existentes,
-            "Eliminar permanentemente solo los archivos que ya existen en la biblioteca",
-        )
-
-        btn_papelera_existentes = TTButton(
-            frame_existentes,
-            text="♻️ Papelera existentes",
-            command=self.on_papelera_existentes,
-            style="secondary.TButton",
-        )
-        btn_papelera_existentes.pack(side=TOP, fill=X, padx=3, pady=3)
-        ToolTip(
-            btn_papelera_existentes,
-            "Mover a la papelera solo los archivos que ya existen en la biblioteca",
-        )
-
         btn_compara_existentes = TTButton(
             frame_existentes,
-            text="🔍 Comparar existentes",
+            text="Comparar existentes",
             command=self.on_comparar_existentes,
             style="light.Outline.TButton",
         )
         btn_compara_existentes.pack(side=TOP, fill=X, padx=3, pady=3)
         ToolTip(btn_compara_existentes, "Comparar archivos existentes por hash y nombre")
 
+        btn_mas_existentes = Menubutton(
+            frame_existentes,
+            text="Más",
+            style="secondary.Outline.TButton",
+        )
+        btn_mas_existentes.pack(side=TOP, fill=X, padx=3, pady=3)
+        menu_existentes = Menu(btn_mas_existentes, tearoff=0)
+        menu_existentes.add_command(label="Eliminar existentes", command=self.on_eliminar_existentes)
+        menu_existentes.add_command(
+            label="Enviar existentes a papelera",
+            command=self.on_papelera_existentes,
+        )
+        btn_mas_existentes["menu"] = menu_existentes
+
         # --- Pestaña "Tabla" ---
         frame_tabla_ops = TTFrame(notebook, padding=8)
-        notebook.add(frame_tabla_ops, text="📊 Tabla")
+        notebook.add(frame_tabla_ops, text="Tabla")
 
         btn_eliminar_fila = TTButton(
             frame_tabla_ops,
-            text="❌ Eliminar seleccionadas",
+            text="Quitar seleccionadas",
             command=self.on_eliminar_filas_seleccionadas,
             style="danger.Outline.TButton",
         )
         btn_eliminar_fila.pack(side=TOP, fill=X, padx=3, pady=3)
         ToolTip(btn_eliminar_fila, "Quitar de la tabla las filas seleccionadas")
 
-        btn_eliminar_filas_existentes = TTButton(
-            frame_tabla_ops,
-            text="⚠️ Eliminar existentes",
-            command=self.on_eliminar_filas_existentes,
-            style="warning.Outline.TButton",
-        )
-        btn_eliminar_filas_existentes.pack(side=TOP, fill=X, padx=3, pady=3)
-        ToolTip(
-            btn_eliminar_filas_existentes, "Quitar de la tabla las filas marcadas como existentes"
-        )
-
         btn_eliminar_filas = TTButton(
             frame_tabla_ops,
-            text="🧹 Limpiar tabla",
+            text="Limpiar tabla",
             command=lambda: self.table_view.delete_rows(),
             style="secondary.Outline.TButton",
         )
         btn_eliminar_filas.pack(side=TOP, fill=X, padx=3, pady=3)
         ToolTip(btn_eliminar_filas, "Quitar todas las filas de la tabla")
+
+        btn_mas_tabla = Menubutton(frame_tabla_ops, text="Más", style="secondary.Outline.TButton")
+        btn_mas_tabla.pack(side=TOP, fill=X, padx=3, pady=3)
+        menu_tabla = Menu(btn_mas_tabla, tearoff=0)
+        menu_tabla.add_command(
+            label="Quitar filas existentes",
+            command=self.on_eliminar_filas_existentes,
+        )
+        btn_mas_tabla["menu"] = menu_tabla
 
         # Frame Table
         self.frame_table = TTFrame(self.paned_window, padding=(PADDING_OUTER, PADDING_OUTER))
@@ -319,7 +302,7 @@ class FrameImportarDocumento(TTFrame):
         """Frame Inferior - Documento seleccionado y controles"""
         frame.configure(padding=(PADDING_OUTER, PADDING_OUTER))
 
-        self.label_frame = LabelFrame(frame, text="📄 Documento seleccionado", padding=(8, 8))
+        self.label_frame = LabelFrame(frame, text="Documento seleccionado", padding=(8, 8))
         self.label_frame.pack(side=TOP, fill=X, padx=5, pady=5)
 
         # Nombre documento
@@ -336,13 +319,13 @@ class FrameImportarDocumento(TTFrame):
 
         # Abrir documentos
         self.btn_abrir_documento = TTButton(
-            frame_buttons, text="👁️ Abrir", command=self.on_abrir_archivo, style="info.TButton"
+            frame_buttons, text="Abrir", command=self.on_abrir_archivo, style="info.TButton"
         )
         self.btn_abrir_documento.grid(row=0, column=0, padx=3, pady=3, sticky=EW)
 
         self.btn_renombrar_documento = TTButton(
             frame_buttons,
-            text="✏️ Renombrar",
+            text="Renombrar",
             command=self.on_renombrar_archivo,
             style="primary.TButton",
         )
@@ -350,51 +333,62 @@ class FrameImportarDocumento(TTFrame):
 
         self.btn_copiar_documento = TTButton(
             frame_buttons,
-            text="📋 Copiar",
+            text="Copiar",
             command=self.on_copiar_archivo,
             style="info.Outline.TButton",
         )
         self.btn_copiar_documento.grid(row=0, column=2, padx=3, pady=3, sticky=EW)
 
+        # Botones secundarios conservados para compatibilidad (invocados desde menú Más)
         self.btn_mover_documento = TTButton(
             frame_buttons,
-            text="✂️ Mover",
+            text="Mover",
             command=self.on_mover_archivo,
             style="warning.Outline.TButton",
         )
-        self.btn_mover_documento.grid(row=0, column=3, padx=3, pady=3, sticky=EW)
 
         self.btn_eliminar_documento = TTButton(
             frame_buttons,
-            text="🗑️ Eliminar",
+            text="Eliminar",
             command=self.on_eliminar_archivo,
             style="danger.Outline.TButton",
         )
-        self.btn_eliminar_documento.grid(row=1, column=0, padx=3, pady=3, sticky=EW)
 
         self.btn_papelera_documento = TTButton(
             frame_buttons,
-            text="♻️ Papelera",
+            text="Papelera",
             command=self.on_papelera_archivo,
             style="secondary.TButton",
         )
-        self.btn_papelera_documento.grid(row=1, column=1, padx=3, pady=3, sticky=EW)
 
         self.btn_convertir_minusculas = TTButton(
             frame_buttons,
-            text="🔤 Minusculas",
+            text="Minúsculas",
             command=self.on_convertir_minuscula,
             style="light.TButton",
         )
-        self.btn_convertir_minusculas.grid(row=1, column=2, padx=3, pady=3, sticky=EW)
 
         self.btn_convertir_mayusculas = TTButton(
             frame_buttons,
-            text="🔤 MAYUSCULAS",
+            text="MAYÚSCULAS",
             command=self.on_convertir_mayuscula,
             style="light.TButton",
         )
-        self.btn_convertir_mayusculas.grid(row=1, column=3, padx=3, pady=3, sticky=EW)
+
+        self.btn_mas_documento = Menubutton(
+            frame_buttons,
+            text="Más",
+            style="secondary.Outline.TButton",
+        )
+        self.btn_mas_documento.grid(row=0, column=3, padx=3, pady=3, sticky=EW)
+        menu_doc = Menu(self.btn_mas_documento, tearoff=0)
+        menu_doc.add_command(label="Mover", command=lambda: self.btn_mover_documento.invoke())
+        menu_doc.add_command(label="Eliminar", command=lambda: self.btn_eliminar_documento.invoke())
+        menu_doc.add_command(label="Enviar a papelera", command=lambda: self.btn_papelera_documento.invoke())
+        menu_doc.add_separator()
+        menu_doc.add_command(label="Convertir a minúsculas", command=lambda: self.btn_convertir_minusculas.invoke())
+        menu_doc.add_command(label="Convertir a MAYÚSCULAS", command=lambda: self.btn_convertir_mayusculas.invoke())
+        self.btn_mas_documento["menu"] = menu_doc
 
         # Label Progreso
         self.lbl_progreso = TTLabel(self.label_frame, padding=(5, 5), text="Progreso: Listo")
@@ -463,7 +457,7 @@ class FrameImportarDocumento(TTFrame):
         resp = messagebox.askokcancel(
             parent=self.winfo_toplevel(),
             title="Advertencia",
-            message="Se eliminara el siguiente archivo. ¿Esta seguro?",
+            message="Se eliminará el siguiente archivo. ¿Está seguro?",
         )
         if resp:
             if exists(self.ruta_archivo):
@@ -479,7 +473,7 @@ class FrameImportarDocumento(TTFrame):
         resp = messagebox.askokcancel(
             parent=self.winfo_toplevel(),
             title="Advertencia",
-            message="Se movera a la papelera el siguiente archivo. ¿Esta seguro?",
+            message="Se moverá a la papelera el siguiente archivo. ¿Está seguro?",
         )
         if resp:
             if exists(self.ruta_archivo):
@@ -556,7 +550,7 @@ class FrameImportarDocumento(TTFrame):
                     self.table_view.view.delete(item)
 
     def on_importar_documentos(self):
-        # obtenmos el tipo de importaciones
+        # obtenemos el tipo de importaciones
         tipo_importacion = self.var_opcion_importacion.get()
         controlar_importaciones = ControlarImporetacionDocumento(
             label_progress=self.lbl_progreso,
@@ -571,7 +565,7 @@ class FrameImportarDocumento(TTFrame):
         res = messagebox.askyesno(
             parent=self.winfo_toplevel(),
             title="Confirmar",
-            message="Se enviar todos los archivos a la papelera. ¿Está seguro?",
+            message="Se enviarán todos los archivos a la papelera. ¿Está seguro?",
         )
         if res:
             controlar_todos = ControlarTodos(
@@ -587,7 +581,7 @@ class FrameImportarDocumento(TTFrame):
         res = messagebox.askyesno(
             parent=self.winfo_toplevel(),
             title="Confirmar",
-            message="Se enviar todos los archivos a la papelera. ¿Está seguro?",
+            message="Se enviarán todos los archivos a la papelera. ¿Está seguro?",
         )
         if res:
             controlar_todos = ControlarExistentes(

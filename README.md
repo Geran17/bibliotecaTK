@@ -57,8 +57,16 @@ pipenv install
 
 ### 4. Ejecutar la aplicación
 
+Modo Tkinter:
+
 ```bash
 pipenv run python src/main.py
+```
+
+Tambien puedes definirlo con variable de entorno:
+
+```bash
+BIBLIOTECA_UI=tkinter pipenv run python src/main.py
 ```
 
 ## 📁 Estructura del Proyecto
@@ -86,7 +94,8 @@ bibliotecaTK/
 │   │       ├── categoria.py
 │   │       └── ... (más entidades)
 │   ├── views/
-│   │   ├── appTK.py              # Aplicación principal
+│   │   ├── tk/                   # Backend Tkinter
+│   │   ├── apps/factory.py       # Selección de backend visual
 │   │   ├── frames/               # Componentes de UI
 │   │   │   ├── frame_importar_documento.py
 │   │   │   ├── frame_administrar_documentos.py
@@ -151,7 +160,7 @@ La base de datos se almacena en:
 
 BibliotecaTK sigue el patrón **MVC** (Modelo-Vista-Controlador):
 
-- **Vistas** (`src/views/`): Interfaz gráfica con Tkinter y ttkbootstrap
+- **Vistas** (`src/views/`): Interfaz gráfica en Tkinter
 - **Controladores** (`src/models/controllers/`): Lógica de negocio y manejo de eventos
 - **Modelos** (`src/models/`): DAOs, DTOs y Entidades para acceso a datos
 - **Base de Datos**: SQLite con validación de integridad referencial

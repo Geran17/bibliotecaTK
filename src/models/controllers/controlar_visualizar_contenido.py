@@ -1,19 +1,14 @@
-from os.path import exists
-from tkinter.messagebox import showerror, showwarning, askyesno
-from tkinter.filedialog import asksaveasfilename
-from typing import Dict, Any, List
 from tkinter import Menu
+from tkinter.messagebox import showerror, showwarning
+from typing import Dict, Any, List, Optional
 
 from ttkbootstrap import Button, Entry, Treeview
 
-from models.controllers.configuracion_controller import ConfiguracionController
-from models.entities.consulta import Consulta
-from models.entities.documento import Documento
-from utilities.auxiliar import (
-    abrir_documento_desde_biblioteca,
-    generar_ruta_documento,
-    copiar_archivo,
+from models.controllers.controlar_menu_contextual_documento import (
+    ControlarMenuContextualDocumento,
 )
+from models.entities.consulta import Consulta
+from utilities.auxiliar import abrir_documento_desde_biblioteca
 
 
 class ControlarVisualizarContenido:
@@ -28,6 +23,13 @@ class ControlarVisualizarContenido:
         self.master = master
 
         self.map_resultados: Dict[str, Dict[str, Any]] = {}
+        self.map_documentos: Dict[int, Dict[str, str]] = {}
+
+        self.menu_ops = ControlarMenuContextualDocumento(
+            master=self.master,
+            get_documento_data=self._obtener_datos_documento_seleccionado,
+            on_refresh=self.recargar_resultados,
+        )
 
         self._crear_menu_contextual()
         self._vincular_eventos()
@@ -35,14 +37,20 @@ class ControlarVisualizarContenido:
     def _crear_menu_contextual(self):
         """Crea el menú contextual para el Treeview."""
         self.menu_contextual = Menu(self.master, tearoff=0)
-        self.menu_contextual.add_command(
-            label="📋 Copiar documento", command=self._on_copiar_documento
-        )
-        self.menu_contextual.add_command(
-            label="🗑️ Eliminar documento", command=self._on_eliminar_documento
-        )
+        self.menu_contextual.add_command(label="📖 Abrir documento", command=self.on_doble_clic_tree)
+        self.menu_contextual.add_command(label="📂 Abrir carpeta", command=self.menu_ops.on_abrir_carpeta)
+        self.menu_contextual.add_command(label="ℹ️ Propiedades", command=self.menu_ops.on_propiedades)
+        self.menu_contextual.add_command(label="🧾 Ver metadatos", command=self.menu_ops.on_ver_metadatos)
         self.menu_contextual.add_separator()
-        self.menu_contextual.add_command(label="🔄 Cambiar estado", command=self._on_cambiar_estado)
+        self.menu_contextual.add_command(label="✏️ Renombrar documento", command=self.menu_ops.on_renombrar_documento)
+        self.menu_contextual.add_command(label="🧬 Renombrar bibliográficamente", command=self.menu_ops.on_renombrar_bibliografico)
+        self.menu_contextual.add_separator()
+        self.menu_contextual.add_command(label="📋 Copiar documento", command=self.menu_ops.on_copiar_documento)
+        self.menu_contextual.add_command(label="✂️ Mover documento", command=self.menu_ops.on_mover_documento)
+        self.menu_contextual.add_command(label="🗑️ Enviar a papelera", command=self.menu_ops.on_enviar_papelera)
+        self.menu_contextual.add_command(label="🗑️ Eliminar documento", command=self.menu_ops.on_eliminar_documento)
+        self.menu_contextual.add_separator()
+        self.menu_contextual.add_command(label="🔄 Cambiar estado", command=self.menu_ops.on_cambiar_estado)
 
     def _vincular_eventos(self):
         """Vincula los eventos de los widgets a sus manejadores."""
@@ -56,6 +64,7 @@ class ControlarVisualizarContenido:
         iid = self.tree_view.identify_row(event.y)
         if iid:
             self.tree_view.selection_set(iid)
+            self.tree_view.focus(iid)
             self.menu_contextual.post(event.x_root, event.y_root)
 
     def on_buscar(self):
@@ -80,17 +89,18 @@ class ControlarVisualizarContenido:
         for item in self.tree_view.get_children():
             self.tree_view.delete(item)
         self.map_resultados.clear()
+        self.map_documentos.clear()
 
     def _poblar_treeview(self, lista_resultados: List[Dict[str, Any]]):
         """Limpia y puebla el Treeview con una lista de resultados jerarquizados."""
         for item in self.tree_view.get_children():
             self.tree_view.delete(item)
         self.map_resultados.clear()
+        self.map_documentos.clear()
 
         if not lista_resultados:
             return
 
-        # Agrupar resultados por documento
         documentos = {}
         for res in lista_resultados:
             id_doc = res["id_documento"]
@@ -102,7 +112,6 @@ class ControlarVisualizarContenido:
                 }
             documentos[id_doc]["items"].append(res)
 
-        # Poblar el Treeview
         for id_doc, data in documentos.items():
             iid_doc = f"doc_{id_doc}"
             self.tree_view.insert("", "end", iid=iid_doc, text=f"📄 {data['nombre']}", open=True)
@@ -117,13 +126,38 @@ class ControlarVisualizarContenido:
                 )
                 self.map_resultados[iid_item] = item
 
+            self.map_documentos[id_doc] = {
+                "nombre_documento": data["nombre"],
+                "extension_doc": data["extension"],
+            }
+
+    def _obtener_datos_documento_seleccionado(self) -> Optional[Dict[str, Any]]:
+        iid_seleccionado = self.tree_view.focus()
+        if not iid_seleccionado:
+            return None
+
+        if iid_seleccionado.startswith("doc_"):
+            try:
+                id_documento = int(iid_seleccionado.split("_", maxsplit=1)[1])
+            except (ValueError, IndexError):
+                return None
+
+            data_doc = self.map_documentos.get(id_documento)
+            if not data_doc:
+                return None
+
+            return {
+                "id_documento": id_documento,
+                "nombre_documento": data_doc["nombre_documento"],
+                "extension_doc": data_doc["extension_doc"],
+                "pagina": None,
+            }
+
+        return self.map_resultados.get(iid_seleccionado)
+
     def on_doble_clic_tree(self, event=None):
         """Abre el documento correspondiente al hacer doble clic en un resultado."""
-        iid_seleccionado = self.tree_view.focus()
-        if not iid_seleccionado or iid_seleccionado.startswith("doc_"):
-            return  # Ignorar clics en los nodos de documento
-
-        resultado = self.map_resultados.get(iid_seleccionado)
+        resultado = self._obtener_datos_documento_seleccionado()
         if not resultado:
             return
 
@@ -135,85 +169,3 @@ class ControlarVisualizarContenido:
         )
         if not ok:
             showerror("Error al abrir", error)
-
-    def _on_copiar_documento(self):
-        """Copia el documento seleccionado a una ubicación externa."""
-        iid_seleccionado = self.tree_view.focus()
-        if not iid_seleccionado or iid_seleccionado.startswith("doc_"):
-            return
-
-        resultado = self.map_resultados.get(iid_seleccionado)
-        if not resultado:
-            return
-
-        nombre_archivo = f"{resultado['nombre_documento']}.{resultado['extension_doc']}"
-        ruta_destino = asksaveasfilename(
-            defaultextension=f".{resultado['extension_doc']}",
-            initialfile=nombre_archivo,
-            title="Copiar documento a...",
-        )
-        if not ruta_destino:
-            return
-
-        config = ConfiguracionController()
-        ruta_biblioteca = config.obtener_ubicacion_biblioteca()
-        ruta_origen = generar_ruta_documento(
-            ruta_biblioteca, resultado["id_documento"], nombre_archivo
-        )
-
-        if not exists(ruta_origen):
-            showerror("Archivo no encontrado", f"El archivo no se encontró:\n{ruta_origen}")
-            return
-
-        try:
-            copiar_archivo(ruta_origen, ruta_destino)
-            showwarning("Copia exitosa", f"Documento copiado a:\n{ruta_destino}")
-        except Exception as e:
-            showerror("Error al copiar", f"No se pudo copiar el documento: {e}")
-
-    def _on_eliminar_documento(self):
-        """Elimina el documento seleccionado de la biblioteca y base de datos."""
-        iid_seleccionado = self.tree_view.focus()
-        if not iid_seleccionado or iid_seleccionado.startswith("doc_"):
-            return
-
-        resultado = self.map_resultados.get(iid_seleccionado)
-        if not resultado:
-            return
-
-        respuesta = askyesno(
-            "Confirmar eliminación",
-            f"¿Está seguro de eliminar el documento '{resultado['nombre_documento']}'?\nEsta acción no se puede deshacer.",
-        )
-        if not respuesta:
-            return
-
-        doc = Documento(id=resultado["id_documento"], nombre="", extension="", hash="", tamano=0)
-        if doc.instanciar() and doc.eliminar():
-            # Actualizar el treeview eliminando el documento
-            self.tree_view.delete(f"doc_{resultado['id_documento']}")
-            showwarning("Eliminación exitosa", "Documento eliminado de la biblioteca.")
-        else:
-            showerror("Error", "No se pudo eliminar el documento.")
-
-    def _on_cambiar_estado(self):
-        """Cambia el estado activo/inactivo del documento."""
-        iid_seleccionado = self.tree_view.focus()
-        if not iid_seleccionado or iid_seleccionado.startswith("doc_"):
-            return
-
-        resultado = self.map_resultados.get(iid_seleccionado)
-        if not resultado:
-            return
-
-        doc = Documento(id=resultado["id_documento"], nombre="", extension="", hash="", tamano=0)
-        if doc.instanciar():
-            nuevo_estado = not doc.esta_activo
-            doc.esta_activo = nuevo_estado
-            if doc.actualizar():
-                estado_texto = "activado" if nuevo_estado else "desactivado"
-                showwarning("Estado cambiado", f"Documento {estado_texto}.")
-            else:
-                showerror("Error", "No se pudo cambiar el estado del documento.")
-        else:
-            showerror("Error", "No se pudo cargar el documento.")

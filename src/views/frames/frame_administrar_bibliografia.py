@@ -13,7 +13,12 @@ from ttkbootstrap import (
 )
 from ttkbootstrap.scrolled import ScrolledFrame
 from ttkbootstrap.constants import *
-from views.components.ui_tokens import PADDING_COMPACT, PADDING_OUTER, PADDING_PANEL
+from views.components.ui_tokens import (
+    PADDING_COMPACT,
+    PADDING_OUTER,
+    PADDING_PANEL,
+    FONT_TITLE,
+)
 from ttkbootstrap.tooltip import ToolTip
 from models.entities.documento import Documento
 from models.controllers.controlar_administrar_bibliografia import ControlarAdministrarBiblioteca
@@ -102,7 +107,7 @@ class FrameAdministrarBibliografia(Frame):
 
     def panel_superior(self, frame: Frame):
         lbl_titulo = Label(
-            frame, text="📚 Administrar Bibliografía", font=("Helvetica", 14, "bold")
+            frame, text="Administrar bibliografía", font=FONT_TITLE
         )
         lbl_titulo.pack(side=TOP, fill=X, padx=10, pady=(5, 10))
 

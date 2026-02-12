@@ -4,7 +4,13 @@ from views.frames.frame_menu import FrameMenu
 from views.frames.frame_central import FrameCentral
 from views.frames.frame_inferior import FrameInferior
 from models.controllers.configuracion_controller import ConfiguracionController
-from views.components.ui_tokens import DEFAULT_FONT, TABLE_ROWHEIGHT, TREE_ROWHEIGHT
+from views.components.ui_tokens import (
+    DEFAULT_FONT,
+    TABLE_ROWHEIGHT,
+    TREE_ROWHEIGHT,
+    PADDING_OUTER,
+    PADDING_PANEL,
+)
 
 
 class AppTK:
@@ -47,7 +53,7 @@ class AppTK:
 
     def crear_widgets(self):
         # Para ir insertando los widgets principales de la aplicacion
-        frame_principal = ttk.Frame(self.raiz, padding=4)
+        frame_principal = ttk.Frame(self.raiz, padding=PADDING_OUTER)
         frame_principal.pack(fill=BOTH, expand=YES)
 
         # Frame Cabecera
@@ -66,10 +72,14 @@ class AppTK:
         frame_menu.set_frame_central(frame_central=frame_central)
 
     def _configurar_estilos_base(self):
-        # Densidad consistente de botones y tablas para pantallas medianas/pequeñas.
-        self.raiz.style.configure("TButton", padding=(10, 6))
-        self.raiz.style.configure("TEntry", padding=(6, 4))
-        self.raiz.style.configure("TCombobox", padding=(6, 4))
+        # Base visual minimalista: densidad media, tipografía uniforme y jerarquía clara.
+        self.raiz.style.configure("TButton", padding=(10, 7))
+        self.raiz.style.configure("Toolbutton", padding=(8, 6))
+        self.raiz.style.configure("TEntry", padding=(8, 5))
+        self.raiz.style.configure("TCombobox", padding=(8, 5))
+        self.raiz.style.configure("TLabel", padding=(0, 1))
+        self.raiz.style.configure("TLabelframe", padding=PADDING_PANEL)
+        self.raiz.style.configure("TNotebook.Tab", padding=(12, 8))
         self.raiz.style.configure("Treeview", rowheight=TREE_ROWHEIGHT)
         self.raiz.style.configure("Table.Treeview", rowheight=TABLE_ROWHEIGHT)
 

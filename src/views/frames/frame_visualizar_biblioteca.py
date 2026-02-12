@@ -10,7 +10,6 @@ from models.controllers.controlar_visualizar_biblioteca import (
     ControlarVisualizarBiblioteca,
 )
 from views.components.smart_table_frame import SmartTableFrame
-from views.components.context_menu_factory import ContextMenuFactory
 from views.components.ui_tokens import PADDING_OUTER, PADDING_PANEL
 
 
@@ -49,7 +48,6 @@ class FrameVisualizarBiblioteca(Frame):
             btn_buscar=self.btn_buscar,
             master=self,
         )
-        self._crear_menu_contextual_tabla()
 
     def crear_widgets(self):
         """Crea y organiza los widgets principales del frame."""
@@ -99,14 +97,4 @@ class FrameVisualizarBiblioteca(Frame):
             self.controlador.on_buscar()
 
     def _crear_menu_contextual_tabla(self):
-        acciones = [
-            {"label": "📖 Abrir documento", "command": self.controlador._abrir_documento_seleccionado},
-            {"label": "🔎 Buscar", "command": self.on_buscar},
-            {"separator": True},
-            {"label": "🔄 Refrescar", "command": self.actualizar_tabla},
-        ]
-        self.menu_contextual_tabla = ContextMenuFactory.build_for_treeview(
-            master=self,
-            treeview=self.table_view.view,
-            actions=acciones,
-        )
+        pass

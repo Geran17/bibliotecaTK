@@ -34,5 +34,5 @@ class DialogSeleccionarCategorias(Toplevel):
     def obtener_documentos_seleccionados(self, documentos_seleccionados: List):
         if documentos_seleccionados:
             self.frame.obtener_documentos_seleccionados(
-                documetos_seleccionados=documentos_seleccionados
+                documentos_seleccionados=documentos_seleccionados
             )

@@ -24,6 +24,7 @@ from views.frames.frame_visualizar_biblioteca import FrameVisualizarBiblioteca
 from views.frames.frame_visualizar_contenido import FrameVisualizarContenido
 from views.frames.frame_visor_metadatos import FrameVisorMetadatos
 from views.frames.frame_visualizar_estante import FrameVisualizarEstante
+from views.components.ui_tokens import PADDING_COMPACT, PADDING_OUTER, PADDING_PANEL
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +51,7 @@ class FrameCentral(Frame):
         self.var_organizar = IntVar(value=0)
         self.notebook_central = None
         self.tab_bienvenida = None
+        self._tabs_por_nombre = {}
 
         # --- Referencias a las pestañas para refrescar ---
         self.tab_visualizar = None
@@ -86,143 +88,165 @@ class FrameCentral(Frame):
 
     def _crear_panel_lateral(self):
         """Crea el panel de navegación lateral con sus secciones."""
-        self.panel_lateral = Frame(self, padding=(2, 2), width=200)
-        self.panel_lateral.pack(side=LEFT, fill=Y, padx=2, pady=2, anchor=W)
+        self.panel_lateral = Frame(self, padding=(PADDING_COMPACT, PADDING_COMPACT), width=200)
+        self.panel_lateral.pack(
+            side=LEFT,
+            fill=Y,
+            padx=PADDING_COMPACT,
+            pady=PADDING_COMPACT,
+            anchor=W,
+        )
         self.panel_lateral.pack_propagate(False)
 
         # --- Sección "Archivo" ---
         ckb_archivos = Checkbutton(
             self.panel_lateral, text="Archivo", offvalue=0, onvalue=1, variable=self.var_archivo
         )
-        ckb_archivos.pack(side=TOP, fill=X, padx=2, pady=2)
+        ckb_archivos.pack(side=TOP, fill=X, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
 
         self.separator_archivo = Separator(self.panel_lateral)
         self.separator_archivo.pack(side=TOP, fill=X, padx=1, pady=1)
 
-        self.panel_archivos = Frame(self.panel_lateral, padding=(2, 2))
-        self.panel_archivos.pack(side=TOP, fill=Y, padx=1, pady=1, anchor=W)
+        self.panel_archivos = Frame(self.panel_lateral, padding=(PADDING_COMPACT, PADDING_COMPACT))
+        self.panel_archivos.pack(side=TOP, fill=Y, padx=PADDING_COMPACT, pady=PADDING_COMPACT, anchor=W)
 
         btn_importar = Button(
             self.panel_archivos,
-            text="📥 Importar",
+            text="Importar",
             style="Link.TButton",
             command=lambda: self.on_dialog_importar(None),
         )
-        btn_importar.pack(side=TOP, fill=X, padx=5, pady=2)
+        btn_importar.pack(side=TOP, fill=X, padx=PADDING_OUTER, pady=PADDING_COMPACT)
         ToolTip(btn_importar, "Importar nuevos documentos a la biblioteca")
 
         btn_documentos = Button(
             self.panel_archivos,
-            text="📜 Documentos",
+            text="Documentos",
             style="Link.TButton",
             command=lambda: self.on_dialog_documentos(None),
         )
-        btn_documentos.pack(side=TOP, fill=X, padx=5, pady=2)
+        btn_documentos.pack(side=TOP, fill=X, padx=PADDING_OUTER, pady=PADDING_COMPACT)
         ToolTip(btn_documentos, "Administrar todos los documentos")
 
         btn_metadato = Button(
             self.panel_archivos,
-            text="📝 Metadatos",
+            text="Metadatos",
             style="Link.TButton",
             command=self.on_dialog_metadatos,
         )
-        btn_metadato.pack(side=TOP, fill=X, padx=5, pady=2)
+        btn_metadato.pack(side=TOP, fill=X, padx=PADDING_OUTER, pady=PADDING_COMPACT)
         ToolTip(btn_metadato, "Abrir el visor de metadatos")
 
         btn_cerrar = Button(
             self.panel_archivos,
-            text="⏻ Cerrar",
+            text="Cerrar",
             style="Link.TButton",
             command=self.winfo_toplevel().quit,
         )
-        btn_cerrar.pack(side=TOP, fill=X, padx=5, pady=2)
+        btn_cerrar.pack(side=TOP, fill=X, padx=PADDING_OUTER, pady=PADDING_COMPACT)
         ToolTip(btn_cerrar, "Cerrar la aplicación")
 
         # --- Separador y Configuración ---
-        Separator(self.panel_lateral).pack(side=TOP, fill=X, padx=1, pady=5)
+        Separator(self.panel_lateral).pack(
+            side=TOP,
+            fill=X,
+            padx=PADDING_COMPACT,
+            pady=PADDING_OUTER,
+        )
 
         btn_config_vistas = Button(
             self.panel_lateral,
-            text="⚙️ Configurar Vistas",
+            text="Configurar vistas",
             style="Link.TButton",
             command=self.on_dialog_config_vistas,
         )
-        btn_config_vistas.pack(side=TOP, fill=X, padx=5, pady=2)
+        btn_config_vistas.pack(side=TOP, fill=X, padx=PADDING_OUTER, pady=PADDING_COMPACT)
         ToolTip(btn_config_vistas, "Elegir qué pestañas mostrar u ocultar")
 
         # --- Sección "Organizar" ---
         ckb_organizar = Checkbutton(
             self.panel_lateral, text="Organizar", offvalue=0, onvalue=1, variable=self.var_organizar
         )
-        ckb_organizar.pack(side=TOP, fill=X, padx=2, pady=2)
+        ckb_organizar.pack(side=TOP, fill=X, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
 
         self.separator_organizar = Separator(self.panel_lateral)
         self.separator_organizar.pack(side=TOP, fill=X, padx=1, pady=1)
 
-        self.panel_organizar = Frame(self.panel_lateral, padding=(2, 2))
-        self.panel_organizar.pack(side=TOP, fill=Y, padx=1, pady=1, anchor=W)
+        self.panel_organizar = Frame(self.panel_lateral, padding=(PADDING_COMPACT, PADDING_COMPACT))
+        self.panel_organizar.pack(side=TOP, fill=Y, padx=PADDING_COMPACT, pady=PADDING_COMPACT, anchor=W)
 
         btn_coleccion = Button(
             self.panel_organizar,
-            text="📚 Colecciones",
+            text="Colecciones",
             style="Link.TButton",
             command=lambda: self.on_dialog_colecciones(None),
         )
-        btn_coleccion.pack(side=TOP, fill=X, padx=5, pady=2)
+        btn_coleccion.pack(side=TOP, fill=X, padx=PADDING_OUTER, pady=PADDING_COMPACT)
         ToolTip(btn_coleccion, "Administrar colecciones")
 
         btn_grupo = Button(
             self.panel_organizar,
-            text="🗂️ Grupos",
+            text="Grupos",
             style="Link.TButton",
             command=lambda: self.on_dialog_grupos(None),
         )
-        btn_grupo.pack(side=TOP, fill=X, padx=5, pady=2)
+        btn_grupo.pack(side=TOP, fill=X, padx=PADDING_OUTER, pady=PADDING_COMPACT)
         ToolTip(btn_grupo, "Administrar grupos")
 
         btn_categoria = Button(
             self.panel_organizar,
-            text="🗃️ Categorías",
+            text="Categorías",
             style="Link.TButton",
             command=lambda: self.on_dialog_categorias(None),
         )
-        btn_categoria.pack(side=TOP, fill=X, padx=5, pady=2)
+        btn_categoria.pack(side=TOP, fill=X, padx=PADDING_OUTER, pady=PADDING_COMPACT)
         ToolTip(btn_categoria, "Administrar categorías")
 
         btn_etiqueta = Button(
             self.panel_organizar,
-            text="🏷️ Etiquetas",
+            text="Etiquetas",
             style="Link.TButton",
             command=lambda: self.on_dialog_etiquetas(None),
         )
-        btn_etiqueta.pack(side=TOP, fill=X, padx=5, pady=2)
+        btn_etiqueta.pack(side=TOP, fill=X, padx=PADDING_OUTER, pady=PADDING_COMPACT)
         ToolTip(btn_etiqueta, "Administrar etiquetas")
 
         btn_palabra_clave = Button(
             self.panel_organizar,
-            text="🔑 Palabras Clave",
+            text="Palabras clave",
             style="Link.TButton",
             command=lambda: self.on_dialog_palabras_clave(None),
         )
-        btn_palabra_clave.pack(side=TOP, fill=X, padx=5, pady=2)
+        btn_palabra_clave.pack(side=TOP, fill=X, padx=PADDING_OUTER, pady=PADDING_COMPACT)
         ToolTip(btn_palabra_clave, "Administrar palabras clave")
 
         # --- Separador final y botón de refrescar ---
-        Separator(self.panel_lateral).pack(side=TOP, fill=X, padx=1, pady=5)
+        Separator(self.panel_lateral).pack(
+            side=TOP,
+            fill=X,
+            padx=PADDING_COMPACT,
+            pady=PADDING_OUTER,
+        )
 
         btn_refrescar = Button(
             self.panel_lateral,
-            text="🔄 Refrescar",
+            text="Refrescar",
             style="Link.TButton",
             command=self.on_refrescar_pestanas,
         )
-        btn_refrescar.pack(side=TOP, fill=X, padx=5, pady=2)
+        btn_refrescar.pack(side=TOP, fill=X, padx=PADDING_OUTER, pady=PADDING_COMPACT)
         ToolTip(btn_refrescar, "Refrescar todas las pestañas")
 
     def _crear_panel_central(self):
         """Crea el panel central que contendrá el contenido principal."""
-        self.panel_central = Frame(self, padding=(2, 2))
-        self.panel_central.pack(side=LEFT, fill=BOTH, padx=2, pady=2, expand=True)
+        self.panel_central = Frame(self, padding=(PADDING_COMPACT, PADDING_COMPACT))
+        self.panel_central.pack(
+            side=LEFT,
+            fill=BOTH,
+            padx=PADDING_COMPACT,
+            pady=PADDING_COMPACT,
+            expand=True,
+        )
 
         self.notebook_central = Notebook(self.panel_central)
         self.notebook_central.pack(side=TOP, fill=BOTH, expand=True)
@@ -239,37 +263,72 @@ class FrameCentral(Frame):
                 command_documentos=lambda: self.on_dialog_documentos(None),
                 command_config=lambda: print("Botón de configuraciones presionado"),
             )
-            self.notebook_central.add(self.tab_bienvenida, text="🏠 Bienvenida")
+            self.notebook_central.add(self.tab_bienvenida, text="Bienvenida")
+            self._registrar_tab("Bienvenida", self.tab_bienvenida)
 
         # --- Pestaña de Visualizar Documentos ---
         if visibilidad.get("visualizar", True):
             self.tab_visualizar = FrameVisualizarDocumentos(self.notebook_central)
-            self.notebook_central.add(self.tab_visualizar, text="🔎 Visualizar")
+            self.notebook_central.add(self.tab_visualizar, text="Visualizar")
+            self._registrar_tab("Visualizar", self.tab_visualizar)
 
         # --- Pestaña de Favoritos ---
         if visibilidad.get("favoritos", True):
             self.tab_favoritos = FrameFavoritos(self.notebook_central)
-            self.notebook_central.add(self.tab_favoritos, text="⭐ Favoritos")
+            self.notebook_central.add(self.tab_favoritos, text="Favoritos")
+            self._registrar_tab("Favoritos", self.tab_favoritos)
 
         # --- Pestaña de Visualizar Biblioteca ---
         if visibilidad.get("biblioteca", True):
             self.tab_biblioteca = FrameVisualizarBiblioteca(self.notebook_central)
-            self.notebook_central.add(self.tab_biblioteca, text="📖 Biblioteca")
+            self.notebook_central.add(self.tab_biblioteca, text="Biblioteca")
+            self._registrar_tab("Biblioteca", self.tab_biblioteca)
 
         # --- Pestaña de Visualizar Contenido ---
         if visibilidad.get("contenido", True):
             self.tab_contenido = FrameVisualizarContenido(self.notebook_central)
-            self.notebook_central.add(self.tab_contenido, text="📑 Contenido")
+            self.notebook_central.add(self.tab_contenido, text="Contenido")
+            self._registrar_tab("Contenido", self.tab_contenido)
 
         # --- Pestaña de Visualizar Metadatos ---
         if visibilidad.get("metadatos", True):
             self.tab_metadatos = FrameVisorMetadatos(self.notebook_central)
-            self.notebook_central.add(self.tab_metadatos, text="🧮 Metadatos")
+            self.notebook_central.add(self.tab_metadatos, text="Metadatos")
+            self._registrar_tab("Metadatos", self.tab_metadatos)
 
         # --- Pestaña de Visualizar Estante ---
         if visibilidad.get("estante", True):
             self.tab_estante = FrameVisualizarEstante(self.notebook_central)
-            self.notebook_central.add(self.tab_estante, text="📚 Estante")
+            self.notebook_central.add(self.tab_estante, text="Estante")
+            self._registrar_tab("Estante", self.tab_estante)
+
+        self.notebook_central.bind("<<NotebookTabChanged>>", self._on_tab_changed)
+        self._restaurar_pestana_activa()
+
+    def _registrar_tab(self, nombre_tab: str, tab_widget):
+        nombre_normalizado = (nombre_tab or "").strip().lower()
+        if nombre_normalizado:
+            self._tabs_por_nombre[nombre_normalizado] = tab_widget
+
+    def _on_tab_changed(self, event=None):
+        if not self.notebook_central:
+            return
+        tab_actual = self.notebook_central.select()
+        if not tab_actual:
+            return
+        nombre_tab = self.notebook_central.tab(tab_actual, option="text")
+        ConfiguracionController().guardar_pestana_activa_principal(nombre_tab)
+
+    def _restaurar_pestana_activa(self):
+        if not self.notebook_central:
+            return
+        configuracion = ConfiguracionController()
+        nombre_guardado = configuracion.obtener_pestana_activa_principal()
+        tab_guardado = self._tabs_por_nombre.get(nombre_guardado)
+        if tab_guardado:
+            self.notebook_central.select(tab_guardado)
+            return
+        self._on_tab_changed()
 
     # ┌────────────────────────────────────────────────────────────┐
     # │ Manejo del Estado de la Interfaz
@@ -285,7 +344,12 @@ class FrameCentral(Frame):
             configuracion.set_toggle_panel_lateral(valor=0)
         else:
             self.panel_lateral.pack(
-                side=LEFT, fill=Y, padx=2, pady=2, anchor=W, before=self.panel_central
+                side=LEFT,
+                fill=Y,
+                padx=PADDING_COMPACT,
+                pady=PADDING_COMPACT,
+                anchor=W,
+                before=self.panel_central,
             )
             self.panel_lateral_visible = True
             # configuracion
@@ -302,12 +366,22 @@ class FrameCentral(Frame):
                 self.panel_lateral_visible = False
             else:
                 self.panel_lateral.pack(
-                    side=LEFT, fill=Y, padx=2, pady=2, anchor=W, before=self.panel_central
+                    side=LEFT,
+                    fill=Y,
+                    padx=PADDING_COMPACT,
+                    pady=PADDING_COMPACT,
+                    anchor=W,
+                    before=self.panel_central,
                 )
                 self.panel_lateral_visible = True
         except Exception as e:
             self.panel_lateral.pack(
-                side=LEFT, fill=Y, padx=2, pady=2, anchor=W, before=self.panel_central
+                side=LEFT,
+                fill=Y,
+                padx=PADDING_COMPACT,
+                pady=PADDING_COMPACT,
+                anchor=W,
+                before=self.panel_central,
             )
             self.panel_lateral_visible = True
 

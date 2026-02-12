@@ -1,12 +1,16 @@
 import math
 from os.path import exists
 from tkinter.messagebox import showerror
+from tkinter import Menu
 from typing import Dict, Any, List
 
 from ttkbootstrap import Button
 from ttkbootstrap.tableview import Tableview
 
 from models.controllers.configuracion_controller import ConfiguracionController
+from models.controllers.controlar_menu_contextual_documento import (
+    ControlarMenuContextualDocumento,
+)
 from models.entities.consulta import Consulta
 from utilities.auxiliar import (
     abrir_documento_desde_biblioteca,
@@ -26,13 +30,53 @@ class ControlarFavoritos:
         self.map_documentos: Dict[int, Dict[str, Any]] = {}
         self.icon_libro = "📕"
 
+        self.menu_ops = ControlarMenuContextualDocumento(
+            master=self.master,
+            get_documento_data=self._get_documento_contextual,
+            on_refresh=self.cargar_favoritos,
+        )
         self._vincular_eventos()
+        self._crear_menu_contextual()
         self.cargar_favoritos()
 
     def _vincular_eventos(self):
         """Vincula los eventos de los widgets a sus manejadores."""
         self.btn_refrescar.config(command=self.cargar_favoritos)
         self.table_view.view.bind("<Double-1>", self.on_doble_clic_tabla)
+        self.table_view.view.bind("<Button-3>", self._mostrar_menu_contextual)
+
+    def _crear_menu_contextual(self):
+        self.menu_contextual = Menu(self.master, tearoff=0)
+        self.menu_contextual.add_command(label="📖 Abrir documento", command=self.menu_ops.on_abrir_documento)
+        self.menu_contextual.add_command(label="📂 Abrir carpeta", command=self.menu_ops.on_abrir_carpeta)
+        self.menu_contextual.add_command(label="ℹ️ Propiedades", command=self.menu_ops.on_propiedades)
+        self.menu_contextual.add_command(label="🧾 Ver metadatos", command=self.menu_ops.on_ver_metadatos)
+        self.menu_contextual.add_separator()
+        self.menu_contextual.add_command(label="✏️ Renombrar documento", command=self.menu_ops.on_renombrar_documento)
+        self.menu_contextual.add_command(label="🧬 Renombrar bibliográficamente", command=self.menu_ops.on_renombrar_bibliografico)
+        self.menu_contextual.add_separator()
+        self.menu_contextual.add_command(label="📋 Copiar documento", command=self.menu_ops.on_copiar_documento)
+        self.menu_contextual.add_command(label="✂️ Mover documento", command=self.menu_ops.on_mover_documento)
+        self.menu_contextual.add_command(label="🗑️ Enviar a papelera", command=self.menu_ops.on_enviar_papelera)
+        self.menu_contextual.add_command(label="🗑️ Eliminar documento", command=self.menu_ops.on_eliminar_documento)
+        self.menu_contextual.add_separator()
+        self.menu_contextual.add_command(label="🔄 Cambiar estado", command=self.menu_ops.on_cambiar_estado)
+        self.menu_contextual.add_separator()
+        self.menu_contextual.add_command(label="🔄 Refrescar", command=self.cargar_favoritos)
+
+    def _mostrar_menu_contextual(self, event):
+        item_id = self.table_view.view.identify_row(event.y)
+        if item_id:
+            self.table_view.view.selection_set(item_id)
+            self.table_view.view.focus(item_id)
+        self.menu_contextual.tk_popup(event.x_root, event.y_root)
+
+    def _get_documento_contextual(self):
+        selected_row = self.table_view.get_rows(selected=True)
+        if not selected_row or not selected_row[0].values:
+            return None
+        id_documento = selected_row[0].values[0]
+        return self.map_documentos.get(id_documento)
 
     def cargar_favoritos(self):
         """Obtiene los documentos favoritos de la BD y los puebla en la tabla."""

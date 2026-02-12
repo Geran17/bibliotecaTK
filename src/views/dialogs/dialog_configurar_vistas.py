@@ -15,7 +15,7 @@ class DialogConfigurarVistas(Toplevel):
 
     def __init__(self, master=None, **kwargs):
         super().__init__(master, **kwargs)
-        self.title("Configurar Vistas")
+        self.title("Configurar vistas")
         self.transient(master)
 
         self.config_controller = ConfiguracionController()
@@ -55,7 +55,7 @@ class DialogConfigurarVistas(Toplevel):
 
     def _crear_widgets(self):
         """Crea los widgets del diálogo."""
-        main_frame = LabelFrame(self, text="Seleccione las pestañas a mostrar", padding=10)
+        main_frame = LabelFrame(self, text="Seleccione las pestañas que desea mostrar", padding=10)
         main_frame.pack(fill=BOTH, expand=True, padx=10, pady=10)
 
         for key, texto in self.map_pestanas.items():
@@ -93,7 +93,7 @@ class DialogConfigurarVistas(Toplevel):
         self.config_controller.guardar_visibilidad_pestanas(nueva_visibilidad)
 
         showinfo(
-            title="Configuración Guardada",
+            title="Configuración guardada",
             message="La configuración de las vistas se ha guardado.\n\n"
             "Por favor, reinicie la aplicación para ver los cambios.",
             parent=self,

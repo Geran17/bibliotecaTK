@@ -19,7 +19,7 @@ from models.entities.documento import Documento
 from models.entities.documento_categoria import DocumentoCategoria
 from views.dialogs.dialog_administrar_categorias import DialogAdministrarCategorias
 from ttkbootstrap.constants import *
-from views.components.ui_tokens import PADDING_COMPACT, PADDING_OUTER, PADDING_PANEL
+from views.components.ui_tokens import FONT_SECTION, PADDING_COMPACT, PADDING_OUTER, PADDING_PANEL
 from typing import List, Dict, Any
 
 
@@ -66,9 +66,7 @@ class FrameSeleccionarCategorias(Frame):
         frame_inferior.pack(side=TOP, fill=X, padx=PADDING_COMPACT, pady=PADDING_COMPACT)
 
     def panel_superior(self, frame: Frame):
-        label_titulo = Label(
-            frame, text="Asociar categorías a los documentos", font=("Helvetica", 12, "bold")
-        )
+        label_titulo = Label(frame, text="Asociar categorías a los documentos", font=FONT_SECTION)
         label_titulo.pack(side=LEFT, padx=PADDING_OUTER * 2, pady=PADDING_OUTER)
 
     def panel_central(self, frame: Frame):
@@ -109,9 +107,9 @@ class FrameSeleccionarCategorias(Frame):
     # │ Metodos de la clase
     # └────────────────────────────────────────────────────────────┘
 
-    def obtener_documentos_seleccionados(self, documetos_seleccionados: List[Documento]):
-        if documetos_seleccionados:
-            self.documentos_seleccionados = documetos_seleccionados
+    def obtener_documentos_seleccionados(self, documentos_seleccionados: List[Documento]):
+        if documentos_seleccionados:
+            self.documentos_seleccionados = documentos_seleccionados
             self._cargar_documentos_seleccionados()
 
     def procesar_categorias_seleccionadas(self, id_documento):

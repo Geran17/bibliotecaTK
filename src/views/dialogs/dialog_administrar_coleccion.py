@@ -1,6 +1,6 @@
 from ttkbootstrap import Toplevel
 from ttkbootstrap.constants import *
-from views.frames.frame_adminstrar_colecciones import AdministrarColecciones
+from views.frames.frame_administrar_colecciones import AdministrarColecciones
 
 
 class DialogAdministrarColeccion(Toplevel):
