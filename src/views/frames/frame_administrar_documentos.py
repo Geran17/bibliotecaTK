@@ -707,6 +707,7 @@ class AdministrarDocumentos(Frame):
             {"label": "📂 Abrir carpeta", "command": self._on_contextual_abrir_carpeta},
             {"label": "ℹ️ Propiedades", "command": self._on_contextual_propiedades},
             {"label": "🧾 Ver metadatos", "command": self._on_contextual_metadatos},
+            {"label": "📝 Comentario", "command": self._on_contextual_comentario},
             {"separator": True},
             {"label": "📋 Copiar seleccionados", "command": self.on_copiar_seleccionados},
             {"label": "✂️ Mover seleccionados", "command": self.on_mover_seleccionados},
@@ -733,3 +734,7 @@ class AdministrarDocumentos(Frame):
     def _on_contextual_propiedades(self):
         self._sincronizar_documento_contextual()
         self.controlador_documento_seleccionado.on_propiedades()
+
+    def _on_contextual_comentario(self):
+        self._sincronizar_documento_contextual()
+        self.controlador_documento_seleccionado.on_comentario()

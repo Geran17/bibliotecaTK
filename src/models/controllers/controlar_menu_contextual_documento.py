@@ -5,6 +5,7 @@ from tkinter.messagebox import askyesno, showerror, showinfo, showwarning
 from typing import Callable, Dict, Any, Optional
 
 from models.controllers.configuracion_controller import ConfiguracionController
+from models.controllers.controlar_comentarios import ControlarComentarios
 from models.entities.bibliografia import Bibliografia
 from models.entities.documento import Documento
 from utilities.auxiliar import (
@@ -18,6 +19,7 @@ from utilities.auxiliar import (
     renombrar_archivo,
 )
 from views.components.resizable_input_dialog import ask_resizable_string
+from views.components.resizable_text_dialog import ask_resizable_text
 from views.dialogs.dialog_visualizar_metadatos import DialogVisualizarMetadatos
 
 
@@ -36,6 +38,7 @@ class ControlarMenuContextualDocumento:
         self.master = master
         self.get_documento_data = get_documento_data
         self.on_refresh = on_refresh
+        self.comentarios = ControlarComentarios()
 
     def _normalizar_documento_data(self, data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         if not data:
@@ -149,6 +152,38 @@ class ControlarMenuContextualDocumento:
         dialog = DialogVisualizarMetadatos(title="Metadatos del Documento")
         dialog.set_documento(documento)
         dialog.grab_set()
+
+    def on_comentario(self):
+        documento = self._get_documento_instanciado()
+        if not documento:
+            return
+
+        comentario_actual = self.comentarios.obtener_comentario(documento.id)
+        texto = ask_resizable_text(
+            master=self.master,
+            title="Comentario del documento",
+            prompt=f"Comentario para: {documento.nombre}",
+            initialvalue=comentario_actual,
+        )
+        if texto is None:
+            return
+
+        texto = texto.strip()
+        if not texto and comentario_actual:
+            if not askyesno(
+                "Eliminar comentario",
+                "El comentario está vacío. ¿Desea eliminarlo?",
+                parent=self.master,
+            ):
+                return
+
+        if self.comentarios.guardar_comentario(documento.id, texto):
+            if texto:
+                showinfo("Comentario", "Comentario guardado.", parent=self.master)
+            else:
+                showinfo("Comentario", "Comentario eliminado.", parent=self.master)
+        else:
+            showerror("Error", "No se pudo guardar el comentario.", parent=self.master)
 
     def on_renombrar_documento(self):
         documento = self._get_documento_instanciado()

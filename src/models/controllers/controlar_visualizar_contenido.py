@@ -41,6 +41,7 @@ class ControlarVisualizarContenido:
         self.menu_contextual.add_command(label="📂 Abrir carpeta", command=self.menu_ops.on_abrir_carpeta)
         self.menu_contextual.add_command(label="ℹ️ Propiedades", command=self.menu_ops.on_propiedades)
         self.menu_contextual.add_command(label="🧾 Ver metadatos", command=self.menu_ops.on_ver_metadatos)
+        self.menu_contextual.add_command(label="📝 Comentario", command=self.menu_ops.on_comentario)
         self.menu_contextual.add_separator()
         self.menu_contextual.add_command(label="✏️ Renombrar documento", command=self.menu_ops.on_renombrar_documento)
         self.menu_contextual.add_command(label="🧬 Renombrar bibliográficamente", command=self.menu_ops.on_renombrar_bibliografico)

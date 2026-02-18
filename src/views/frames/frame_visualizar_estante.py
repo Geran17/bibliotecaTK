@@ -23,6 +23,8 @@ class FrameVisualizarEstante(Frame):
         # --- Variables ---
         self.var_buscar = StringVar()
         self.var_modo_visualizacion = StringVar(value="Cuadrícula")
+        self.var_tipo_organizacion = StringVar()
+        self.var_organizacion = StringVar()
         self.campos_busqueda = [
             "Todo",
             "Nombre",
@@ -33,6 +35,13 @@ class FrameVisualizarEstante(Frame):
             "Colección",
             "Grupo",
         ]
+        self.tipos_organizacion = [
+            "Colecciones",
+            "Grupos",
+            "Categorías",
+            "Etiquetas",
+            "Palabras Clave",
+        ]
         self.map_documentos = {}
 
         # --- Mapas para el controlador ---
@@ -40,6 +49,8 @@ class FrameVisualizarEstante(Frame):
         self.map_vars = {
             "var_buscar": self.var_buscar,
             "var_modo_visualizacion": self.var_modo_visualizacion,
+            "var_tipo_organizacion": self.var_tipo_organizacion,
+            "var_organizacion": self.var_organizacion,
         }
 
         self._crear_widgets()  # Creates widgets and populates self.map_widgets
@@ -84,6 +95,8 @@ class FrameVisualizarEstante(Frame):
             "ent_buscar": self.ent_buscar,
             "cbx_campos": self.cbx_campos,
             "cbx_modo_visualizacion": self.cbx_modo_visualizacion,
+            "cbx_tipo_organizacion": self.cbx_tipo_organizacion,
+            "cbx_organizacion": self.cbx_organizacion,
             "btn_buscar": self.btn_buscar,
             "btn_anterior": self.btn_anterior,
             "btn_siguiente": self.btn_siguiente,
@@ -132,7 +145,6 @@ class FrameVisualizarEstante(Frame):
         self.scroll_frame = ScrolledFrame(
             frame,
             padding=(PADDING_COMPACT, PADDING_COMPACT),
-            bootstyle="dark",
         )
         self.scroll_frame.pack(side=TOP, fill=BOTH, expand=True)
 
@@ -141,6 +153,35 @@ class FrameVisualizarEstante(Frame):
     # └────────────────────────────────────────────────────────────┘
 
     def _panel_inferior(self, frame: Frame):
+        frame_organizacion = Frame(frame)
+        frame_organizacion.pack(fill=X, padx=PADDING_OUTER, pady=(0, PADDING_OUTER))
+
+        lbl_tipo_org = Label(frame_organizacion, text="Organización:")
+        lbl_tipo_org.pack(side=LEFT, padx=(0, PADDING_PANEL))
+
+        self.cbx_tipo_organizacion = Combobox(
+            frame_organizacion,
+            values=self.tipos_organizacion,
+            state=READONLY,
+            width=18,
+            textvariable=self.var_tipo_organizacion,
+        )
+        self.cbx_tipo_organizacion.pack(side=LEFT, padx=(0, PADDING_PANEL))
+        ToolTip(self.cbx_tipo_organizacion, "Selecciona el tipo de organización")
+
+        lbl_org = Label(frame_organizacion, text="Elemento:")
+        lbl_org.pack(side=LEFT, padx=(0, PADDING_PANEL))
+
+        self.cbx_organizacion = Combobox(
+            frame_organizacion,
+            values=[],
+            state=DISABLED,
+            width=28,
+            textvariable=self.var_organizacion,
+        )
+        self.cbx_organizacion.pack(side=LEFT, fill=X, expand=True)
+        ToolTip(self.cbx_organizacion, "Selecciona la organización para mostrar sus libros")
+
         frame_busqueda = Frame(frame)
         frame_busqueda.pack(fill=X, padx=PADDING_OUTER, pady=PADDING_OUTER)
 
@@ -167,7 +208,7 @@ class FrameVisualizarEstante(Frame):
         self.btn_anterior.pack(side=LEFT, padx=(0, PADDING_PANEL))
         ToolTip(self.btn_anterior, "Ir a la página anterior")
 
-        self.lbl_pagina = Label(frame_paginacion, text="Página 1 de 1", style="inverse-dark")
+        self.lbl_pagina = Label(frame_paginacion, text="Página 1 de 1", bootstyle="secondary")
         self.lbl_pagina.pack(side=LEFT, expand=True)
 
         self.btn_siguiente = Button(frame_paginacion, text="Siguiente ▶", style="secondary")

@@ -1,6 +1,7 @@
 from os import mkdir
 from os.path import join, isdir
 import json
+from datetime import datetime
 from utilities.fileINI import FileINI
 from utilities.configuracion import CONFIG_INI
 from pathlib import Path
@@ -33,6 +34,7 @@ class ConfiguracionController:
         self.key_mostrar_operaciones = "mostrar_operaciones"
         self.key_estado_vista_documentos = "estado_vista_documentos"
         self.key_estado_vista_estante = "estado_vista_estante"
+        self.key_progreso_lectura_estante = "progreso_lectura_estante"
         self.key_pestana_activa_principal = "pestana_activa_principal"
         # ----- Keys Pestañas -----
         self.key_pestana_bienvenida = "pestana_bienvenida"
@@ -389,6 +391,89 @@ class ConfiguracionController:
         except Exception:
             pass
         return {}
+
+    def guardar_progresos_lectura(self, progresos: Dict[str, Any]) -> bool:
+        if not isinstance(progresos, dict):
+            return False
+        try:
+            value = json.dumps(progresos, ensure_ascii=True)
+            return self.iniFile.add_value(
+                section=self.section_toggle,
+                key=self.key_progreso_lectura_estante,
+                value=value,
+            )
+        except Exception:
+            return False
+
+    def obtener_progresos_lectura(self) -> Dict[str, Any]:
+        raw = self.iniFile.get_value(
+            section=self.section_toggle,
+            key=self.key_progreso_lectura_estante,
+        )
+        if not raw:
+            return {}
+
+        try:
+            data = json.loads(raw)
+        except Exception:
+            return {}
+
+        if not isinstance(data, dict):
+            return {}
+
+        progresos_normalizados = {}
+        for key, value in data.items():
+            try:
+                id_documento = str(int(key))
+            except (TypeError, ValueError):
+                continue
+
+            if not isinstance(value, dict):
+                continue
+
+            pagina_actual = value.get("pagina_actual", 0)
+            try:
+                pagina_actual = max(0, int(pagina_actual))
+            except (TypeError, ValueError):
+                pagina_actual = 0
+
+            actualizado_en = value.get("actualizado_en", "")
+            actualizado_en = str(actualizado_en).strip() if actualizado_en is not None else ""
+
+            progresos_normalizados[id_documento] = {
+                "pagina_actual": pagina_actual,
+                "en_lectura": bool(value.get("en_lectura", pagina_actual > 0)),
+                "actualizado_en": actualizado_en,
+            }
+
+        return progresos_normalizados
+
+    def guardar_progreso_lectura(self, id_documento: int, pagina_actual: int) -> bool:
+        try:
+            id_normalizado = str(int(id_documento))
+            pagina_normalizada = max(0, int(pagina_actual))
+        except (TypeError, ValueError):
+            return False
+
+        progresos = self.obtener_progresos_lectura()
+        progresos[id_normalizado] = {
+            "pagina_actual": pagina_normalizada,
+            "en_lectura": pagina_normalizada > 0,
+            "actualizado_en": datetime.now().isoformat(timespec="seconds"),
+        }
+        return self.guardar_progresos_lectura(progresos=progresos)
+
+    def eliminar_progreso_lectura(self, id_documento: int) -> bool:
+        try:
+            id_normalizado = str(int(id_documento))
+        except (TypeError, ValueError):
+            return False
+
+        progresos = self.obtener_progresos_lectura()
+        if id_normalizado in progresos:
+            progresos.pop(id_normalizado, None)
+            return self.guardar_progresos_lectura(progresos=progresos)
+        return True
 
     def guardar_pestana_activa_principal(self, nombre_pestana: str) -> bool:
         nombre_normalizado = (nombre_pestana or "").strip().lower()

@@ -348,9 +348,31 @@ class ConsultaDAO(DAO):
             Una lista de diccionarios que representan todos los documentos.
         """
         sql = """
-            SELECT v.*, b.titulo, b.numero_paginas
+            SELECT
+                v.*,
+                b.titulo,
+                COALESCE(b.numero_paginas, mp.numero_paginas_meta) AS numero_paginas
             FROM vista_asociaciones_documentos v
             LEFT JOIN bibliografia b ON v.id = b.id_documento
+            LEFT JOIN (
+                SELECT
+                    m.id_documento,
+                    MAX(
+                        CASE
+                            WHEN (
+                                lower(replace(replace(m.clave, ' ', ''), '_', ''))
+                                LIKE '%pagecount%'
+                                OR lower(replace(replace(m.clave, ' ', ''), '_', ''))
+                                   IN ('pdf:pages', 'pages')
+                            )
+                                 AND trim(m.valor) <> ''
+                                 AND trim(m.valor) NOT GLOB '*[^0-9]*'
+                            THEN CAST(trim(m.valor) AS INTEGER)
+                        END
+                    ) AS numero_paginas_meta
+                FROM metadato m
+                GROUP BY m.id_documento
+            ) mp ON v.id = mp.id_documento
             ORDER BY v.nombre
         """
         return self._ejecutar_consulta(sql=sql, params=())
@@ -435,6 +457,28 @@ class ConsultaDAO(DAO):
         """
         like_termino = f"%{termino}%"
         params = (like_termino,)
+        paginas_select = "COALESCE(b.numero_paginas, mp.numero_paginas_meta) AS numero_paginas"
+        join_paginas_metadato = """
+            LEFT JOIN (
+                SELECT
+                    m.id_documento,
+                    MAX(
+                        CASE
+                            WHEN (
+                                lower(replace(replace(m.clave, ' ', ''), '_', ''))
+                                LIKE '%pagecount%'
+                                OR lower(replace(replace(m.clave, ' ', ''), '_', ''))
+                                   IN ('pdf:pages', 'pages')
+                            )
+                                 AND trim(m.valor) <> ''
+                                 AND trim(m.valor) NOT GLOB '*[^0-9]*'
+                            THEN CAST(trim(m.valor) AS INTEGER)
+                        END
+                    ) AS numero_paginas_meta
+                FROM metadato m
+                GROUP BY m.id_documento
+            ) mp ON v.id = mp.id_documento
+        """
 
         # Mapeo de campos a sus respectivas tablas y columnas
         mapa_busqueda = {
@@ -451,10 +495,11 @@ class ConsultaDAO(DAO):
 
         if campo_lower == "todo":
             # Búsqueda en múltiples campos
-            sql = """
-                SELECT DISTINCT v.*, b.titulo, b.numero_paginas
+            sql = f"""
+                SELECT DISTINCT v.*, b.titulo, {paginas_select}
                 FROM vista_asociaciones_documentos v
                 LEFT JOIN bibliografia b ON v.id = b.id_documento
+                {join_paginas_metadato}
                 LEFT JOIN documento_coleccion dc ON v.id = dc.id_documento
                 LEFT JOIN coleccion c ON dc.id_coleccion = c.id
                 LEFT JOIN documento_grupo dg ON v.id = dg.id_documento
@@ -472,27 +517,32 @@ class ConsultaDAO(DAO):
             tabla, columna = mapa_busqueda[campo_lower]
             if tabla == "documento":
                 sql = f"""
-                    SELECT v.*, b.titulo, b.numero_paginas
+                    SELECT v.*, b.titulo, {paginas_select}
                     FROM vista_asociaciones_documentos v
                     LEFT JOIN bibliografia b ON v.id = b.id_documento
+                    {join_paginas_metadato}
                     WHERE {columna} LIKE ?"""
             elif tabla == "bibliografia":
                 sql = f"""
-                    SELECT DISTINCT v.*, b.titulo, b.numero_paginas
+                    SELECT DISTINCT v.*, b.titulo, {paginas_select}
                     FROM vista_asociaciones_documentos v
-                    JOIN bibliografia b ON v.id = b.id_documento WHERE {columna} LIKE ?"""
+                    JOIN bibliografia b ON v.id = b.id_documento
+                    {join_paginas_metadato}
+                    WHERE {columna} LIKE ?"""
             elif tabla == "coleccion":
                 sql = f"""
-                    SELECT DISTINCT v.*, b.titulo, b.numero_paginas
+                    SELECT DISTINCT v.*, b.titulo, {paginas_select}
                     FROM vista_asociaciones_documentos v
                     LEFT JOIN bibliografia b ON v.id = b.id_documento
+                    {join_paginas_metadato}
                     JOIN documento_coleccion dc ON v.id = dc.id_documento
                     JOIN coleccion c ON dc.id_coleccion = c.id WHERE {columna} LIKE ?"""
             elif tabla == "grupo":
                 sql = f"""
-                    SELECT DISTINCT v.*, b.titulo, b.numero_paginas
+                    SELECT DISTINCT v.*, b.titulo, {paginas_select}
                     FROM vista_asociaciones_documentos v
                     LEFT JOIN bibliografia b ON v.id = b.id_documento
+                    {join_paginas_metadato}
                     JOIN documento_grupo dg ON v.id = dg.id_documento
                     JOIN grupo g ON dg.id_grupo = g.id WHERE {columna} LIKE ?"""
         else:

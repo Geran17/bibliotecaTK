@@ -1,13 +1,14 @@
 from ttkbootstrap.tableview import Tableview
 from ttkbootstrap import Button, IntVar, StringVar
 from typing import Dict, Any, Optional
-from tkinter.messagebox import showerror, showwarning, showinfo
+from tkinter.messagebox import showerror, showwarning, showinfo, askyesno
 from models.entities.documento import Documento
 from models.entities.bibliografia import Bibliografia
 from os.path import join, exists
 from pathlib import Path
 from utilities.configuracion import DIRECTORIO_TEMPORAL
 from models.controllers.configuracion_controller import ConfiguracionController
+from models.controllers.controlar_comentarios import ControlarComentarios
 from utilities.auxiliar import (
     generar_ruta_documento,
     abrir_archivo,
@@ -18,6 +19,7 @@ from utilities.auxiliar import (
     eliminar_archivo,
 )
 from views.components.resizable_input_dialog import ask_resizable_string
+from views.components.resizable_text_dialog import ask_resizable_text
 from views.dialogs.dialog_visualizar_metadatos import DialogVisualizarMetadatos
 
 
@@ -39,6 +41,7 @@ class ControlarDocumentoSeleccionado:
         self.selected_item = ()
         self.ruta_biblioteca: str = None
         self.ruta_documento: str = None
+        self.comentarios = ControlarComentarios()
 
         # Maps
         # map_widgets
@@ -350,6 +353,39 @@ class ControlarDocumentoSeleccionado:
                 icon="warning",
                 parent=self.master,
             )
+
+    def on_comentario(self):
+        if not self.documento:
+            self._set_documento()
+        if not self.documento:
+            return
+
+        comentario_actual = self.comentarios.obtener_comentario(self.documento.id)
+        texto = ask_resizable_text(
+            master=self.master,
+            title="Comentario del documento",
+            prompt=f"Comentario para: {self.documento.nombre}",
+            initialvalue=comentario_actual,
+        )
+        if texto is None:
+            return
+
+        texto = texto.strip()
+        if not texto and comentario_actual:
+            if not askyesno(
+                "Eliminar comentario",
+                "El comentario está vacío. ¿Desea eliminarlo?",
+                parent=self.master,
+            ):
+                return
+
+        if self.comentarios.guardar_comentario(self.documento.id, texto):
+            if texto:
+                showinfo("Comentario", "Comentario guardado.", parent=self.master)
+            else:
+                showinfo("Comentario", "Comentario eliminado.", parent=self.master)
+        else:
+            showerror("Error", "No se pudo guardar el comentario.", parent=self.master)
 
     def _formatear_tamano(self, bytes_value: int) -> str:
         if not bytes_value:
